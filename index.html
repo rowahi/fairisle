@@ -767,7 +767,7 @@ function printOut(){const p=P(),u=usage(p),cv=document.createElement('canvas');
  ${p.colors.map((c,i)=>`<tr><td><i style="background:${c.c}"></i></td><td><b>${L(i)}</b></td><td>${esc(c.n)}</td><td>${c.c}</td><td>${u[L(i)]||0}</td></tr>`).join('')}</table>
  <div class="fig"><h2>Vorschau</h2><p class="meta">${info}</p><img src="${pv.toDataURL()}" style="width:${pv.style.width}" alt="Vorschau">${leg?`<p>${leg}</p>`:''}</div>`;
  setTimeout(()=>window.print(),50)}
-$('fbk').href=`https://tally.so/r/xVVA05?app=fairisle&version=${APPV}`;
+$('fbk').href=`https://tally.so/r/Vpzl8J?version=${APPV}`;
 $('printBtn').onclick=$('printBtn2').onclick=printOut;
 $('odsSave').onclick=$('odsSave2').onclick=()=>{const p=P();dl((p.name||'Muster').replace(/[\\/:*?"<>|]+/g,'_').trim()+'.ods',zip(odsFiles(p)));toast('ODS-Datei erstellt')};
 
