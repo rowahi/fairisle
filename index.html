@@ -10,7 +10,35 @@
 body{background:var(--bg);color:var(--tx);font:15px/1.45 "Inter",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;padding-bottom:calc(64px + env(safe-area-inset-bottom))}
 body.wide{padding-bottom:24px}
 header{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:14px;padding:10px 20px;padding-top:calc(10px + env(safe-area-inset-top));background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--bd)}
-.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.05rem;letter-spacing:-.01em;white-space:nowrap}.brand img{width:30px;height:30px;border-radius:8px}
+.logo{width:30px;height:30px;border-radius:8px;flex:0 0 auto}
+header #openDrawer{height:42px;font-size:.95rem;padding:0 16px}
+header #pname{max-width:280px;font-weight:600;height:40px;min-width:0;flex:0 1 280px}
+.saved{font-size:.82rem;color:var(--mut);white-space:nowrap;transition:color .3s}.saved.err{color:var(--warn);font-weight:700}.saved.pulse{color:var(--ac)}
+/* Menüs */
+.menu{position:relative;display:inline-block}
+.mpanel{display:none;position:absolute;top:calc(100% + 6px);left:0;z-index:40;min-width:250px;max-width:min(92vw,380px);background:var(--card);border:1px solid var(--bd);border-radius:14px;box-shadow:0 12px 40px rgba(20,16,30,.18);padding:6px}
+.menu.r .mpanel{left:auto;right:0}.menu.open .mpanel{display:block}.menu.open>.mbtn{background:var(--acs)}
+.mi{display:flex;align-items:center;gap:10px;width:100%;justify-content:flex-start;background:transparent;height:40px;padding:0 12px;border-radius:9px;font-weight:500;text-decoration:none;color:var(--tx);font-size:.92rem}
+.mi:hover{background:var(--soft)}.mi.on{background:var(--acs);font-weight:700}.mi.dan{color:var(--warn)}
+.mh{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);font-weight:600;padding:8px 12px 4px}
+.mpanel hr{border:0;border-top:1px solid var(--bd);margin:6px 4px}
+.msec{padding:10px 12px}.mpanel.msec{padding:14px}
+.help{max-width:340px}.help p{margin:0 0 8px;font-size:.88rem;line-height:1.45}.help p:last-child{margin:0}
+.lbl2{font-size:.85rem;color:var(--mut);min-width:7.5em}
+.nl{margin:6px 0 0;padding-left:20px}.nl li{margin:4px 0;font-size:.92rem}
+/* Seitenleiste */
+#scrim{position:fixed;inset:0;background:rgba(20,16,30,.35);z-index:50}
+#drawer{position:fixed;top:0;bottom:0;left:0;width:min(440px,100vw);z-index:51;background:var(--bg);box-shadow:8px 0 40px rgba(0,0,0,.2);padding:16px;overflow:auto;animation:din .18s ease-out}
+@keyframes din{from{transform:translateX(-30px);opacity:.4}to{transform:none;opacity:1}}
+#drawer .dtabs{display:flex;margin-bottom:6px}#drawer .dtabs button{flex:1}
+#drawer .plist{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
+.pt{position:relative}.pt .tmenu{position:absolute;top:6px;right:6px}.pt .tmenu .mbtn{width:30px;height:30px;padding:0;background:var(--card);box-shadow:0 0 0 1px var(--bd)}
+.pt b{padding-right:30px}
+/* Dialoge */
+dialog{border:0;border-radius:18px;padding:20px;max-width:min(560px,94vw);width:100%;background:var(--card);color:var(--tx);box-shadow:0 20px 60px rgba(0,0,0,.3)}
+dialog::backdrop{background:rgba(20,16,30,.4)}dialog h2{margin:0 0 8px;font-size:1.1rem}
+.keys td{padding:5px 12px 5px 0;font-size:.9rem}
+.ctabs,.dtabs{display:flex;margin:10px 0}.ctabs button{flex:1;padding:0 6px}
 header .sp{flex:1}
 main{max-width:1440px;margin:0 auto;padding:16px}
 section[hidden],.hide{display:none!important}
@@ -28,7 +56,7 @@ body.drag{cursor:col-resize;user-select:none}
 .qi{display:flex;align-items:center;gap:8px;padding:6px 8px;border:1px solid var(--bd);border-radius:12px;flex-wrap:wrap}
 .qi.cur{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac)}
 .qi .qn{flex:1;min-width:90px}.qi .qn b{display:block;font-size:.88rem;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.qi .qn small{color:var(--mut);font-size:.75rem}
-.qi canvas{border-radius:4px;flex:0 0 auto}.qi input[type=color]{width:40px;height:32px;padding:2px;flex:0 0 auto;cursor:pointer}
+.qi canvas{border-radius:4px;flex:0 0 auto}.qi .qbar{flex:0 0 40px;height:22px;border-radius:5px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}.qi .qsw input[type=color]{width:34px;height:22px;padding:0;border-radius:5px}.qi input[type=color]{width:40px;height:32px;padding:2px;flex:0 0 auto;cursor:pointer}
 .qi .qsw{display:flex;gap:3px;flex-wrap:wrap}.qi .qsw button{width:18px;height:18px;padding:0;border-radius:5px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
 .tpl .row button{height:32px;font-size:.8rem;padding:0 8px}
 .qi .hdl{cursor:grab;color:var(--mut);font-size:1.1rem;padding:0 2px;user-select:none;touch-action:none}.qi.drg{opacity:.4}.qi.ovt{box-shadow:0 -3px 0 var(--ac)}.qi.ovb{box-shadow:0 3px 0 var(--ac)}
@@ -98,13 +126,15 @@ kbd{font:600 .72rem ui-monospace,monospace;background:var(--soft);border-radius:
 nav.bot{position:fixed;bottom:0;left:0;right:0;z-index:10;display:flex;background:var(--card);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom)}
 nav.bot button{flex:1;background:none;color:var(--mut);border-radius:0;height:56px;font-weight:500}nav.bot button.on{color:var(--ac);font-weight:700}
 body.wide nav.bot{display:none}body:not(.wide) nav.top{display:none}
-body:not(.wide) header{padding:8px 12px}body:not(.wide) .brand span{font-size:.95rem}
+body:not(.wide) header{padding:8px 10px;gap:8px}body:not(.wide) header .lbl,body:not(.wide) .logo{display:none}
+body:not(.wide) header #openDrawer{padding:0 12px}body:not(.wide) header #pname{flex:1 1 auto}
+@media(max-width:979px){.mpanel{position:fixed;left:8px!important;right:8px!important;top:auto;bottom:calc(72px + env(safe-area-inset-bottom));max-width:none;max-height:70vh;overflow:auto;border-radius:18px}
+ .menu.r .mpanel{left:8px;right:8px}.mi{height:46px}}
 body:not(.wide) main{padding:10px}body:not(.wide) #tools{flex-wrap:wrap;width:100%}body:not(.wide) #tools button{flex:1 1 40%;padding:0 6px}body:not(.wide) .card{padding:12px;margin-bottom:10px}
 #toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:9px 16px;border-radius:10px;font-size:.88rem;opacity:0;transition:opacity .3s;pointer-events:none;z-index:20}#toast.on{opacity:.94}
 #print{display:none}
 .note{border-color:color-mix(in srgb,var(--warn) 45%,var(--bd));background:color-mix(in srgb,var(--warn) 6%,var(--card))}.note li{margin:3px 0;font-size:.9rem}
 a.btn{display:flex;align-items:center;justify-content:center;height:38px;background:var(--soft);color:var(--tx);border-radius:10px;padding:0 14px;text-decoration:none;font-weight:600;font-size:.9rem}a.btn:hover{background:color-mix(in srgb,var(--soft) 80%,var(--ac) 12%)}
-body:not(.wide) #printBtn{display:none}
 @media print{
  @page{size:A4;margin:12mm}
  body>*:not(#print){display:none!important}
@@ -119,142 +149,220 @@ body:not(.wide) #printBtn{display:none}
 }
 </style></head><body>
 <header>
- <div class="brand"><img src="icon.svg" alt=""><span>Fair-Isle-Musterhilfe</span></div>
- <nav class="top seg"><button data-t="ed">Entwurf</button><button data-t="pat">Muster &amp; Dateien</button></nav>
+ <img class="logo" src="icon.svg" alt="">
+ <button class="pri" id="openDrawer" title="Muster öffnen, neu anlegen, Projekte und Motiv-Bibliothek">🗂 <span class="lbl">Meine Muster</span></button>
+ <input id="pname" aria-label="Name des Musters" placeholder="Name des Musters">
+ <span id="saved" class="saved" title="Alles wird automatisch in diesem Browser gespeichert">✓ <span class="lbl">Gespeichert</span></span>
  <div class="sp"></div>
- <button id="printBtn" title="Diagramm, Legende und Vorschau drucken oder als PDF speichern">🖨 Drucken / PDF</button>
- <button class="pri" id="odsSave2" title="Als ODS (LibreOffice Calc) speichern">💾 ODS speichern</button>
+ <button id="undo" title="Rückgängig (Strg+Z)">↶ <span class="lbl">Rückgängig</span></button>
+ <div class="menu r" data-mk="file"><button class="mbtn" title="Dateien speichern, öffnen, drucken, sichern">📄 <span class="lbl">Datei</span> ▾</button><div class="mpanel">
+  <div class="mh">Als Datei speichern</div>
+  <button class="mi" id="odsSave">💾 Muster als ODS (LibreOffice)</button>
+  <button class="mi hide" id="qodsM">💾 Projekt als ODS</button>
+  <button class="mi" id="printBtn">🖨 Drucken / PDF</button>
+  <button class="mi" id="codeCopy">📋 Muster-Code kopieren</button>
+  <hr><div class="mh">Öffnen / aufnehmen</div>
+  <button class="mi" id="odsOpen">📂 ODS-Datei öffnen …</button>
+  <button class="mi" data-act="imp">⌨ Text oder Code einfügen …</button>
+  <hr><div class="mh">Sicherung aller Daten</div>
+  <button class="mi" id="bkSave">⬇ Gesamtsicherung herunterladen</button>
+  <button class="mi" id="bkLoad">⬆ Sicherung wiederherstellen …</button>
+ </div></div>
+ <div class="menu r" data-mk="more"><button class="mbtn ib" title="Hinweise, Tastenkürzel, Feedback">☰</button><div class="mpanel">
+  <button class="mi" data-act="note">⚠ Wichtige Hinweise</button>
+  <button class="mi" data-act="keys">⌨ Tastenkürzel</button>
+  <a class="mi" id="fbk" target="_blank" rel="noopener">💬 Feedback senden</a>
+ </div></div>
 </header>
 <main>
-<div class="card note hide" id="note"><div class="hd" style="margin-bottom:0"><h2>⚠ Wichtig: Deine Daten bleiben nur in diesem Browser</h2><div class="sp"></div><button class="pri" id="noteOk">Verstanden</button></div><ul style="margin:6px 0 0;padding-left:20px">
- <li>Alle Muster, Projekte und Garne werden <b>nur lokal in diesem Browser auf diesem Gerät</b> gespeichert – nicht im Internet. Ein anderer Browser oder ein anderes Gerät sieht sie nicht.</li>
- <li><b>Browserdaten, Cache bzw. „Website-Daten“ nicht löschen</b> und nicht im privaten Fenster arbeiten – sonst ist alles verloren.</li>
- <li>Regelmässig sichern: <b>„Gesamtsicherung herunterladen“</b> (alles in einer Datei) oder einzelne Muster als ODS speichern.</li>
-</ul></div>
+<div class="card note hide" id="note"><div class="hd" style="margin-bottom:0"><h2>⚠ Deine Muster bleiben nur in diesem Browser</h2><div class="sp"></div><button class="pri" id="noteOk">Verstanden</button></div>
+<ul class="nl"><li>Gespeichert wird automatisch – aber <b>nur hier, in diesem Browser auf diesem Gerät</b>.</li><li><b>Browserdaten / Cache nicht löschen</b>, nicht im privaten Fenster arbeiten.</li><li>Ab und zu sichern: <b>📄 Datei → Gesamtsicherung</b>.</li></ul></div>
 <div class="design">
 <div class="colL">
 <section id="v-ed"><div class="card">
- <div class="hd"><input id="pname" aria-label="Name des Musters" placeholder="Name des Musters" style="max-width:340px;font-weight:600"><div class="sp"></div>
-  <button id="undo" title="Rückgängig (Strg+Z)">↶ Rückgängig</button></div>
- <div class="sizes">
-  <div class="szg"><span class="lbl">Breite</span>
-   <div class="stp"><small>links</small><button data-sz="L-" title="Links eine Masche ausblenden">−</button><button data-sz="L+" title="Links eine Masche hinzufügen">+</button></div>
-   <span class="val" id="wv"></span>
-   <div class="stp"><button data-sz="R-" title="Rechts eine Masche ausblenden">−</button><button data-sz="R+" title="Rechts eine Masche hinzufügen">+</button><small>rechts</small></div></div>
-  <div class="szg"><span class="lbl">Höhe</span>
-   <div class="stp"><small>oben</small><button data-sz="T-" title="Oben eine Reihe ausblenden">−</button><button data-sz="T+" title="Oben eine Reihe hinzufügen">+</button></div>
-   <span class="val" id="hv"></span>
-   <div class="stp"><button data-sz="B-" title="Unten eine Reihe ausblenden">−</button><button data-sz="B+" title="Unten eine Reihe hinzufügen">+</button><small>unten</small></div></div>
+ <div class="bar" style="margin-top:0">
+  <div class="chips" id="chips"></div><div class="sp"></div>
+  <div class="seg" id="tools"><button data-tool="pen" title="Malen">✏️ Malen</button><button data-tool="fill" title="Fläche füllen">🪣 Füllen</button></div>
  </div>
- <div class="bar"><div class="chips" id="chips"></div><div class="sp" style="flex:1"></div>
-  <div class="seg" id="tools"><button data-tool="pen" title="Malen">✏️ Malen</button><button data-tool="fill" title="Fläche füllen">🪣 Füllen</button><button data-tool="pick" title="Farbe aus dem Raster aufnehmen">💧 Aufnehmen</button><button data-tool="sel" title="Bereich auswählen, kopieren, spiegeln">⬚ Auswahl</button></div></div>
+ <div class="bar">
+  <div class="menu" data-mk="size"><button class="mbtn" title="Breite und Höhe an jedem Rand ändern">📐 Grösse <b id="szv"></b> ▾</button><div class="mpanel msec">
+   <div class="sizes" style="flex-direction:column;gap:12px">
+    <div class="szg"><span class="lbl2">Breite</span>
+     <div class="stp"><small>links</small><button data-sz="L-" title="Links eine Masche ausblenden">−</button><button data-sz="L+" title="Links eine Masche hinzufügen">+</button></div>
+     <span class="val" id="wv"></span>
+     <div class="stp"><button data-sz="R-" title="Rechts eine Masche ausblenden">−</button><button data-sz="R+" title="Rechts eine Masche hinzufügen">+</button><small>rechts</small></div></div>
+    <div class="szg"><span class="lbl2">Höhe</span>
+     <div class="stp"><small>oben</small><button data-sz="T-" title="Oben eine Reihe ausblenden">−</button><button data-sz="T+" title="Oben eine Reihe hinzufügen">+</button></div>
+     <span class="val" id="hv"></span>
+     <div class="stp"><button data-sz="B-" title="Unten eine Reihe ausblenden">−</button><button data-sz="B+" title="Unten eine Reihe hinzufügen">+</button><small>unten</small></div></div>
+   </div>
+   <p class="mut" style="margin:10px 0 0">„−“ blendet nur aus – mit „+“ kommt der Inhalt zurück.</p>
+  </div></div>
+  <div class="menu" data-mk="tools"><button class="mbtn" id="toolsBtn">🧰 <span id="toolsLbl">Werkzeuge</span> ▾</button><div class="mpanel">
+   <button class="mi" data-tool="pick">💧 Farbe im Raster aufnehmen</button>
+   <button class="mi" data-tool="sel">⬚ Bereich auswählen, kopieren, spiegeln</button>
+   <hr>
+   <button class="mi" data-op="fh">↔ Ganzen Rapport spiegeln</button>
+   <button class="mi" data-op="fv">↕ Ganzen Rapport spiegeln</button>
+   <button class="mi" data-op="all">▣ Alles in aktiver Farbe</button>
+   <div class="msec"><div class="mh" style="padding:0 0 6px">Verschieben</div><div class="row" style="margin:0"><button data-op="sl">←</button><button data-op="sr">→</button><button data-op="su">↑</button><button data-op="sd">↓</button></div></div>
+   <div class="msec"><div class="mh" style="padding:0 0 6px">Farbe ersetzen</div><div class="row" style="margin:0"><select id="rf" aria-label="Farbe ersetzen von"></select><select id="rt" aria-label="ersetzen durch"></select><button class="mi0" data-op="rep">OK</button></div></div>
+   <hr>
+   <label class="ck msec"><input type="checkbox" id="mx">Beim Malen links/rechts spiegeln</label>
+   <label class="ck msec"><input type="checkbox" id="my">Beim Malen oben/unten spiegeln</label>
+  </div></div>
+  <div class="menu" data-mk="edview"><button class="mbtn">👁 Ansicht ▾</button><div class="mpanel msec">
+   <div class="szg"><span class="lbl2">Zoom</span><div class="stp"><button data-zm="-">−</button><b class="val" id="zv" style="min-width:3.4em"></b><button data-zm="+">+</button></div></div>
+   <div class="szg" style="margin-top:10px"><span class="lbl2" title="Ab dieser Länge wird der Spannfaden orange markiert">Max. Spannfaden</span><div class="stp"><button data-fl="-">−</button><b class="val" id="flv"></b><button data-fl="+">+</button></div></div>
+   <label class="ck"><input type="checkbox" id="lt">Buchstaben im Raster zeigen</label>
+   <label class="ck"><input type="checkbox" id="gray2">◐ Graustufen (Kontrast prüfen)</label>
+  </div></div>
+  <div class="sp"></div>
+  <div class="menu r" data-mk="edhelp"><button class="mbtn ib" title="Hilfe">?</button><div class="mpanel msec help">
+   <p><b>Lesen:</b> Reihen von unten nach oben, Maschen von rechts nach links.</p>
+   <p><b>Rechts neben jeder Reihe:</b> verwendete Farben und längster Spannfaden (orange = zu lang).</p>
+   <p><b>Am PC:</b> Rechtsklick malt mit A, Tasten <kbd>1</kbd>–<kbd>9</kbd> wählen die Farbe, <kbd>Strg</kbd>+<kbd>Z</kbd> macht rückgängig.</p>
+  </div></div>
+ </div>
  <div class="bar hide" id="selbar"></div>
  <div class="gsc" id="cvw"><canvas id="cv"></canvas></div>
- <p class="mut" style="margin:10px 0 0">Reihen von unten nach oben, Maschen von rechts nach links. Rechts: Farben je Reihe und längster Spannfaden (orange = zu lang). „−“ blendet nur aus – mit „+“ kommt der Inhalt zurück.<span class="kb"> Rechtsklick malt mit A, <kbd>1</kbd>–<kbd>9</kbd> wählt die Farbe, <kbd>Strg</kbd>+<kbd>Z</kbd> macht rückgängig.</span></p>
- <details><summary>Weitere Werkzeuge</summary>
-  <div class="row"><label class="ck"><input type="checkbox" id="mx">Beim Malen links/rechts spiegeln</label><label class="ck"><input type="checkbox" id="my">Beim Malen oben/unten spiegeln</label><label class="ck"><input type="checkbox" id="lt">Buchstaben zeigen</label></div>
-  <div class="row"><button data-op="fh">↔ Spiegeln</button><button data-op="fv">↕ Spiegeln</button><button data-op="all">Alles in aktiver Farbe</button></div>
-  <div class="row"><button data-op="sl">← Verschieben</button><button data-op="sr">→</button><button data-op="su">↑</button><button data-op="sd">↓</button></div>
-  <div class="row"><select id="rf" aria-label="Farbe ersetzen von"></select><select id="rt" aria-label="ersetzen durch"></select><button data-op="rep">Farbe ersetzen</button></div>
-  <div class="sizes" style="margin-top:12px">
-   <div class="szg"><span class="lbl">Zoom</span><div class="stp"><button data-zm="-">−</button><b class="val" id="zv" style="min-width:3.4em;text-align:center"></b><button data-zm="+">+</button></div></div>
-   <div class="szg"><span class="lbl">Max. Spannfaden</span><div class="stp"><button data-fl="-">−</button><b class="val" id="flv"></b><button data-fl="+">+</button></div></div>
-  </div>
- </details>
 </div></section>
 
-<section id="v-col"><div class="card ccard"><div class="cgrid">
- <div>
-  <div class="hd"><h2>Farben</h2><div class="sp"></div><button class="ib" id="cadd" title="Farbe hinzufügen">＋</button><button class="ib" id="cdel" title="Letzte Farbe entfernen">－</button></div>
-  <p class="mut hide" id="pjpal" style="margin:-4px 0 8px"></p>
-  <div id="cols"></div>
-  <div id="contrast"></div>
-  <h3>Meine Garne</h3>
-  <div class="yarns" id="yarns"></div>
-  <div class="row"><button id="yadd">＋ Aktuelle Farbe als Garn merken</button></div>
-  <h3>Standardfarben</h3>
-  <div class="sw" id="sw"></div>
+<section id="v-col"><div class="card ccard">
+ <div class="hd"><h2>Farben</h2><div class="sp"></div><button id="cadd" title="Farbe hinzufügen">＋ Farbe</button><button class="ib" id="cdel" title="Letzte Farbe entfernen">－</button>
+  <div class="menu r" data-mk="colhelp"><button class="mbtn ib" title="Hilfe">?</button><div class="mpanel msec help">
+   <p>Jeder Buchstabe steht für eine Farbe. Farbe antippen, dann rechts einstellen.</p>
+   <p><b>Projekte:</b> Alle Rapporte eines Projekts teilen dieselben Farben – eine Änderung gilt für das ganze Projekt.</p>
+   <p><b>Hell.</b> = Helligkeit (0–100). Farben in derselben Reihe sollten sich deutlich unterscheiden, sonst verschwindet das Motiv.</p>
+  </div></div></div>
+ <p class="mut hide" id="pjpal" style="margin:-4px 0 8px"></p>
+ <div class="cgrid">
+  <div><div id="cols"></div><div id="contrast"></div></div>
+  <div class="ced" id="ced">
+   <div class="hd" style="margin-bottom:8px"><h2 id="cet"></h2></div>
+   <div class="g2" style="margin-top:0"><input id="cehex" maxlength="7" aria-label="Hex-Code" spellcheck="false"><input id="cename" placeholder="Garn / Farbname" aria-label="Name der Farbe"></div>
+   <div class="seg ctabs"><button data-ct="pick">🎨 Wählen</button><button data-ct="photo">📷 Foto</button><button data-ct="yarn">🧶 Garne</button><button data-ct="std">▦ Standard</button></div>
+   <div id="ct-pick">
+    <canvas id="sv"></canvas><canvas id="hue"></canvas>
+    <div class="cmp" style="margin-top:12px"><div id="cmpo">vorher</div><div id="cmpn">jetzt</div></div>
+    <canvas id="knit"></canvas>
+    <div class="row"><button id="cerev">Zurücksetzen</button><button id="eyed">🎯 Vom Bildschirm</button></div>
+   </div>
+   <div id="ct-photo">
+    <div class="drop" id="drop">Foto der Wolle oder Banderole hierher ziehen, mit <kbd>Strg</kbd>+<kbd>V</kbd> einfügen oder<div class="row" style="justify-content:center"><button id="photoBtn" style="flex:0 1 auto">📷 Foto wählen</button></div></div>
+    <canvas id="photo" class="hide"></canvas>
+   </div>
+   <div id="ct-yarn"><div class="yarns" id="yarns"></div><div class="row"><button id="yadd">＋ Aktuelle Farbe als Garn merken</button></div></div>
+   <div id="ct-std"><div class="sw" id="sw"></div></div>
+  </div>
  </div>
- <div class="ced">
-  <div class="hd" style="margin-bottom:8px"><h2 id="cet"></h2></div>
-  <canvas id="sv"></canvas><canvas id="hue"></canvas>
-  <div class="g2"><input id="cehex" maxlength="7" aria-label="Hex-Code" spellcheck="false"><input id="cename" placeholder="Garn / Farbname" aria-label="Name der Farbe"></div>
-  <h3>Vergleich</h3>
-  <div class="cmp"><div id="cmpo">vorher</div><div id="cmpn">jetzt</div></div>
-  <canvas id="knit"></canvas>
-  <div class="row"><button id="cerev">Zurücksetzen</button><button id="eyed">🎯 Vom Bildschirm</button></div>
-  <h3>Aus Foto aufnehmen</h3>
-  <div class="drop" id="drop">Foto der Wolle oder Banderole hierher ziehen, mit <kbd>Strg</kbd>+<kbd>V</kbd> einfügen oder<div class="row" style="justify-content:center"><button id="photoBtn" style="flex:0 1 auto">📷 Foto wählen</button></div></div>
-  <input type="file" id="photoFile" accept="image/*" hidden>
-  <canvas id="photo" class="hide"></canvas>
- </div>
-</div></div></section>
+</div></section>
 </div>
 <div class="split" id="split" title="Ziehen, um die Breite zu ändern (Doppelklick: zurücksetzen)"></div>
 <div class="colR">
 <section id="v-pv"><div class="card">
- <div class="hd"><h2>Vorschau</h2><div class="sp"></div><div class="seg"><button data-sq="0">Aktuelles Muster</button><button data-sq="1">Projekt</button></div></div>
- <div class="pvc"><div class="seg"><button data-pm="box">▦ Kästchen</button><button data-pm="st">∨ Maschen</button></div><label><input type="checkbox" id="pvl">Rapportgrenzen</label><label title="Zeigt nur die Helligkeit – so sieht man, ob sich die Farben im Muster genug abheben"><input type="checkbox" id="gray">◐ Graustufen (Kontrast)</label></div>
- <div class="gsc" id="pvw" style="margin-bottom:4px"><canvas id="pv"></canvas></div>
- <p class="mut" id="pvi" style="margin:10px 0 0"></p><div class="leg" id="pleg"></div>
- <div id="pvS">
-  <div class="pvc" style="margin-top:10px">
-   <label>Wiederholungen <span class="stp"><button data-rp="x-">−</button><b class="val" id="rxv"></b><button data-rp="x+">+</button></span> × <span class="stp"><button data-rp="y-">−</button><b class="val" id="ryv"></b><button data-rp="y+">+</button></span></label>
-  </div>
-  <div class="pvc" style="margin-top:10px">
-   <label>Rand oben <select id="btc" aria-label="Farbe Rand oben"></select><span class="stp"><button data-bd="t-">−</button><b class="val" id="btv"></b><button data-bd="t+">+</button></span> Reihen</label>
-   <label>Rand unten <select id="bbc" aria-label="Farbe Rand unten"></select><span class="stp"><button data-bd="b-">−</button><b class="val" id="bbv"></b><button data-bd="b+">+</button></span> Reihen</label>
-  </div>
+ <div class="hd"><h2>Vorschau</h2><div class="sp"></div>
+  <div class="seg"><button data-sq="0">Aktuelles Muster</button><button data-sq="1">Projekt</button></div>
+  <div class="menu r" data-mk="pvview"><button class="mbtn">👁 Ansicht ▾</button><div class="mpanel msec">
+   <div class="seg"><button data-pm="box">▦ Kästchen</button><button data-pm="st">∨ Maschen</button></div>
+   <label class="ck"><input type="checkbox" id="pvl">Rapportgrenzen zeigen</label>
+   <label class="ck"><input type="checkbox" id="gray">◐ Graustufen (Kontrast prüfen)</label>
+   <div id="pvS"><hr>
+    <div class="szg"><span class="lbl2">Wiederholungen</span><span class="stp"><button data-rp="x-">−</button><b class="val" id="rxv"></b><button data-rp="x+">+</button></span> × <span class="stp"><button data-rp="y-">−</button><b class="val" id="ryv"></b><button data-rp="y+">+</button></span></div>
+    <div class="szg" style="margin-top:10px"><span class="lbl2">Rand oben</span><select id="btc" aria-label="Farbe Rand oben" style="width:auto"></select><span class="stp"><button data-bd="t-">−</button><b class="val" id="btv"></b><button data-bd="t+">+</button></span></div>
+    <div class="szg" style="margin-top:10px"><span class="lbl2">Rand unten</span><select id="bbc" aria-label="Farbe Rand unten" style="width:auto"></select><span class="stp"><button data-bd="b-">−</button><b class="val" id="bbv"></b><button data-bd="b+">+</button></span></div>
+   </div>
+  </div></div>
  </div>
  <div id="pvQ">
-  <div class="row" style="align-items:center"><select id="prsel" aria-label="Projekt wählen" style="flex:3;font-weight:600"></select><button class="ib" id="prnew" title="Neues Projekt">＋</button><button class="ib" id="prdup" title="Projekt duplizieren">⧉</button><button class="ib" id="prdel" title="Projekt löschen">🗑</button></div>
-  <input id="prname" placeholder="Name des Projekts" aria-label="Name des Projekts" style="margin-top:8px">
-  <div class="pvc" style="margin-top:10px">
-   <label>Breite <span class="stp"><button data-qw="-">−</button><b class="val" id="qwv"></b><button data-qw="+">+</button></span> Maschen</label>
-   <button id="qfit" title="Kleinste Maschenzahl, in die alle Rapporte aufgehen">An Rapporte anpassen</button>
+  <div class="row" style="margin-top:0;align-items:center"><select id="prsel" aria-label="Projekt wählen" style="flex:1;font-weight:600"></select>
+   <div class="menu r" data-mk="proj" style="flex:0 0 auto"><button class="mbtn">⋯ Projekt</button><div class="mpanel msec">
+    <div class="mh" style="padding:0 0 4px">Name</div><input id="prname" placeholder="Name des Projekts" aria-label="Name des Projekts">
+    <div class="szg" style="margin-top:12px"><span class="lbl2">Breite</span><span class="stp"><button data-qw="-">−</button><b class="val" id="qwv"></b><button data-qw="+">+</button></span><small class="mut">Maschen</small></div>
+    <div class="row"><button id="qfit" title="Kleinste Maschenzahl, in die alle Rapporte aufgehen">An Rapporte anpassen</button></div>
+    <hr>
+    <button class="mi" id="prnew">＋ Neues Projekt</button>
+    <button class="mi" id="prdup">⧉ Projekt duplizieren</button>
+    <button class="mi" id="qods">💾 Projekt als ODS speichern</button>
+    <button class="mi dan" id="prdel">🗑 Projekt löschen</button>
+   </div></div>
   </div>
-  <div class="note card hide" id="pjmix" style="margin:10px 0 0;padding:10px 12px;box-shadow:none"><b>Die Rapporte in diesem Projekt haben unterschiedliche Farben.</b> <span class="mut">Im Projekt gelten für alle Rapporte dieselben Farben A, B, C …</span><div class="row"><button class="pri" id="pjsync">Farben angleichen (wie im aktuellen Rapport)</button></div></div>
-  <p class="mut" style="margin:8px 0 0">Alle Rapporte eines Projekts teilen dieselben Farben – eine Änderung unter „Farben“ gilt für das ganze Projekt. Reihenfolge per ⠿ ziehen oder mit ↑ ↓, Motiv mit ◀ ▶ seitlich verschieben. Geht ein Rapport nicht auf, wird der Rand mit seiner Hintergrundfarbe gefüllt.</p>
+  <div class="note card hide" id="pjmix" style="margin:10px 0 0;padding:10px 12px;box-shadow:none"><b>Die Rapporte haben unterschiedliche Farben.</b> <span class="mut">Im Projekt gelten für alle dieselben Farben.</span><div class="row"><button class="pri" id="pjsync">Farben angleichen</button></div></div>
+ </div>
+ <div class="gsc" id="pvw" style="margin-bottom:4px"><canvas id="pv"></canvas></div>
+ <p class="mut" id="pvi" style="margin:10px 0 0"></p><div class="leg" id="pleg"></div>
+ <div id="pvQ2">
+  <div class="hd" style="margin:16px 0 0"><h2>Reihenfolge</h2><div class="sp"></div>
+   <div class="menu r" data-mk="qhelp"><button class="mbtn ib" title="Hilfe">?</button><div class="mpanel msec help">
+    <p>Mit <b>⠿</b> ziehen oder im Menü <b>⋯</b> mit ↑ ↓ umsortieren.</p>
+    <p>Im Menü <b>⋯</b>: Motiv seitlich verschieben (◀ ▶), Rand und Entfernen.</p>
+    <p>Geht ein Rapport in der Projektbreite nicht auf (oranger Punkt), wird der Rand mit seiner Hintergrundfarbe gefüllt.</p>
+   </div></div></div>
   <div class="qlist" id="qlist"></div>
-  <div class="row"><select id="qsel" aria-label="Muster für die Folge" style="flex:2"></select><button id="qaddp">＋ Muster</button><button id="qaddb">＋ Farbstreifen</button></div>
-  <div class="row"><button id="qods">💾 Projekt als ODS speichern</button></div>
+  <div class="row"><select id="qsel" aria-label="Muster zum Hinzufügen" style="flex:2"></select><button id="qaddp">＋ Muster</button><button id="qaddb">＋ Streifen</button></div>
  </div>
 </div></section>
 </div>
 </div>
-
-<section id="v-pat" hidden>
-<div class="card"><div class="hd"><h2 id="curn"></h2><div class="sp"></div>
- <button class="pri" id="odsSave">💾 Als ODS speichern</button><button id="printBtn2">🖨 Drucken / PDF</button><button id="dup">Duplizieren</button><button class="dan" id="del">Löschen</button></div>
- <p class="mut" style="margin:0">Die ODS-Datei (LibreOffice Calc) enthält den Rapport mit bedingter Formatierung (Zellwert „A“ → Farbe von A usw.) und ein Blatt „Vorschau“ mit Wiederholungen und Rändern.</p></div>
-<div class="card"><h2>Neues Muster aus der Motiv-Bibliothek</h2><p class="mut" style="margin:4px 0 0">Kachel anklicken für ein neues Muster – oder „Ins Muster einsetzen“, um das Motiv in den aktuellen Rapport zu stempeln.</p><div id="newb"></div></div>
-<div class="card"><h2 style="margin-bottom:12px">Meine Muster</h2><div class="plist" id="plist"></div></div>
-<div class="card"><div class="hd"><h2>Meine Projekte</h2><div class="sp"></div><button id="prnew2">＋ Neues Projekt</button></div>
- <p class="mut" style="margin:0 0 10px">Ein Projekt reiht mehrere Rapporte und Farbstreifen untereinander – z. B. für einen Pullover oder eine Mütze.</p><div class="plist" id="pjlist"></div></div>
-<div class="card"><h2>Bestehendes Muster aufnehmen</h2>
- <div class="row"><button id="odsOpen">📂 ODS-Datei öffnen</button></div><input type="file" id="odsFile" accept=".ods,application/vnd.oasis.opendocument.spreadsheet" hidden>
- <h3>Code oder Buchstaben-Raster einfügen</h3>
- <textarea id="imp" rows="6" spellcheck="false" style="font-family:ui-monospace,monospace" placeholder="Eine Zeile pro Reihe, oberste Reihe zuerst, z. B.&#10;AABAA&#10;ABCBA&#10;AABAA"></textarea>
- <div class="row"><button id="impGo">Übernehmen</button><button id="codeCopy">Code des Musters kopieren</button></div>
-</div>
-<div class="card note"><h2>⚠ Wichtige Hinweise</h2><ul style="margin:6px 0 0;padding-left:20px">
- <li>Alle Muster, Projekte und Garne werden <b>nur lokal in diesem Browser auf diesem Gerät</b> gespeichert – nicht im Internet. Ein anderer Browser oder ein anderes Gerät sieht sie nicht.</li>
- <li><b>Browserdaten, Cache bzw. „Website-Daten“ nicht löschen</b> und nicht im privaten Fenster arbeiten – sonst ist alles verloren.</li>
- <li>Regelmässig sichern: <b>„Gesamtsicherung herunterladen“</b> (alles in einer Datei) oder einzelne Muster als ODS speichern.</li>
-</ul>
- <div class="row"><button class="pri" id="bkSave">💾 Gesamtsicherung herunterladen</button><button id="bkLoad">📂 Sicherung wiederherstellen</button></div><input type="file" id="bkFile" accept=".json,application/json" hidden>
- <p class="mut" id="bkInfo" style="margin:8px 0 0"></p></div>
-<div class="card"><h2>Feedback</h2><p class="mut" style="margin:4px 0 0">Ein Wunsch, eine Idee oder ein Fehler? Wir freuen uns über deine Nachricht.</p>
-<div class="row"><a class="btn" id="fbk" target="_blank" rel="noopener">💬 Feedback oder Wunsch senden</a></div></div>
-</section>
 </main>
-<nav class="bot"><button data-t="ed">Rapport</button><button data-t="col">Farben</button><button data-t="pv">Vorschau</button><button data-t="pat">Muster</button></nav>
+<nav class="bot"><button data-t="ed">Rapport</button><button data-t="col">Farben</button><button data-t="pv">Vorschau</button><button data-t="pat">🗂 Muster</button></nav>
+
+<div id="scrim" class="hide"></div>
+<aside id="drawer" class="hide" aria-label="Meine Muster">
+ <div class="hd"><h2>🗂 Meine Muster</h2><div class="sp"></div><button class="ib" id="drClose" title="Schliessen (Esc)">✕</button></div>
+ <div class="seg dtabs"><button data-dt="pat">Muster</button><button data-dt="pj">Projekte</button><button data-dt="lib">Bibliothek</button></div>
+ <div id="dt-pat">
+  <div class="row"><button class="pri" id="newBlank">＋ Neues leeres Muster</button><button data-dt="lib">📚 Aus Bibliothek</button></div>
+  <p class="mut">Muster antippen zum Öffnen. Alles wird automatisch gespeichert.</p>
+  <div class="plist" id="plist"></div>
+ </div>
+ <div id="dt-pj">
+  <div class="row"><button class="pri" id="prnew2">＋ Neues Projekt</button></div>
+  <p class="mut">Ein Projekt reiht mehrere Rapporte und Farbstreifen untereinander – z. B. für einen Pullover oder eine Mütze.</p>
+  <div class="plist" id="pjlist"></div>
+ </div>
+ <div id="dt-lib">
+  <p class="mut">Kachel antippen = neues Muster. „📋 Einsetzen“ = Motiv in den aktuellen Rapport stempeln.</p>
+  <div id="newb"></div>
+ </div>
+</aside>
+
+<dialog id="dlgImp"><h2>Text oder Code einfügen</h2>
+ <p class="mut">Ein Muster-Code (beginnt mit <code>FI1:</code>) oder ein Buchstaben-Raster: eine Zeile pro Reihe, oberste Reihe zuerst.</p>
+ <textarea id="imp" rows="7" spellcheck="false" style="font-family:ui-monospace,monospace" placeholder="AABAA&#10;ABCBA&#10;AABAA"></textarea>
+ <div class="row"><button class="pri" id="impGo">Als neues Muster übernehmen</button><button data-close>Abbrechen</button></div>
+</dialog>
+<dialog id="dlgNote"><h2>⚠ Wichtige Hinweise</h2>
+ <ul class="nl">
+  <li>Alle Muster, Projekte und Garne werden <b>nur lokal in diesem Browser auf diesem Gerät</b> gespeichert – nicht im Internet. Ein anderer Browser oder ein anderes Gerät sieht sie nicht.</li>
+  <li><b>Browserdaten, Cache bzw. „Website-Daten“ nicht löschen</b> und nicht im privaten Fenster arbeiten – sonst ist alles verloren.</li>
+  <li>Regelmässig sichern: <b>Gesamtsicherung herunterladen</b> (alles in einer Datei). Damit lassen sich die Daten auch auf einen anderen PC übertragen.</li>
+ </ul>
+ <p class="mut" id="bkInfo"></p>
+ <div class="row"><button class="pri" data-act="bk">⬇ Gesamtsicherung herunterladen</button><button data-act="bkl">⬆ Wiederherstellen …</button></div>
+ <div class="row"><button data-close>Schliessen</button></div>
+</dialog>
+<dialog id="dlgKeys"><h2>⌨ Tastenkürzel (PC)</h2>
+ <table class="keys">
+  <tr><td><kbd>1</kbd>–<kbd>9</kbd></td><td>Farbe wählen</td></tr>
+  <tr><td>Rechtsklick</td><td>mit A malen</td></tr>
+  <tr><td><kbd>Strg</kbd>+<kbd>Z</kbd></td><td>Rückgängig</td></tr>
+  <tr><td><kbd>Strg</kbd>+<kbd>A</kbd></td><td>Alles auswählen</td></tr>
+  <tr><td><kbd>Strg</kbd>+<kbd>C</kbd> / <kbd>X</kbd> / <kbd>V</kbd></td><td>Kopieren / Ausschneiden / Einfügen</td></tr>
+  <tr><td><kbd>Entf</kbd></td><td>Auswahl mit A füllen</td></tr>
+  <tr><td><kbd>Esc</kbd></td><td>Menü, Leiste, Auswahl oder Einfügen beenden</td></tr>
+ </table>
+ <div class="row"><button data-close>Schliessen</button></div>
+</dialog>
+<input type="file" id="odsFile" accept=".ods,application/vnd.oasis.opendocument.spreadsheet" hidden>
+<input type="file" id="bkFile" accept=".json,application/json" hidden>
+<input type="file" id="photoFile" accept="image/*" hidden>
 <div id="toast"></div>
 <div id="print"></div>
 
 <script>
 'use strict';
-const APPV='8';
+const APPV='9';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const L=i=>String.fromCharCode(65+i);
@@ -297,7 +405,10 @@ S.prev={...DEF.prev,...S.prev};S.ed={...DEF.ed,...S.ed};S.ui={...DEF.ui,...S.ui}
 if(!S.list.length){const t=TPL.raute;S.list.push(mkPat(t.name,t.lines,t.cols))}
 if(!S.list.some(p=>p.id===S.cur))S.cur=S.list[0].id;
 S.list.forEach(p=>{uid=Math.max(uid,p.id);p.ox=p.ox|0;p.oy=p.oy|0});S.projs.forEach(x=>uid=Math.max(uid,x.id));
-const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){toast('Speichern im Browser fehlgeschlagen')}};
+let svT=0;
+const save=()=>{const el=document.getElementById('saved');try{localStorage.setItem(K,JSON.stringify(S));
+ if(el){el.classList.remove('err');el.classList.add('pulse');el.innerHTML='✓ <span class="lbl">Gespeichert</span>';el.title='Automatisch gespeichert um '+new Date().toLocaleTimeString('de-CH')+' – nur in diesem Browser';clearTimeout(svT);svT=setTimeout(()=>el.classList.remove('pulse'),700)}}
+ catch(e){if(el){el.classList.add('err');el.innerHTML='⚠ <span class="lbl">Nicht gespeichert!</span>';el.title='Speichern im Browser fehlgeschlagen – bitte Gesamtsicherung herunterladen'}toast('Speichern im Browser fehlgeschlagen')}};
 const P=()=>S.list.find(p=>p.id===S.cur);
 
 const cell=(p,c,r)=>{const s=p.g[r+p.oy];return s&&s[c+p.ox]||'A'};
@@ -394,6 +505,7 @@ function selOp(k){const p=P(),r=selRect();
  if(k==='cfh'&&CB){CB=CB.map(r=>r.slice().reverse());renderSelbar();drawEd();return}
  if(k==='cfv'&&CB){CB=CB.slice().reverse();renderSelbar();drawEd();return}
  if(k==='none'){SEL=null;renderSelbar();drawEd();return}
+ if(k==='done'){setTool('pen');return}
  if(k==='all'){setTool('sel');SEL=[0,0,p.w-1,p.h-1];renderSelbar();drawEd();return}
  if(!r)return;const D=disp(p),part=D.slice(r.y,r.y+r.h).map(row=>row.slice(r.x,r.x+r.w));
  if(k==='copy'||k==='cut'){CB=part;toast(`${r.w} × ${r.h} in die Ablage kopiert`)}
@@ -404,7 +516,7 @@ function selOp(k){const p=P(),r=selRect();
  renderSelbar()}
 function renderSelbar(){const r=selRect(),on=S.ed.tool==='sel'||S.ed.tool==='paste';
  $('selbar').classList.toggle('hide',!on&&!CB);
- $('selbar').innerHTML=(S.ed.tool==='sel'?(r?`<span class="mut">Auswahl ${r.w} × ${r.h}</span><button data-sb="copy" title="Strg+C">Kopieren</button><button data-sb="cut" title="Strg+X">Ausschneiden</button><button data-sb="fh">↔</button><button data-sb="fv">↕</button><button data-sb="del" title="Entf">Mit A füllen</button><button data-sb="none" title="Esc">✕</button>`:'<span class="mut">Bereich im Raster aufziehen</span><button data-sb="all">Alles auswählen</button>'):'')
+ $('selbar').innerHTML=(on?'<button class="pri" data-sb="done" title="Esc">✓ Fertig</button>':'')+(S.ed.tool==='sel'?(r?`<span class="mut">Auswahl ${r.w} × ${r.h}</span><button data-sb="copy" title="Strg+C">Kopieren</button><button data-sb="cut" title="Strg+X">Ausschneiden</button><button data-sb="fh">↔</button><button data-sb="fv">↕</button><button data-sb="del" title="Entf">Mit A füllen</button><button data-sb="none" title="Esc">✕</button>`:'<span class="mut">Bereich im Raster aufziehen</span><button data-sb="all">Alles auswählen</button>'):'')
   +(CB?`<span class="sp" style="flex:1"></span><span class="mut">Ablage ${CB[0].length} × ${CB.length}</span><button data-sb="cfh" title="Ablage spiegeln">↔</button><button data-sb="cfv" title="Ablage spiegeln">↕</button><button class="${S.ed.tool==='paste'?'pri':''}" data-sb="paste" title="Strg+V">📋 Einfügen</button>`:'')}
 function setTool(t){S.ed.tool=t;if(t!=='sel')SEL=null;if(t!=='paste')HOV=null;save();renderEd()}
 let drawing=false,last='',pch='A';
@@ -446,7 +558,7 @@ function size(k){const p=P(),plus=k[1]==='+',hor=k[0]==='L'||k[0]==='R';
   case'T+':p.h++;break;case'T-':p.h--;break;
   case'B+':if(p.oy>0)p.oy--;else p.g.unshift('');p.h++;break;
   case'B-':p.oy++;p.h--;break}
- ensure(p);save();$('wv').textContent=p.w;$('hv').textContent=p.h;later('ed','pv','knit')}
+ ensure(p);save();$('wv').textContent=p.w;$('hv').textContent=p.h;$('szv').textContent=`${p.w} × ${p.h}`;later('ed','pv','knit')}
 function hold(sel,fn){document.querySelectorAll(sel).forEach(b=>{let t1,t2;const stop=()=>{clearTimeout(t1);clearInterval(t2)};
  b.addEventListener('pointerdown',e=>{if(e.button)return;e.preventDefault();fn(b);t1=setTimeout(()=>t2=setInterval(()=>fn(b),80),450)});
  ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,stop));
@@ -462,6 +574,8 @@ function renderEd(){const p=P();ensure(p);
  if(document.activeElement!==$('pname'))$('pname').value=p.name;
  $('wv').textContent=p.w;$('hv').textContent=p.h;renderChips();
  document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('on',b.dataset.tool===S.ed.tool));
+ $('szv').textContent=`${p.w} × ${p.h}`;$('gray2').checked=S.ui.gray;
+ const TL={pick:'Aufnehmen',sel:'Auswahl',paste:'Einsetzen'};$('toolsLbl').textContent=TL[S.ed.tool]||'Werkzeuge';$('toolsBtn').classList.toggle('pri',!!TL[S.ed.tool]);
  $('undo').disabled=!UND.length;$('mx').checked=S.ed.mx;$('my').checked=S.ed.my;$('lt').checked=S.ed.letters;
  $('zv').textContent=Math.round(S.ed.zoom*100)+' %';$('flv').textContent=S.ed.flt;renderSelbar();
  const o=p.colors.map((c,i)=>`<option value="${L(i)}">${L(i)}${c.n?' – '+esc(c.n):''}</option>`).join('');
@@ -509,8 +623,9 @@ function renderContrast(){const p=P(),pairs=new Map();
  disp(p).forEach(row=>{const u=[...new Set(row)].filter(ch=>ch.charCodeAt(0)-65<p.colors.length);
   for(let i=0;i<u.length;i++)for(let j=i+1;j<u.length;j++){const k=[u[i],u[j]].sort().join('');pairs.set(k,(pairs.get(k)||0)+1)}});
  const bad=[...pairs].map(([k,n])=>{const a=p.colors[k.charCodeAt(0)-65],b=p.colors[k.charCodeAt(1)-65];return{k,n,d:Math.abs(Lstar(a.c)-Lstar(b.c))}}).filter(x=>x.d<20).sort((a,b)=>a.d-b.d);
- $('contrast').innerHTML=bad.length?`<p class="mut warn" style="margin:8px 0 0">⚠ Wenig Kontrast in denselben Reihen: ${bad.map(x=>`<b>${x.k[0]}/${x.k[1]}</b> (Unterschied ${Math.round(x.d)})`).join(', ')}. Das Motiv hebt sich dort kaum ab – Graustufen-Vorschau zum Prüfen.</p>`:''}
-function renderCol(){const p=P(),pp=projsOf(p),mt=mates(p);$('pjpal').classList.toggle('hide',!mt.length);if(mt.length)$('pjpal').textContent=`Projektfarben – gelten auch für ${mt.length} weitere${mt.length===1?'n':''} Rapport${mt.length===1?'':'e'} in ${pp.map(x=>'„'+pjName(x)+'“').join(', ')}.`;if(S.ed.col>=p.colors.length)S.ed.col=p.colors.length-1;
+ $('contrast').innerHTML=bad.length?`<p class="mut warn" style="margin:8px 0 0" title="Diese Farben kommen in derselben Reihe vor und sind fast gleich hell – das Motiv hebt sich kaum ab. Zum Prüfen: Ansicht → Graustufen.">⚠ Wenig Kontrast: ${bad.map(x=>`<b>${x.k[0]}/${x.k[1]}</b>`).join(', ')}</p>`:''}
+function renderCol(){const ct=S.ui.ct||'pick';document.querySelectorAll('[data-ct]').forEach(b=>b.classList.toggle('on',b.dataset.ct===ct));['pick','photo','yarn','std'].forEach(k=>$('ct-'+k).classList.toggle('hide',k!==ct));
+ const p=P(),pp=projsOf(p),mt=mates(p);$('pjpal').classList.toggle('hide',!mt.length);if(mt.length)$('pjpal').textContent=`Projektfarben – gelten auch für ${mt.length} weitere${mt.length===1?'n':''} Rapport${mt.length===1?'':'e'} in ${pp.map(x=>'„'+pjName(x)+'“').join(', ')}.`;if(S.ed.col>=p.colors.length)S.ed.col=p.colors.length-1;
  if(!CE||CE.i!==S.ed.col||!P().colors[CE.i])selCol(S.ed.col);
  renderColList();const c=p.colors[CE.i];
  $('cet').textContent=`Farbe ${L(CE.i)} bearbeiten`;
@@ -531,7 +646,7 @@ function drawPicker(){if(!CE)return;const sv=$('sv'),hu=$('hue'),dpr=window.devi
  g=x.createLinearGradient(0,0,HW,0);for(let i=0;i<=6;i++)g.addColorStop(i/6,hsv2hex(i*60%360,1,1));x.fillStyle=g;x.fillRect(0,0,HW,HH);
  const hx=CE.h/360*HW;x.fillStyle='#fff';x.strokeStyle='rgba(0,0,0,.5)';x.beginPath();x.roundRect?x.roundRect(hx-4,0,8,HH,3):x.rect(hx-4,0,8,HH);x.fill();x.stroke()}
 function drawCmp(){const c=P().colors[CE.i].c;const o=$('cmpo'),n=$('cmpn');o.style.background=CE.orig;o.style.color=ink(CE.orig);o.textContent='vorher '+CE.orig;n.style.background=c;n.style.color=ink(c);n.textContent='jetzt '+c}
-function drawKnit(){if(!CE)return;const p=P(),cv=$('knit'),w=$('sv').clientWidth||360;
+function drawKnit(){if(!CE||$('ct-pick').classList.contains('hide'))return;const p=P(),cv=$('knit'),w=$('ced').clientWidth||360;
  drawPat(cv,p,{rx:Math.max(1,Math.ceil(28/p.w)),ry:Math.max(1,Math.ceil(10/p.h)),maxW:w,maxH:130,mode:'st',maxCell:16})}
 // Farbe setzen; src: 'picker' | 'hex' | sonst (Foto, Garn, Palette …)
 function setColor(hex,src){if(!CE||!HEX.test(hex))return;hex=hex.toLowerCase();const p=P(),c=p.colors[CE.i];if(c.c===hex&&src!=='force')return;const old=c.c;c.c=hex;palSync(p);projsOf(p).forEach(pj=>pj.items.forEach(i=>{if(i.t==='b'&&i.c===old)i.c=hex}));save();
@@ -544,6 +659,7 @@ function huePick(e){const r=$('hue').getBoundingClientRect();CE.h=Math.min(359.9
 function drag(el,fn){let on=false;el.addEventListener('pointerdown',e=>{on=true;el.setPointerCapture(e.pointerId);fn(e)});
  el.addEventListener('pointermove',e=>{if(on)fn(e)});const end=()=>{if(on){on=false;renderColList()}};el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end)}
 drag($('sv'),svPick);drag($('hue'),huePick);
+document.querySelectorAll('[data-ct]').forEach(b=>b.onclick=()=>{S.ui.ct=b.dataset.ct;save();renderCol()});
 $('cehex').addEventListener('input',()=>{let v=$('cehex').value.trim();if(!v.startsWith('#'))v='#'+v;if(HEX.test(v))setColor(v,'hex')});
 $('cehex').addEventListener('change',()=>renderCol());
 $('cename').addEventListener('input',()=>{P().colors[CE.i].n=$('cename').value.slice(0,60);palSync();save();later('chips')});
@@ -569,8 +685,8 @@ $('cdel').onclick=()=>{const p=P();if(p.colors.length<=1)return;const i=p.colors
  snap();p.colors.pop();const rm=s=>s.split(x).join('A');p.g=p.g.map(rm);palSync(p,rm);if(S.ed.col>=p.colors.length)S.ed.col=p.colors.length-1;CE=null;save();render()};
 // Foto-Pipette
 let IMG=null,PM=null;
-async function loadImg(blob){try{IMG=await createImageBitmap(blob);PM=null;$('photo').classList.remove('hide');if(!WIDE.matches&&S.tab!=='col')go('col');else drawPhoto();toast('Foto geladen – auf die Wolle tippen, um die Farbe aufzunehmen')}catch(e){toast('Bild konnte nicht geladen werden')}}
-function drawPhoto(){if(!IMG)return;const cv=$('photo'),dpr=window.devicePixelRatio||1,maxW=$('sv').clientWidth||360;
+async function loadImg(blob){try{IMG=await createImageBitmap(blob);PM=null;$('photo').classList.remove('hide');S.ui.ct='photo';if(!WIDE.matches&&S.tab!=='col')go('col');else renderCol();toast('Foto geladen – auf die Wolle tippen, um die Farbe aufzunehmen')}catch(e){toast('Bild konnte nicht geladen werden')}}
+function drawPhoto(){if(!IMG)return;const cv=$('photo'),dpr=window.devicePixelRatio||1,maxW=$('ced').clientWidth||360;
  let w=maxW,h=w*IMG.height/IMG.width;if(h>320){h=320;w=h*IMG.width/IMG.height}
  cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);cv.style.width=w+'px';cv.style.height=h+'px';
  const x=cv.getContext('2d',{willReadFrequently:true});x.setTransform(1,0,0,1,0,0);x.drawImage(IMG,0,0,cv.width,cv.height);
@@ -653,18 +769,22 @@ function renderSeq(){const pj=PJ(),items=seqItems(),cols=[...seqColors().keys()]
  $('prsel').innerHTML=S.projs.map(x=>`<option value="${x.id}"${x.id===pj.id?' selected':''}>${esc(pjName(x))}</option>`).join('');
  if(document.activeElement!==$('prname'))$('prname').value=pj.name;$('prdel').disabled=S.projs.length<2;
  $('qwv').textContent=W;
- $('qlist').innerHTML=items.map((it,k)=>{const nav=`<button class="ib" data-qm="${k},-1" title="Nach oben"${k?'':' disabled'}>↑</button><button class="ib" data-qm="${k},1" title="Nach unten"${k<items.length-1?'':' disabled'}>↓</button><button class="ib" data-qx="${k}" title="Entfernen">✕</button>`,hd=`<span class="hdl" title="Ziehen, um die Reihenfolge zu ändern">⠿</span>`;
-  if(it.t==='b')return`<div class="qi" data-k="${k}">${hd}<input type="color" value="${it.c}" data-qc="${k}" aria-label="Farbe des Streifens"><div class="qn"><b>Farbstreifen</b><div class="qsw">${cols.map(c=>`<button data-qs="${k}" data-c="${c}" style="background:${c}" title="${c}"></button>`).join('')}</div></div><span class="stp"><button data-qr="${k},-1">−</button><b class="val">${it.n}</b><button data-qr="${k},1">+</button></span><small class="mut">Reihen</small>${nav}</div>`;
-  const p=S.list.find(x=>x.id===it.id),f=fitLayout(p,W,it.pad);
-  const fit=!f.n?`<span class="warn">breiter als ${W} Maschen – wird abgeschnitten</span>`:f.rem?`<span class="warn">${f.n} × ${p.w} + ${f.rem} M. Rand</span> in <select data-qb="${k}" aria-label="Randfarbe">${p.colors.map((c,i)=>`<option value="${L(i)}"${(it.bg||'A')===L(i)?' selected':''}>${L(i)}${c.n?' – '+esc(c.n):''}</option>`).join('')}</select> <select data-qa="${k}" aria-label="Rand wo"><option value="c"${(it.pad||'c')==='c'?' selected':''}>beidseitig</option><option value="l"${it.pad==='l'?' selected':''}>links</option><option value="r"${it.pad==='r'?' selected':''}>rechts</option></select>`:`${f.n} × ${p.w} Maschen`;
-  return`<div class="qi${p.id===S.cur?' cur':''}" data-k="${k}">${hd}<canvas data-th="${p.id}"></canvas><div class="qn"><b data-qo="${p.id}" title="Zum Bearbeiten öffnen">${esc(p.name||'Ohne Namen')}</b><small>${p.w} × ${p.h} · ${fit}</small></div><span class="stp"><button data-qr="${k},-1">−</button><b class="val">${it.ry}</b><button data-qr="${k},1">+</button></span><small class="mut">× hoch</small><span class="stp" title="Motiv nach links/rechts verschieben"><button data-qo2="${k},-1">◀</button><b class="val" style="min-width:2.6em">${(it.off|0)>0?'+':''}${it.off|0}</b><button data-qo2="${k},1">▶</button></span>${nav}</div>`}).join('')||'<p class="mut">Noch leer – unten Muster oder Farbstreifen hinzufügen.</p>';
+ $('qlist').innerHTML=items.map((it,k)=>{const hd=`<span class="hdl" title="Ziehen, um die Reihenfolge zu ändern">⠿</span>`,
+  mv=`<div class="msec" style="padding:6px 12px"><div class="row" style="margin:0"><button data-qm="${k},-1"${k?'':' disabled'}>↑ nach oben</button><button data-qm="${k},1"${k<items.length-1?'':' disabled'}>↓ nach unten</button></div></div><hr><button class="mi dan" data-qx="${k}">🗑 Aus dem Projekt entfernen</button>`,
+  menu=inner=>`<div class="menu r" data-mk="q${k}"><button class="mbtn ib" title="Einstellungen für diese Zeile">⋯</button><div class="mpanel">${inner}${mv}</div></div>`;
+  if(it.t==='b')return`<div class="qi" data-k="${k}">${hd}<i class="qbar" style="background:${it.c}"></i><div class="qn"><b>Farbstreifen</b></div><span class="stp"><button data-qr="${k},-1">−</button><b class="val">${it.n}</b><button data-qr="${k},1">+</button></span><small class="mut">Reihen</small>${menu(`<div class="msec"><div class="mh" style="padding:0 0 6px">Farbe</div><div class="qsw">${cols.map(c=>`<button data-qs="${k}" data-c="${c}" style="background:${c}" title="${c}"></button>`).join('')}<input type="color" value="${it.c}" data-qc="${k}" aria-label="Eigene Farbe"></div></div><hr>`)}</div>`;
+  const p=S.list.find(x=>x.id===it.id),f=fitLayout(p,W,it.pad),off=it.off|0;
+  const st=!f.n?`<span class="warn">● zu breit</span>`:f.rem?`<span class="warn" title="${f.n} × ${p.w} Maschen + ${f.rem} Maschen Rand">● +${f.rem} M. Rand</span>`:`${f.n} × ${p.w} M.`;
+  const rand=f.n&&f.rem?`<div class="msec"><div class="mh" style="padding:0 0 6px">Rand (${f.rem} Maschen)</div><div class="row" style="margin:0"><select data-qb="${k}" aria-label="Randfarbe">${p.colors.map((c,i)=>`<option value="${L(i)}"${(it.bg||'A')===L(i)?' selected':''}>Farbe ${L(i)}${c.n?' – '+esc(c.n):''}</option>`).join('')}</select><select data-qa="${k}" aria-label="Rand wo"><option value="c"${(it.pad||'c')==='c'?' selected':''}>beidseitig</option><option value="l"${it.pad==='l'?' selected':''}>links</option><option value="r"${it.pad==='r'?' selected':''}>rechts</option></select></div></div><hr>`:!f.n?`<p class="mut msec warn" style="margin:0">Breiter als ${W} Maschen – wird abgeschnitten.</p><hr>`:'';
+  return`<div class="qi${p.id===S.cur?' cur':''}" data-k="${k}">${hd}<canvas data-th="${p.id}"></canvas><div class="qn"><b data-qo="${p.id}" title="Zum Bearbeiten öffnen">${esc(p.name||'Ohne Namen')}</b><small>${st}${off?` · Versatz ${off>0?'+':''}${off}`:''}</small></div><span class="stp"><button data-qr="${k},-1">−</button><b class="val">${it.ry}</b><button data-qr="${k},1">+</button></span><small class="mut">× hoch</small>${menu(`<div class="msec"><div class="mh" style="padding:0 0 6px">Seitlich verschieben</div><span class="stp"><button data-qo2="${k},-1">◀</button><b class="val" style="min-width:3em">${off>0?'+':''}${off}</b><button data-qo2="${k},1">▶</button></span> <small class="mut">Maschen</small></div><hr>${rand}<button class="mi" data-qo="${p.id}">✏️ Im Editor öffnen</button><hr>`)}</div>`}).join('')||'<p class="mut">Noch leer – unten Muster oder Farbstreifen hinzufügen.</p>';
+ reopenMenu();
  $('qlist').querySelectorAll('[data-th]').forEach(cv=>{const p=S.list.find(x=>x.id===+cv.dataset.th);drawPat(cv,p,{rx:1,ry:1,maxW:40,maxH:32,mode:'box',maxCell:5})});
  $('qsel').innerHTML=S.list.map(p=>`<option value="${p.id}"${p.id===S.cur?' selected':''}>${esc(p.name||'Ohne Namen')} (${p.w} × ${p.h})</option>`).join('');
  const m=seqColors();$('pleg').innerHTML=[...m].map(([c,n])=>`<span><i style="background:${c}"></i>${esc(n)||c}</span>`).join('')}
 function renderPv(){const p=P(),{rx,ry,bt,bb}=S.prev;if(S.seq.on)initSeq();
  document.querySelectorAll('[data-sq]').forEach(b=>b.classList.toggle('on',+b.dataset.sq===+S.seq.on));
- $('pvS').classList.toggle('hide',S.seq.on);$('pvQ').classList.toggle('hide',!S.seq.on);
- $('pvl').checked=S.prev.lines;$('gray').checked=S.ui.gray;document.querySelectorAll('[data-pm]').forEach(b=>b.classList.toggle('on',b.dataset.pm===S.prev.mode));
+ $('pvS').classList.toggle('hide',S.seq.on);$('pvQ').classList.toggle('hide',!S.seq.on);$('pvQ2').classList.toggle('hide',!S.seq.on);
+ $('pvl').checked=S.prev.lines;$('gray').checked=S.ui.gray;$('gray2').checked=S.ui.gray;document.querySelectorAll('[data-pm]').forEach(b=>b.classList.toggle('on',b.dataset.pm===S.prev.mode));
  if(S.seq.on){renderSeq();drawPv();return}
  $('rxv').textContent=rx;$('ryv').textContent=ry;$('btv').textContent=bt.n;$('bbv').textContent=bb.n;
  const o=p.colors.map((c,i)=>`<option value="${i}">${L(i)}${c.n?' – '+esc(c.n):''}</option>`).join('');
@@ -674,7 +794,7 @@ function renderPv(){const p=P(),{rx,ry,bt,bb}=S.prev;if(S.seq.on)initSeq();
 document.querySelectorAll('[data-pm]').forEach(b=>b.onclick=()=>{S.prev.mode=b.dataset.pm;save();renderPv()});
 document.querySelectorAll('[data-sq]').forEach(b=>b.onclick=()=>{S.seq.on=b.dataset.sq==='1';if(S.seq.on)initSeq();save();renderPv()});
 $('pvl').onchange=()=>{S.prev.lines=$('pvl').checked;save();renderPv()};
-$('gray').onchange=()=>{S.ui.gray=$('gray').checked;save();render()};
+$('gray').onchange=$('gray2').onchange=e=>{S.ui.gray=e.target.checked;save();render()};
 $('btc').onchange=()=>{S.prev.bt.c=+$('btc').value;if(!S.prev.bt.n)S.prev.bt.n=3;save();renderPv()};
 $('bbc').onchange=()=>{S.prev.bb.c=+$('bbc').value;if(!S.prev.bb.n)S.prev.bb.n=3;save();renderPv()};
 hold('[data-qw]',b=>{const pj=PJ();pj.W=Math.min(600,Math.max(4,pj.W+(b.dataset.qw==='+'?1:-1)));save();renderPv()});
@@ -695,7 +815,7 @@ $('qaddp').onclick=()=>{const id=+$('qsel').value;if(!id)return;const it=setItem
  if(ref&&ref!==q&&!samePal(q.colors,ref.colors)){q.colors=clonePal(ref.colors);palSync(q);toast(`„${q.name}“ verwendet jetzt die Projektfarben`)}
  save();renderPv()};
 $('qaddb').onclick=()=>{const c=[...seqColors().keys()][0]||P().colors[0].c;setItems(seqItems()).push({t:'b',c,n:2});save();renderPv()};
-$('qlist').addEventListener('click',e=>{const t=e.target.closest('button,[data-qo]');if(!t)return;const it=setItems(seqItems());
+$('qlist').addEventListener('click',e=>{const t=e.target.closest('button,[data-qo]');if(!t||t.classList.contains('mbtn'))return;const it=setItems(seqItems());
  if(t.dataset.qo){S.cur=+t.dataset.qo;CE=null;save();render();return}
  if(t.dataset.qm){const[k,d]=t.dataset.qm.split(',').map(Number);[it[k],it[k+d]]=[it[k+d],it[k]]}
  if(t.dataset.qx)it.splice(+t.dataset.qx,1);
@@ -723,31 +843,54 @@ function seqOds(pj=PJ()){const m=seqColors(pj);if(m.size>26)return toast('Mehr a
 $('qods').onclick=()=>seqOds();
 
 /* ---------- Musterliste ---------- */
-function renderPat(){const p=P();bkInfo();$('curn').textContent=p.name||'Ohne Namen';$('del').disabled=S.list.length<2;
- const grp={};Object.entries(TPL).forEach(([k,t])=>(grp[t.g]=grp[t.g]||[]).push([k,t]));
- $('newb').innerHTML=Object.entries(grp).map(([g,a])=>`<h3>${esc(g)}</h3><div class="plist tpl">${a.map(([k,t])=>{const f=fromLines(t.lines);return`<div class="pt" data-new="${k}" title="Neues Muster aus dieser Vorlage"><b>${esc(t.name)}</b><span class="mut">${f.w} × ${f.h}</span><canvas data-tk="${k}"></canvas>${k==='leer'?'':`<div class="row" style="margin-top:6px"><button data-tcb="${k}" title="In die Ablage legen und im aktuellen Rapport einsetzen">📋 Einsetzen</button></div>`}</div>`}).join('')}</div>`).join('');
- $('newb').querySelectorAll('[data-tk]').forEach(cv=>{const t=TPL[cv.dataset.tk],q=mkPat(t.name,t.lines,t.cols);drawPat(cv,q,{rx:2,ry:1,maxW:150,maxH:70,mode:'box',maxCell:6})});
- $('plist').innerHTML=S.list.map(x=>`<div class="pt${x.id===S.cur?' on':''}" data-id="${x.id}"><b>${esc(x.name||'Ohne Namen')}</b><span class="mut">${x.w} × ${x.h} · ${x.colors.length} Farben</span><canvas></canvas></div>`).join('');
- $('pjlist').innerHTML=S.projs.length?S.projs.map(x=>{const n=seqItems(x).filter(i=>i.t==='p').length;return`<div class="pt${S.seq.on&&x.id===S.curPj?' on':''}" data-pj="${x.id}"><b>${esc(pjName(x))}</b><span class="mut">${x.W} Maschen · ${n} Rapport${n===1?'':'e'}</span><canvas></canvas><div class="row" style="margin-top:6px"><button data-pjo="${x.id}" style="height:32px;font-size:.8rem">💾 ODS</button></div></div>`}).join(''):'<p class="mut">Noch keine Projekte.</p>';
- $('pjlist').querySelectorAll('[data-pj]').forEach(el=>{const x=S.projs.find(q=>q.id===+el.dataset.pj);if(!x.W)x.W=seqFit(x);const r=seqRows(x);drawRows(el.querySelector('canvas'),r.rows.length?r.rows:[[ '#ffffff']],{maxW:200,maxH:120,mode:'box',maxCell:6})});
- $('plist').querySelectorAll('.pt').forEach(el=>{const x=S.list.find(q=>q.id===+el.dataset.id);ensure(x);drawPat(el.querySelector('canvas'),x,{rx:3,ry:Math.max(1,Math.round(x.w*3/x.h/1.8)),maxW:200,maxH:110,mode:'box',maxCell:8})})}
-$('pjlist').addEventListener('click',e=>{const o=e.target.closest('[data-pjo]');if(o){seqOds(S.projs.find(x=>x.id===+o.dataset.pjo));return}
- const t=e.target.closest('[data-pj]');if(!t)return;S.curPj=+t.dataset.pj;S.seq.on=true;save();go('pv')});
-$('prnew2').onclick=()=>{const pj=newProj('Projekt '+(S.projs.length+1));S.projs.push(pj);S.curPj=pj.id;pj.W=seqFit(pj);S.seq.on=true;save();go('pv')};
-$('plist').addEventListener('click',e=>{const t=e.target.closest('.pt');if(!t)return;S.cur=+t.dataset.id;CE=null;save();go('ed')});
+const DR={open:false,tab:'pat'};
+function openDrawer(t){DR.open=true;if(t)DR.tab=t;closeMenus();$('drawer').classList.remove('hide');$('scrim').classList.remove('hide');renderPat();$('drClose').focus()}
+function closeDrawer(){DR.open=false;$('drawer').classList.add('hide');$('scrim').classList.add('hide')}
+$('openDrawer').onclick=()=>openDrawer();$('drClose').onclick=closeDrawer;$('scrim').onclick=closeDrawer;
+document.querySelectorAll('#drawer [data-dt]').forEach(b=>b.onclick=()=>{DR.tab=b.dataset.dt;renderPat();$('drawer').scrollTop=0});
+const tmenu=items=>`<div class="menu r tmenu" data-mk="t${items[0][2]}"><button class="mbtn" title="Weitere Aktionen">⋯</button><div class="mpanel">${items.map(([a,l,id,c])=>`<button class="mi${c?' '+c:''}" data-${a}="${id}">${l}</button>`).join('')}</div></div>`;
+function renderPat(){
+ document.querySelectorAll('#drawer .dtabs [data-dt]').forEach(b=>b.classList.toggle('on',b.dataset.dt===DR.tab));
+ ['pat','pj','lib'].forEach(k=>$('dt-'+k).classList.toggle('hide',DR.tab!==k));
+ if(DR.tab==='lib'){const grp={};Object.entries(TPL).forEach(([k,t])=>(grp[t.g]=grp[t.g]||[]).push([k,t]));
+  $('newb').innerHTML=Object.entries(grp).map(([g,a])=>`<h3>${esc(g)}</h3><div class="plist tpl">${a.map(([k,t])=>{const f=fromLines(t.lines);return`<div class="pt" data-new="${k}" title="Neues Muster aus dieser Vorlage"><b>${esc(t.name)}</b><span class="mut">${f.w} × ${f.h}</span><canvas data-tk="${k}"></canvas>${k==='leer'?'':`<div class="row" style="margin-top:6px"><button data-tcb="${k}" title="Motiv in den aktuellen Rapport stempeln">📋 Einsetzen</button></div>`}</div>`}).join('')}</div>`).join('');
+  $('newb').querySelectorAll('[data-tk]').forEach(cv=>{const t=TPL[cv.dataset.tk],q=mkPat(t.name,t.lines,t.cols);drawPat(cv,q,{rx:2,ry:1,maxW:150,maxH:70,mode:'box',maxCell:6})})}
+ if(DR.tab==='pat'){
+  $('plist').innerHTML=S.list.map(x=>`<div class="pt${x.id===S.cur?' on':''}" data-id="${x.id}">${tmenu([['pa-dup','⧉ Duplizieren',x.id],['pa-ren','✎ Umbenennen',x.id],['pa-ods','💾 Als ODS speichern',x.id],['pa-del','🗑 Löschen',x.id,'dan']])}<b>${esc(x.name||'Ohne Namen')}</b><span class="mut">${x.id===S.cur?'✓ geöffnet · ':''}${x.w} × ${x.h} · ${x.colors.length} Farben</span><canvas></canvas></div>`).join('');
+  $('plist').querySelectorAll('.pt').forEach(el=>{const x=S.list.find(q=>q.id===+el.dataset.id);ensure(x);drawPat(el.querySelector('canvas'),x,{rx:3,ry:Math.max(1,Math.round(x.w*3/x.h/1.8)),maxW:180,maxH:100,mode:'box',maxCell:8})})}
+ if(DR.tab==='pj'){
+  $('pjlist').innerHTML=S.projs.length?S.projs.map(x=>{const n=seqItems(x).filter(i=>i.t==='p').length;return`<div class="pt${S.seq.on&&x.id===S.curPj?' on':''}" data-pj="${x.id}">${tmenu([['pj-dup','⧉ Duplizieren',x.id],['pj-ods','💾 Als ODS speichern',x.id],['pj-del','🗑 Löschen',x.id,'dan']])}<b>${esc(pjName(x))}</b><span class="mut">${x.W} Maschen · ${n} Rapport${n===1?'':'e'}</span><canvas></canvas></div>`}).join(''):'<p class="mut">Noch keine Projekte.</p>';
+  $('pjlist').querySelectorAll('[data-pj]').forEach(el=>{const x=S.projs.find(q=>q.id===+el.dataset.pj);if(!x.W)x.W=seqFit(x);const r=seqRows(x);drawRows(el.querySelector('canvas'),r.rows.length?r.rows:[['#ffffff']],{maxW:180,maxH:110,mode:'box',maxCell:6})})}}
+function openPat(id){S.cur=id;CE=null;save();closeDrawer();go(WIDE.matches?S.tab:'ed');toast(`„${P().name||'Ohne Namen'}“ geöffnet`)}
+$('plist').addEventListener('click',e=>{const m=e.target.closest('[data-pa-dup],[data-pa-ren],[data-pa-ods],[data-pa-del]');
+ if(m){const d=m.dataset,id=+(d.paDup||d.paRen||d.paOds||d.paDel),p=S.list.find(x=>x.id===id);closeMenus();
+  if(d.paDup){const q=JSON.parse(JSON.stringify(p));q.id=++uid;q.name+=' (Kopie)';S.list.splice(S.list.indexOf(p)+1,0,q);save();renderPat();toast('Kopie angelegt')}
+  if(d.paRen){const n=prompt('Neuer Name:',p.name);if(n!=null){p.name=n.trim().slice(0,80)||p.name;save();renderPat();if(p===P())renderEd()}}
+  if(d.paOds)saveOds(p);
+  if(d.paDel){if(S.list.length<2)return toast('Das letzte Muster kann nicht gelöscht werden');if(!confirm(`„${p.name}“ wirklich löschen? Das lässt sich nicht rückgängig machen.`))return;
+   S.list=S.list.filter(x=>x!==p);if(S.cur===id)S.cur=S.list[0].id;CE=null;save();renderPat();render();toast('Muster gelöscht')}
+  return}
+ if(e.target.closest('.menu'))return;const t=e.target.closest('.pt');if(t)openPat(+t.dataset.id)});
+$('pjlist').addEventListener('click',e=>{const m=e.target.closest('[data-pj-dup],[data-pj-ods],[data-pj-del]');
+ if(m){const d=m.dataset,id=+(d.pjDup||d.pjOds||d.pjDel),pj=S.projs.find(x=>x.id===id);closeMenus();
+  if(d.pjDup){const q=JSON.parse(JSON.stringify(pj));q.id=++uid;q.name=pjName(pj)+' (Kopie)';S.projs.splice(S.projs.indexOf(pj)+1,0,q);save();renderPat();toast('Projekt kopiert')}
+  if(d.pjOds)seqOds(pj);
+  if(d.pjDel){if(!confirm(`Projekt „${pjName(pj)}“ löschen? Die Muster selbst bleiben erhalten.`))return;S.projs=S.projs.filter(x=>x!==pj);if(S.curPj===id)S.curPj=S.projs[0]?S.projs[0].id:0;if(!S.projs.length)S.seq.on=false;save();renderPat();render()}
+  return}
+ if(e.target.closest('.menu'))return;const t=e.target.closest('[data-pj]');if(!t)return;S.curPj=+t.dataset.pj;S.seq.on=true;save();closeDrawer();go(WIDE.matches?S.tab:'pv');toast(`Projekt „${pjName(PJ())}“ geöffnet`)});
+$('prnew2').onclick=()=>{const pj=newProj('Projekt '+(S.projs.length+1));S.projs.push(pj);S.curPj=pj.id;pj.W=seqFit(pj);S.seq.on=true;save();closeDrawer();go(WIDE.matches?S.tab:'pv');toast('Neues Projekt angelegt')};
+$('newBlank').onclick=()=>{const t=TPL.leer,p=mkPat('Neues Muster',t.lines,t.cols);S.list.unshift(p);S.cur=p.id;S.ed.col=1;CE=null;save();closeDrawer();go('ed');toast('Neues Muster angelegt – Name oben ändern');setTimeout(()=>$('pname').select(),50)};
 $('newb').addEventListener('click',e=>{const c=e.target.closest('[data-tcb]');
- if(c){const t=TPL[c.dataset.tcb];CB=t.lines.map(l=>[...l]);go('ed');setTool('paste');toast(`„${t.name}“ in der Ablage – im Raster klicken zum Einsetzen`);return}
+ if(c){const t=TPL[c.dataset.tcb];CB=t.lines.map(l=>[...l]);closeDrawer();go('ed');setTool('paste');toast(`„${t.name}“ – im Raster klicken zum Einsetzen, Esc beendet`);return}
  const b=e.target.closest('[data-new]');if(!b)return;const t=TPL[b.dataset.new];
- const p=mkPat(t.name,t.lines,t.cols);S.list.unshift(p);S.cur=p.id;S.ed.col=Math.min(1,p.colors.length-1);CE=null;save();go('ed')});
-$('dup').onclick=()=>{const p=JSON.parse(JSON.stringify(P()));p.id=++uid;p.name+=' (Kopie)';S.list.splice(S.list.indexOf(P())+1,0,p);S.cur=p.id;save();renderPat();toast('Kopie angelegt')};
-$('del').onclick=()=>{if(S.list.length<2)return;const p=P();if(!confirm(`„${p.name}“ wirklich löschen?`))return;S.list=S.list.filter(x=>x!==p);S.cur=S.list[0].id;CE=null;save();renderPat()};
+ const p=mkPat(t.name,t.lines,t.cols);S.list.unshift(p);S.cur=p.id;S.ed.col=Math.min(1,p.colors.length-1);CE=null;save();closeDrawer();go('ed');toast(`Neues Muster „${t.name}“ angelegt`)});
 const b64e=s=>{const b=new TextEncoder().encode(s);let t='';for(let i=0;i<b.length;i+=8192)t+=String.fromCharCode(...b.subarray(i,i+8192));return btoa(t)};
 const b64d=s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\s/g,'')),c=>c.charCodeAt(0)));
 const pdata=p=>({name:p.name,w:p.w,h:p.h,ox:p.ox,oy:p.oy,g:p.g,colors:p.colors});
 const code=p=>'FI1:'+b64e(JSON.stringify(pdata(p)));
-$('codeCopy').onclick=async()=>{const c=code(P());$('imp').value=c;try{await navigator.clipboard.writeText(c);toast('Code kopiert')}catch(e){$('imp').select();toast('Code steht im Feld – bitte kopieren')}};
-function addPat(p){S.list.unshift(p);S.cur=p.id;S.ed.col=Math.min(1,p.colors.length-1);CE=null;save();toast(`„${p.name}“ übernommen (${p.w} × ${p.h})`);go('ed')}
-$('impGo').onclick=()=>{const t=$('imp').value.trim();if(!t)return;
+$('codeCopy').onclick=async()=>{const c=code(P());try{await navigator.clipboard.writeText(c);toast('Code kopiert – mit „Text oder Code einfügen“ wieder einlesen')}catch(e){$('imp').value=c;dlg('dlgImp');$('imp').select();toast('Code steht im Feld – bitte kopieren')}};
+function addPat(p){S.list.unshift(p);S.cur=p.id;S.ed.col=Math.min(1,p.colors.length-1);CE=null;save();closeDrawer();toast(`„${p.name}“ übernommen (${p.w} × ${p.h})`);go('ed')}
+$('impGo').onclick=()=>{const t=$('imp').value.trim();if(!t)return;$('dlgImp').close();
  try{if(/^FI1:/i.test(t))return addPat(norm(JSON.parse(b64d(t.slice(4)))));
   const lines=t.split(/\r?\n/).map(l=>l.toUpperCase().replace(/[^A-Z]/g,'')).filter(Boolean);
   if(!lines.length)throw 0;const f=fromLines(lines);addPat(norm({name:'Import',...f}))}
@@ -858,8 +1001,18 @@ $('bkFile').onchange=async()=>{const f=$('bkFile').files[0];$('bkFile').value=''
    items:(Array.isArray(x.items)?x.items:[]).filter(i=>i&&(i.t==='p'||(i.t==='b'&&HEX.test(i.c)))).map(i=>i.t==='b'?{t:'b',c:i.c,n:Math.min(60,Math.max(0,i.n|0))}:{t:'p',id:Number(i.id),ry:Math.min(20,Math.max(1,i.ry|0)),pad:['c','l','r'].includes(i.pad)?i.pad:'c',bg:/^[A-Z]$/.test(i.bg)?i.bg:'A',off:Math.max(-MAXS,Math.min(MAXS,i.off|0))})}));
   localStorage.setItem(K,JSON.stringify(d));location.reload()}catch(e){toast('Das ist keine gültige Sicherungsdatei')}};
 $('fbk').href=`https://tally.so/r/Vpzl8J?version=${APPV}`;
-$('printBtn').onclick=$('printBtn2').onclick=printOut;
-$('odsSave').onclick=$('odsSave2').onclick=()=>{const p=P();dl((p.name||'Muster').replace(/[\\/:*?"<>|]+/g,'_').trim()+'.ods',zip(odsFiles(p)));toast('ODS-Datei erstellt')};
+$('printBtn').onclick=printOut;
+function saveOds(p=P()){dl((p.name||'Muster').replace(/[\\/:*?"<>|]+/g,'_').trim()+'.ods',zip(odsFiles(p)));toast('ODS-Datei erstellt')}
+$('odsSave').onclick=()=>saveOds();$('qodsM').onclick=()=>seqOds();
+// Menü-Aktionen und Dialoge
+const dlg=id=>{closeMenus();const d=$(id);if(d.showModal)d.showModal();else d.setAttribute('open','')};
+document.addEventListener('click',e=>{const a=e.target.closest('[data-act]');if(a){const k=a.dataset.act;
+  if(k==='imp'){dlg('dlgImp');setTimeout(()=>$('imp').focus(),30)}
+  if(k==='note'){bkInfo();dlg('dlgNote')}
+  if(k==='keys')dlg('dlgKeys');
+  if(k==='bk')$('bkSave').click();
+  if(k==='bkl')$('bkLoad').click()}
+ const c=e.target.closest('dialog [data-close]');if(c)c.closest('dialog').close()});
 
 // ODS einlesen: bevorzugt eingebettete Daten, sonst Raster + bedingte Formatierung aus content.xml
 function parseOds(f,fname){
@@ -889,13 +1042,22 @@ $('odsFile').onchange=async()=>{const file=$('odsFile').files[0];$('odsFile').va
 
 /* ---------- Navigation / Layout ---------- */
 function layout(){document.body.classList.toggle('wide',WIDE.matches);const t=S.tab,w=WIDE.matches;
- document.querySelectorAll('main section').forEach(s=>{const id=s.id.slice(2);s.hidden=w?(t==='pat')!==(id==='pat'):id!==t});
- document.querySelectorAll('nav.bot button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
- document.querySelectorAll('nav.top button').forEach(b=>b.classList.toggle('on',(b.dataset.t==='pat')===(t==='pat')));
- document.querySelectorAll('.kb').forEach(e=>e.classList.toggle('hide',!w))}
-function go(t){S.tab=t;save();layout();render();window.scrollTo(0,0)}
-function render(){if(visible('ed'))renderEd();if(visible('col'))renderCol();if(visible('pv'))renderPv();if(visible('pat'))renderPat()}
-document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.t));
+ document.querySelectorAll('main section').forEach(s=>{s.hidden=w?false:s.id.slice(2)!==t});
+ document.querySelectorAll('nav.bot button').forEach(b=>b.classList.toggle('on',b.dataset.t===t))}
+function go(t){if(t==='pat'){openDrawer();return}S.tab=t;save();layout();render();window.scrollTo(0,0)}
+function render(){if(visible('ed'))renderEd();if(visible('col'))renderCol();if(visible('pv'))renderPv();if(DR.open)renderPat();
+ $('qodsM').classList.toggle('hide',!(S.seq.on&&PJ()))}
+document.querySelectorAll('nav.bot button').forEach(b=>b.onclick=()=>go(b.dataset.t));
+// Menüs: immer nur eines offen; Klick daneben oder Esc schliesst
+let OPENMK=null;
+function closeMenus(){document.querySelectorAll('.menu.open').forEach(m=>m.classList.remove('open'));OPENMK=null}
+function reopenMenu(){if(!OPENMK)return;const m=document.querySelector(`.menu[data-mk="${OPENMK}"]`);if(m)m.classList.add('open')}
+document.addEventListener('click',e=>{const b=e.target.closest('.mbtn');
+ if(b){const m=b.closest('.menu'),was=m.classList.contains('open');closeMenus();if(!was){m.classList.add('open');OPENMK=m.dataset.mk||null}return}
+ if(e.target.closest('.mpanel .mi'))return setTimeout(closeMenus,0);
+ if(!e.target.closest('.menu'))closeMenus()});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(document.querySelector('.menu.open')){closeMenus();e.stopImmediatePropagation();return}
+ if(DR.open&&!document.querySelector('dialog[open]')){closeDrawer();e.stopImmediatePropagation()}},true);
 WIDE.addEventListener('change',()=>{layout();render()});
 let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(render,120)});
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',render);
@@ -908,6 +1070,6 @@ setSplit(S.ui.split);
  const end=()=>{if(!on)return;on=false;sp.classList.remove('on');document.body.classList.remove('drag');save();render()};
  sp.addEventListener('pointerup',end);sp.addEventListener('pointercancel',end);
  sp.addEventListener('dblclick',()=>{setSplit(56);save();render()})})();
-go(['ed','col','pv','pat'].includes(S.tab)?S.tab:'ed');
+go(['ed','col','pv'].includes(S.tab)?S.tab:'ed');
 if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script></body></html>

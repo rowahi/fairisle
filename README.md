@@ -2,6 +2,14 @@
 
 Kleine Web-App (PWA, eine Datei, ohne Server) zum Entwerfen und Anpassen von Fair-Isle-Strickmustern.
 
+## Bedienung in Kürze
+
+- **🗂 Meine Muster** (oben links): Muster öffnen, neu anlegen, Projekte und Motiv-Bibliothek.
+- **Name** daneben: direkt umbenennen. **✓ Gespeichert** zeigt: alles wird automatisch im Browser gespeichert.
+- **📄 Datei**: als ODS speichern, drucken/PDF, ODS öffnen, Text/Code einfügen, Gesamtsicherung.
+- **☰**: wichtige Hinweise, Tastenkürzel, Feedback.
+- Seltener gebrauchte Einstellungen stecken in Menüs (Grösse, Werkzeuge, Ansicht, Projekt, „⋯“ je Zeile), Erklärungen hinter „?“ – so bleibt der Bildschirm ruhig.
+
 ## Funktionen
 
 - **Rapport**: Breite (links/rechts) und Höhe (oben/unten) an beiden Enden mit + / − ändern (gedrückt halten wiederholt). Bei − bleibt der ausgeblendete Inhalt erhalten und kommt mit + zurück.
