@@ -214,7 +214,7 @@ body:not(.wide) #printBtn{display:none}
    <button id="qfit" title="Kleinste Maschenzahl, in die alle Rapporte aufgehen">An Rapporte anpassen</button>
   </div>
   <div class="note card hide" id="pjmix" style="margin:10px 0 0;padding:10px 12px;box-shadow:none"><b>Die Rapporte in diesem Projekt haben unterschiedliche Farben.</b> <span class="mut">Im Projekt gelten für alle Rapporte dieselben Farben A, B, C …</span><div class="row"><button class="pri" id="pjsync">Farben angleichen (wie im aktuellen Rapport)</button></div></div>
-  <p class="mut" style="margin:8px 0 0">Alle Rapporte eines Projekts teilen dieselben Farben – eine Änderung unter „Farben“ gilt für das ganze Projekt. Reihenfolge per ⠿ ziehen oder mit ↑ ↓. Geht ein Rapport nicht auf, wird der Rand mit seiner Hintergrundfarbe gefüllt.</p>
+  <p class="mut" style="margin:8px 0 0">Alle Rapporte eines Projekts teilen dieselben Farben – eine Änderung unter „Farben“ gilt für das ganze Projekt. Reihenfolge per ⠿ ziehen oder mit ↑ ↓, Motiv mit ◀ ▶ seitlich verschieben. Geht ein Rapport nicht auf, wird der Rand mit seiner Hintergrundfarbe gefüllt.</p>
   <div class="qlist" id="qlist"></div>
   <div class="row"><select id="qsel" aria-label="Muster für die Folge" style="flex:2"></select><button id="qaddp">＋ Muster</button><button id="qaddb">＋ Farbstreifen</button></div>
   <div class="row"><button id="qods">💾 Projekt als ODS speichern</button></div>
@@ -254,7 +254,7 @@ body:not(.wide) #printBtn{display:none}
 
 <script>
 'use strict';
-const APPV='7';
+const APPV='8';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const L=i=>String.fromCharCode(65+i);
@@ -608,10 +608,12 @@ function drawRows(cv,rows,o){
 // Rapport p auf W Maschen verteilen. Geht er nicht auf, wird der Rest mit der Hintergrundfarbe gefüllt:
 // pad 'c' = beidseitig, 'l' = links, 'r' = rechts. Ist W kleiner als der Rapport, wird abgeschnitten.
 function fitLayout(p,W,pad){const n=Math.floor(W/p.w),rem=W-n*p.w;return{n,rem,lp:!n?0:pad==='l'?rem:pad==='r'?0:Math.floor(rem/2)}}
-function patRows(p,W,ry,pad,bg){ensure(p);const D=disp(p).map(r=>r.map(ch=>hexOf(p,ch))),out=[],{n,lp}=fitLayout(p,W,pad),fc=hexOf(p,bg||'A');
- for(let k=0;k<ry;k++)for(let dy=0;dy<p.h;dy++)out.push(Array.from({length:W},(_,x)=>{if(!n)return D[dy][p.w-1-((W-1-x)%p.w)];const i=x-lp;return i<0||i>=n*p.w?fc:D[dy][i%p.w]}));
+// off: Versatz in Maschen (positiv = nach rechts), verschiebt das Motiv innerhalb der Wiederholungen
+function patRows(p,W,ry,pad,bg,off=0){ensure(p);const D=disp(p).map(r=>r.map(ch=>hexOf(p,ch))),out=[],{n,lp}=fitLayout(p,W,pad),fc=hexOf(p,bg||'A'),md=v=>((v%p.w)+p.w)%p.w;
+ for(let k=0;k<ry;k++)for(let dy=0;dy<p.h;dy++)out.push(Array.from({length:W},(_,x)=>{if(!n)return D[dy][md(p.w-1-(W-1-x)-off)];const i=x-lp;return i<0||i>=n*p.w?fc:D[dy][md(i-off)]}));
  return out}
-function vlines(p,W,y0,y1,pad){const{n,lp}=fitLayout(p,W,pad),v=[];if(!n)return v;for(let k=0;k<=n;k++){const x=lp+k*p.w;if(x>0&&x<W)v.push([x,y0,y1])}return v}
+function vlines(p,W,y0,y1,pad,off=0){const{n,lp}=fitLayout(p,W,pad),o=((off%p.w)+p.w)%p.w,e=lp+n*p.w,xs=new Set();if(!n)return[];
+ [lp,e].forEach(x=>{if(x>0&&x<W)xs.add(x)});for(let k=0;k<=n;k++){const x=lp+o+k*p.w;if(x>lp&&x<e)xs.add(x)}return[...xs].map(x=>[x,y0,y1])}
 function drawPat(cv,p,o){const W=p.w*o.rx,bt=o.bt||{n:0},bb=o.bb||{n:0},band=(b,n)=>Array.from({length:n},()=>Array(W).fill(hexOf(p,b.ch||'A')));
  const rows=[...band(bt,bt.n),...patRows(p,W,o.ry),...band(bb,bb.n)],y0=bt.n,y1=bt.n+p.h*o.ry,hl=[];
  for(let j=0;j<=o.ry;j++){const y=y0+j*p.h;if(y>0&&y<rows.length)hl.push(y)}
@@ -637,7 +639,7 @@ function seqFit(pj=PJ()){const ws=seqItems(pj).filter(i=>i.t==='p').map(i=>S.lis
 function seqRows(pj=PJ()){const W=pj.W,rows=[],hl=[],vl=[];
  for(const it of seqItems(pj)){if(rows.length)hl.push(rows.length);
   if(it.t==='b'){for(let i=0;i<it.n;i++)rows.push(Array(W).fill(it.c))}
-  else{const p=S.list.find(x=>x.id===it.id),y0=rows.length;rows.push(...patRows(p,W,it.ry,it.pad,it.bg));vl.push(...vlines(p,W,y0,rows.length,it.pad));for(let k=1;k<it.ry;k++)hl.push(y0+k*p.h)}}
+  else{const p=S.list.find(x=>x.id===it.id),y0=rows.length;rows.push(...patRows(p,W,it.ry,it.pad,it.bg,it.off|0));vl.push(...vlines(p,W,y0,rows.length,it.pad,it.off|0));for(let k=1;k<it.ry;k++)hl.push(y0+k*p.h)}}
  return{rows,hl,vl}}
 function seqColors(pj=PJ()){const m=new Map(),f=seqItems(pj).find(i=>i.t==='p');if(f&&!palMixed(pj))S.list.find(x=>x.id===f.id).colors.forEach(c=>m.set(c.c,c.n));for(const it of seqItems(pj)){if(it.t==='b'){if(!m.has(it.c))m.set(it.c,'')}else{const p=S.list.find(x=>x.id===it.id);p.colors.forEach(c=>{if(!m.has(c.c)||!m.get(c.c))m.set(c.c,c.n)})}}return m}
 function initSeq(){if(!S.projs.length)S.projs.push(newProj('Projekt 1'));if(!PJ())S.curPj=S.projs[0].id;if(!PJ().W)PJ().W=seqFit()}
@@ -655,7 +657,7 @@ function renderSeq(){const pj=PJ(),items=seqItems(),cols=[...seqColors().keys()]
   if(it.t==='b')return`<div class="qi" data-k="${k}">${hd}<input type="color" value="${it.c}" data-qc="${k}" aria-label="Farbe des Streifens"><div class="qn"><b>Farbstreifen</b><div class="qsw">${cols.map(c=>`<button data-qs="${k}" data-c="${c}" style="background:${c}" title="${c}"></button>`).join('')}</div></div><span class="stp"><button data-qr="${k},-1">−</button><b class="val">${it.n}</b><button data-qr="${k},1">+</button></span><small class="mut">Reihen</small>${nav}</div>`;
   const p=S.list.find(x=>x.id===it.id),f=fitLayout(p,W,it.pad);
   const fit=!f.n?`<span class="warn">breiter als ${W} Maschen – wird abgeschnitten</span>`:f.rem?`<span class="warn">${f.n} × ${p.w} + ${f.rem} M. Rand</span> in <select data-qb="${k}" aria-label="Randfarbe">${p.colors.map((c,i)=>`<option value="${L(i)}"${(it.bg||'A')===L(i)?' selected':''}>${L(i)}${c.n?' – '+esc(c.n):''}</option>`).join('')}</select> <select data-qa="${k}" aria-label="Rand wo"><option value="c"${(it.pad||'c')==='c'?' selected':''}>beidseitig</option><option value="l"${it.pad==='l'?' selected':''}>links</option><option value="r"${it.pad==='r'?' selected':''}>rechts</option></select>`:`${f.n} × ${p.w} Maschen`;
-  return`<div class="qi${p.id===S.cur?' cur':''}" data-k="${k}">${hd}<canvas data-th="${p.id}"></canvas><div class="qn"><b data-qo="${p.id}" title="Zum Bearbeiten öffnen">${esc(p.name||'Ohne Namen')}</b><small>${p.w} × ${p.h} · ${fit}</small></div><span class="stp"><button data-qr="${k},-1">−</button><b class="val">${it.ry}</b><button data-qr="${k},1">+</button></span><small class="mut">× hoch</small>${nav}</div>`}).join('')||'<p class="mut">Noch leer – unten Muster oder Farbstreifen hinzufügen.</p>';
+  return`<div class="qi${p.id===S.cur?' cur':''}" data-k="${k}">${hd}<canvas data-th="${p.id}"></canvas><div class="qn"><b data-qo="${p.id}" title="Zum Bearbeiten öffnen">${esc(p.name||'Ohne Namen')}</b><small>${p.w} × ${p.h} · ${fit}</small></div><span class="stp"><button data-qr="${k},-1">−</button><b class="val">${it.ry}</b><button data-qr="${k},1">+</button></span><small class="mut">× hoch</small><span class="stp" title="Motiv nach links/rechts verschieben"><button data-qo2="${k},-1">◀</button><b class="val" style="min-width:2.6em">${(it.off|0)>0?'+':''}${it.off|0}</b><button data-qo2="${k},1">▶</button></span>${nav}</div>`}).join('')||'<p class="mut">Noch leer – unten Muster oder Farbstreifen hinzufügen.</p>';
  $('qlist').querySelectorAll('[data-th]').forEach(cv=>{const p=S.list.find(x=>x.id===+cv.dataset.th);drawPat(cv,p,{rx:1,ry:1,maxW:40,maxH:32,mode:'box',maxCell:5})});
  $('qsel').innerHTML=S.list.map(p=>`<option value="${p.id}"${p.id===S.cur?' selected':''}>${esc(p.name||'Ohne Namen')} (${p.w} × ${p.h})</option>`).join('');
  const m=seqColors();$('pleg').innerHTML=[...m].map(([c,n])=>`<span><i style="background:${c}"></i>${esc(n)||c}</span>`).join('')}
@@ -699,6 +701,7 @@ $('qlist').addEventListener('click',e=>{const t=e.target.closest('button,[data-q
  if(t.dataset.qx)it.splice(+t.dataset.qx,1);
  if(t.dataset.qr){const[k,d]=t.dataset.qr.split(',').map(Number),x=it[k];if(x.t==='b')x.n=Math.min(60,Math.max(0,x.n+d));else x.ry=Math.min(20,Math.max(1,x.ry+d))}
  if(t.dataset.qs)it[+t.dataset.qs].c=t.dataset.c;
+ if(t.dataset.qo2){const[k,d]=t.dataset.qo2.split(',').map(Number),x=it[k],w=S.list.find(q=>q.id===x.id).w;let o=(x.off|0)+d;if(o>=w||o<=-w)o=0;x.off=o}
  save();renderPv()});
 $('qlist').addEventListener('input',e=>{const k=e.target.dataset.qc;if(k==null)return;const it=seqItems()[+k];if(it&&HEX.test(e.target.value)){it.c=e.target.value;save();later('pv')}});
 $('qlist').addEventListener('change',e=>{const d=e.target.dataset,it=setItems(seqItems());
@@ -852,7 +855,7 @@ $('bkFile').onchange=async()=>{const f=$('bkFile').files[0];$('bkFile').value=''
   const d=o.data;d.list=d.list.map(x=>{const n=norm(x);n.id=Number(x.id)||n.id;return n});
   d.yarns=(Array.isArray(d.yarns)?d.yarns:[]).filter(y=>y&&HEX.test(y.c)).map(y=>({c:y.c,n:String(y.n||'').slice(0,60)}));
   d.projs=(Array.isArray(d.projs)?d.projs:[]).map(x=>({id:Number(x.id)||++uid,name:String(x.name||'').slice(0,80),W:Math.min(600,Math.max(0,x.W|0)),
-   items:(Array.isArray(x.items)?x.items:[]).filter(i=>i&&(i.t==='p'||(i.t==='b'&&HEX.test(i.c)))).map(i=>i.t==='b'?{t:'b',c:i.c,n:Math.min(60,Math.max(0,i.n|0))}:{t:'p',id:Number(i.id),ry:Math.min(20,Math.max(1,i.ry|0)),pad:['c','l','r'].includes(i.pad)?i.pad:'c',bg:/^[A-Z]$/.test(i.bg)?i.bg:'A'})}));
+   items:(Array.isArray(x.items)?x.items:[]).filter(i=>i&&(i.t==='p'||(i.t==='b'&&HEX.test(i.c)))).map(i=>i.t==='b'?{t:'b',c:i.c,n:Math.min(60,Math.max(0,i.n|0))}:{t:'p',id:Number(i.id),ry:Math.min(20,Math.max(1,i.ry|0)),pad:['c','l','r'].includes(i.pad)?i.pad:'c',bg:/^[A-Z]$/.test(i.bg)?i.bg:'A',off:Math.max(-MAXS,Math.min(MAXS,i.off|0))})}));
   localStorage.setItem(K,JSON.stringify(d));location.reload()}catch(e){toast('Das ist keine gültige Sicherungsdatei')}};
 $('fbk').href=`https://tally.so/r/Vpzl8J?version=${APPV}`;
 $('printBtn').onclick=$('printBtn2').onclick=printOut;
