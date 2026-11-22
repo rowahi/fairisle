@@ -30,6 +30,7 @@ body.drag{cursor:col-resize;user-select:none}
 .qi .qn{flex:1;min-width:90px}.qi .qn b{display:block;font-size:.88rem;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.qi .qn small{color:var(--mut);font-size:.75rem}
 .qi canvas{border-radius:4px;flex:0 0 auto}.qi input[type=color]{width:40px;height:32px;padding:2px;flex:0 0 auto;cursor:pointer}
 .qi .qsw{display:flex;gap:3px;flex-wrap:wrap}.qi .qsw button{width:18px;height:18px;padding:0;border-radius:5px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+.tpl .row button{height:32px;font-size:.8rem;padding:0 8px}
 .qi .ib{width:30px;height:30px;font-size:.85rem;background:transparent}.qi .ib:hover{background:var(--soft)}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:16px;margin-bottom:16px;box-shadow:var(--sh)}
 .card>h2,.hd h2{margin:0;font-size:1rem;font-weight:700;letter-spacing:-.01em}
@@ -96,13 +97,29 @@ nav.bot{position:fixed;bottom:0;left:0;right:0;z-index:10;display:flex;backgroun
 nav.bot button{flex:1;background:none;color:var(--mut);border-radius:0;height:56px;font-weight:500}nav.bot button.on{color:var(--ac);font-weight:700}
 body.wide nav.bot{display:none}body:not(.wide) nav.top{display:none}
 body:not(.wide) header{padding:8px 12px}body:not(.wide) .brand span{font-size:.95rem}
-body:not(.wide) main{padding:10px}body:not(.wide) .card{padding:12px;margin-bottom:10px}
+body:not(.wide) main{padding:10px}body:not(.wide) #tools{flex-wrap:wrap;width:100%}body:not(.wide) #tools button{flex:1 1 40%;padding:0 6px}body:not(.wide) .card{padding:12px;margin-bottom:10px}
 #toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:9px 16px;border-radius:10px;font-size:.88rem;opacity:0;transition:opacity .3s;pointer-events:none;z-index:20}#toast.on{opacity:.94}
+#print{display:none}
+a.btn{display:flex;align-items:center;justify-content:center;height:38px;background:var(--soft);color:var(--tx);border-radius:10px;padding:0 14px;text-decoration:none;font-weight:600;font-size:.9rem}a.btn:hover{background:color-mix(in srgb,var(--soft) 80%,var(--ac) 12%)}
+body:not(.wide) #printBtn{display:none}
+@media print{
+ @page{size:A4;margin:12mm}
+ body>*:not(#print){display:none!important}
+ body{padding:0!important;background:#fff;color:#000;font-size:10pt}
+ #print{display:block}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ #print h1{font-size:16pt;margin:0 0 2mm}#print h2{font-size:12pt;margin:6mm 0 2mm}
+ #print .meta{color:#555;margin:0 0 4mm}
+ #print img{display:block;max-width:100%;max-height:235mm;break-inside:avoid}
+ #print table{border-collapse:collapse;break-inside:avoid}#print td,#print th{border:1px solid #bbb;padding:1.2mm 2.5mm;text-align:left}
+ #print td i{display:inline-block;width:9mm;height:5mm;border:1px solid #888;vertical-align:middle}
+ #print .fig{break-inside:avoid}
+}
 </style></head><body>
 <header>
  <div class="brand"><img src="icon.svg" alt=""><span>Fair-Isle-Musterhilfe</span></div>
  <nav class="top seg"><button data-t="ed">Entwurf</button><button data-t="pat">Muster &amp; Dateien</button></nav>
  <div class="sp"></div>
+ <button id="printBtn" title="Diagramm, Legende und Vorschau drucken oder als PDF speichern">🖨 Drucken / PDF</button>
  <button class="pri" id="odsSave2" title="Als ODS (LibreOffice Calc) speichern">💾 ODS speichern</button>
 </header>
 <main>
@@ -122,7 +139,8 @@ body:not(.wide) main{padding:10px}body:not(.wide) .card{padding:12px;margin-bott
    <div class="stp"><button data-sz="B-" title="Unten eine Reihe ausblenden">−</button><button data-sz="B+" title="Unten eine Reihe hinzufügen">+</button><small>unten</small></div></div>
  </div>
  <div class="bar"><div class="chips" id="chips"></div><div class="sp" style="flex:1"></div>
-  <div class="seg" id="tools"><button data-tool="pen" title="Malen">✏️ Malen</button><button data-tool="fill" title="Fläche füllen">🪣 Füllen</button><button data-tool="pick" title="Farbe aus dem Raster aufnehmen">💧 Aufnehmen</button></div></div>
+  <div class="seg" id="tools"><button data-tool="pen" title="Malen">✏️ Malen</button><button data-tool="fill" title="Fläche füllen">🪣 Füllen</button><button data-tool="pick" title="Farbe aus dem Raster aufnehmen">💧 Aufnehmen</button><button data-tool="sel" title="Bereich auswählen, kopieren, spiegeln">⬚ Auswahl</button></div></div>
+ <div class="bar hide" id="selbar"></div>
  <div class="gsc" id="cvw"><canvas id="cv"></canvas></div>
  <p class="mut" style="margin:10px 0 0">Reihen von unten nach oben, Maschen von rechts nach links. Rechts: Farben je Reihe und längster Spannfaden (orange = zu lang). „−“ blendet nur aus – mit „+“ kommt der Inhalt zurück.<span class="kb"> Rechtsklick malt mit A, <kbd>1</kbd>–<kbd>9</kbd> wählt die Farbe, <kbd>Strg</kbd>+<kbd>Z</kbd> macht rückgängig.</span></p>
  <details><summary>Weitere Werkzeuge</summary>
@@ -141,6 +159,7 @@ body:not(.wide) main{padding:10px}body:not(.wide) .card{padding:12px;margin-bott
  <div>
   <div class="hd"><h2>Farben</h2><div class="sp"></div><button class="ib" id="cadd" title="Farbe hinzufügen">＋</button><button class="ib" id="cdel" title="Letzte Farbe entfernen">－</button></div>
   <div id="cols"></div>
+  <div id="contrast"></div>
   <h3>Meine Garne</h3>
   <div class="yarns" id="yarns"></div>
   <div class="row"><button id="yadd">＋ Aktuelle Farbe als Garn merken</button></div>
@@ -166,7 +185,7 @@ body:not(.wide) main{padding:10px}body:not(.wide) .card{padding:12px;margin-bott
 <div class="colR">
 <section id="v-pv"><div class="card">
  <div class="hd"><h2>Vorschau</h2><div class="sp"></div><div class="seg"><button data-sq="0">Aktuelles Muster</button><button data-sq="1">Musterfolge</button></div></div>
- <div class="pvc"><div class="seg"><button data-pm="box">▦ Kästchen</button><button data-pm="st">∨ Maschen</button></div><label><input type="checkbox" id="pvl">Rapportgrenzen</label></div>
+ <div class="pvc"><div class="seg"><button data-pm="box">▦ Kästchen</button><button data-pm="st">∨ Maschen</button></div><label><input type="checkbox" id="pvl">Rapportgrenzen</label><label title="Zeigt nur die Helligkeit – so sieht man, ob sich die Farben im Muster genug abheben"><input type="checkbox" id="gray">◐ Graustufen (Kontrast)</label></div>
  <div class="gsc" id="pvw" style="margin-bottom:4px"><canvas id="pv"></canvas></div>
  <p class="mut" id="pvi" style="margin:10px 0 0"></p><div class="leg" id="pleg"></div>
  <div id="pvS">
@@ -193,9 +212,9 @@ body:not(.wide) main{padding:10px}body:not(.wide) .card{padding:12px;margin-bott
 
 <section id="v-pat" hidden>
 <div class="card"><div class="hd"><h2 id="curn"></h2><div class="sp"></div>
- <button class="pri" id="odsSave">💾 Als ODS speichern</button><button id="dup">Duplizieren</button><button class="dan" id="del">Löschen</button></div>
+ <button class="pri" id="odsSave">💾 Als ODS speichern</button><button id="printBtn2">🖨 Drucken / PDF</button><button id="dup">Duplizieren</button><button class="dan" id="del">Löschen</button></div>
  <p class="mut" style="margin:0">Die ODS-Datei (LibreOffice Calc) enthält den Rapport mit bedingter Formatierung (Zellwert „A“ → Farbe von A usw.) und ein Blatt „Vorschau“ mit Wiederholungen und Rändern.</p></div>
-<div class="card"><h2>Neues Muster</h2><div class="row" id="newb"></div></div>
+<div class="card"><h2>Neues Muster aus der Motiv-Bibliothek</h2><p class="mut" style="margin:4px 0 0">Kachel anklicken für ein neues Muster – oder „Ins Muster einsetzen“, um das Motiv in den aktuellen Rapport zu stempeln.</p><div id="newb"></div></div>
 <div class="card"><h2 style="margin-bottom:12px">Meine Muster</h2><div class="plist" id="plist"></div></div>
 <div class="card"><h2>Bestehendes Muster aufnehmen</h2>
  <div class="row"><button id="odsOpen">📂 ODS-Datei öffnen</button></div><input type="file" id="odsFile" accept=".ods,application/vnd.oasis.opendocument.spreadsheet" hidden>
@@ -203,13 +222,17 @@ body:not(.wide) main{padding:10px}body:not(.wide) .card{padding:12px;margin-bott
  <textarea id="imp" rows="6" spellcheck="false" style="font-family:ui-monospace,monospace" placeholder="Eine Zeile pro Reihe, oberste Reihe zuerst, z. B.&#10;AABAA&#10;ABCBA&#10;AABAA"></textarea>
  <div class="row"><button id="impGo">Übernehmen</button><button id="codeCopy">Code des Musters kopieren</button></div>
 </div>
+<div class="card"><h2>Feedback</h2><p class="mut" style="margin:4px 0 0">Ein Wunsch, eine Idee oder ein Fehler? Wir freuen uns über deine Nachricht.</p>
+<div class="row"><a class="btn" id="fbk" target="_blank" rel="noopener">💬 Feedback oder Wunsch senden</a></div></div>
 </section>
 </main>
 <nav class="bot"><button data-t="ed">Rapport</button><button data-t="col">Farben</button><button data-t="pv">Vorschau</button><button data-t="pat">Muster</button></nav>
 <div id="toast"></div>
+<div id="print"></div>
 
 <script>
 'use strict';
+const APPV='4';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const L=i=>String.fromCharCode(65+i);
@@ -228,14 +251,23 @@ const toast=t=>{const e=$('toast');e.textContent=t;e.classList.add('on');clearTi
 function fromLines(lines){const w=Math.max(1,...lines.map(l=>l.length)),h=lines.length,g=[];
  for(let r=0;r<h;r++)g.push([...lines[h-1-r].padEnd(w,'A')].reverse().join(''));return{w,h,g}}
 const TPL={
- leer:{name:'Neues Muster',lines:Array(10).fill('AAAAAAAAAAAA'),cols:[0,1]},
- raute:{name:'Raute',lines:['AAABAAAA','AABABAAA','ABAAABAA','BAACAABA','ABAAABAA','AABABAAA','AAABAAAA'],cols:[0,1,2]},
- laeuse:{name:'Läuse',lines:['BAAA','AAAA','AABA','AAAA'],cols:[0,7]},
- welle:{name:'Welle',lines:['AAAAAAAAAAAA','BAAAAABAAAAA','BBAAABBBAAAB','ABBABBABBABB','AABBBAAABBBA','AAABAAAAABAA','CCCCCCCCCCCC'],cols:[0,1,2]}
+ leer:{name:'Leer',g:'Start',lines:Array(10).fill('AAAAAAAAAAAA'),cols:[0,1]},
+ peerie_kreuz:{name:'Peerie Kreuz',g:'Peeries (kleine Bänder)',lines:['AABAAA','ABBBAA','AABAAA'],cols:[0,2]},
+ peerie_raute:{name:'Peerie Raute',g:'Peeries (kleine Bänder)',lines:['ABAA','BABA','ABAA'],cols:[0,1]},
+ peerie_zz:{name:'Zickzack',g:'Peeries (kleine Bänder)',lines:['AABABA','ABAAAB','BAAAAA'],cols:[0,4]},
+ laeuse:{name:'Läuse',g:'Peeries (kleine Bänder)',lines:['BAAA','AAAA','AABA','AAAA'],cols:[0,7]},
+ karo:{name:'Karo',g:'Peeries (kleine Bänder)',lines:['BBAA','BBAA','AABB','AABB'],cols:[0,5]},
+ raute:{name:'Raute',g:'Bänder',lines:['AAABAAAA','AABABAAA','ABAAABAA','BAACAABA','ABAAABAA','AABABAAA','AAABAAAA'],cols:[0,1,2]},
+ welle:{name:'Welle',g:'Bänder',lines:['AAAAAAAAAAAA','BAAAAABAAAAA','BBAAABBBAAAB','ABBABBABBABB','AABBBAAABBBA','AAABAAAAABAA','CCCCCCCCCCCC'],cols:[0,1,2]},
+ oxo:{name:'OXO',g:'Bänder',lines:["AABBBAAABAAAAABA", "ABBABBAABBAAABBA", "BBAAABBAABBABBAA", "BAABAABAAABABAAA", "BABBBABAAAABAAAA", "BAABAABAAABABAAA", "BBAAABBAABBABBAA", "ABBABBAABBAAABBA", "AABBBAAABAAAAABA"],cols:[0,2]},
+ stern:{name:'Stern',g:'Motive',lines:["AAAAAAABAAAAAAAA", "AAAAAABBBAAAAAAA", "AAAAABBBBBAAAAAA", "AAAABBBBBBBAAAAA", "AAABABBBBBABAAAA", "AABBBABBBABBBAAA", "ABBBBBAAABBBBBAA", "BBBBBBABABBBBBBA", "ABBBBBAAABBBBBAA", "AABBBABBBABBBAAA", "AAABABBBBBABAAAA", "AAAABBBBBBBAAAAA", "AAAAABBBBBAAAAAA", "AAAAAABBBAAAAAAA", "AAAAAAABAAAAAAAA"],cols:[0,1]},
+ flocke:{name:'Schneeflocke',g:'Motive',lines:["BAAABAAABA", "ABAABAABAA", "AABABABAAA", "AAABBBAAAA", "BBBBBBBBBA", "AAABBBAAAA", "AABABABAAA", "ABAABAABAA", "BAAABAAABA"],cols:[0,1]},
+ baum:{name:'Baum',g:'Motive',lines:["AAAABAAAAA", "AAABBBAAAA", "AABBBBBAAA", "AAAABAAAAA", "AAABBBAAAA", "AABBBBBAAA", "ABBBBBBBAA", "AAAABAAAAA", "AAAABAAAAA"],cols:[0,4]},
+ herz:{name:'Herz',g:'Motive',lines:["ABBAAABBAA", "BBBBABBBBA", "BBBBBBBBBA", "BBBBBBBBBA", "ABBBBBBBAA", "AABBBBBAAA", "AAABBBAAAA", "AAAABAAAAA"],cols:[0,2]}
 };
 let uid=Date.now();
 function mkPat(name,lines,cols){const{w,h,g}=fromLines(lines);return{id:++uid,name,w,h,ox:0,oy:0,g,colors:cols.map(i=>({c:PAL[i][0],n:PAL[i][1]}))}}
-const DEF={tab:'ed',cur:0,list:[],yarns:[],prev:{rx:3,ry:3,mode:'box',lines:true,bt:{c:0,n:0},bb:{c:0,n:0}},ed:{tool:'pen',col:1,letters:true,mx:false,my:false,zoom:1,flt:5},seq:{on:false,W:0,items:[]},ui:{split:56}};
+const DEF={tab:'ed',cur:0,list:[],yarns:[],prev:{rx:3,ry:3,mode:'box',lines:true,bt:{c:0,n:0},bb:{c:0,n:0}},ed:{tool:'pen',col:1,letters:true,mx:false,my:false,zoom:1,flt:5},seq:{on:false,W:0,items:[]},ui:{split:56,gray:false}};
 const K='fairisle';
 let S;try{S=JSON.parse(localStorage.getItem(K))}catch(e){}
 if(!S||!Array.isArray(S.list))S=JSON.parse(JSON.stringify(DEF));
@@ -278,51 +310,97 @@ function undo(){while(UND.length){const u=JSON.parse(UND.pop()),p=S.list.find(x=
 
 /* ---------- Rapport-Editor ---------- */
 let CS=20,INF=0;const BOT=20;
-function drawEd(){
- const p=P(),cv=$('cv'),ctx=cv.getContext('2d'),D=disp(p),nc=p.colors.length,dpr=window.devicePixelRatio||1;
- INF=34+Math.min(nc,6)*10+28;
- const availW=$('cvw').clientWidth-INF-4;
- let fit=Math.floor(availW/p.w);
- if(WIDE.matches)fit=Math.min(fit,Math.floor((innerHeight-300)/p.h));
- CS=Math.max(6,Math.round(Math.max(10,Math.min(44,fit))*S.ed.zoom));
- const W=p.w*CS+INF,H=p.h*CS+BOT;
+// Helligkeit (CIE L*) und Graustufen für die Kontrastprüfung
+const lin=v=>(v/=255)<=.04045?v/12.92:((v+.055)/1.055)**2.4;
+const relY=h=>{const n=parseInt(h.slice(1),16);return .2126*lin(n>>16&255)+.7152*lin(n>>8&255)+.0722*lin(n&255)};
+const Lstar=h=>{const y=relY(h);return y>.008856?116*Math.cbrt(y)-16:903.3*y};
+const grayHex=h=>{const y=relY(h),s=y<=.0031308?12.92*y:1.055*y**(1/2.4)-.055,v=Math.round(Math.min(1,s)*255).toString(16).padStart(2,'0');return'#'+v+v+v};
+const gc=(h,g=S.ui.gray)=>g?grayHex(h):h;
+// Diagramm zeichnen (Editor und Druck). o: {cs,gray,letters,mut,warn,flt}
+function drawChart(cv,p,o){
+ const ctx=cv.getContext('2d'),D=disp(p),nc=p.colors.length,dpr=o.dpr||window.devicePixelRatio||1,CS=o.cs,inf=34+Math.min(nc,6)*10+28;
+ const W=p.w*CS+inf,H=p.h*CS+BOT;
  cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';
  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
- const css=getComputedStyle(document.body),mut=css.getPropertyValue('--mut'),wr=css.getPropertyValue('--warn');
+ const col=i=>gc(p.colors[i].c,o.gray);
  ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`600 ${Math.round(CS*.45)}px system-ui,sans-serif`;
  for(let dy=0;dy<p.h;dy++)for(let dx=0;dx<p.w;dx++){
   const ch=D[dy][dx],i=ch.charCodeAt(0)-65,x=dx*CS,y=dy*CS;
-  if(i<nc){ctx.fillStyle=p.colors[i].c;ctx.fillRect(x,y,CS,CS)}
+  if(i<nc){ctx.fillStyle=col(i);ctx.fillRect(x,y,CS,CS)}
   else{ctx.fillStyle='#bbb';ctx.fillRect(x,y,CS,CS);ctx.strokeStyle='#777';ctx.beginPath();ctx.moveTo(x,y+CS);ctx.lineTo(x+CS,y);ctx.stroke()}
-  if(S.ed.letters&&CS>=16){ctx.fillStyle=i<nc?ink(p.colors[i].c):'#000';ctx.globalAlpha=.45;ctx.fillText(ch,x+CS/2,y+CS/2+1);ctx.globalAlpha=1}
+  if(o.letters&&CS>=14){ctx.fillStyle=i<nc?ink(col(i)):'#000';ctx.globalAlpha=.5;ctx.fillText(ch,x+CS/2,y+CS/2+1);ctx.globalAlpha=1}
  }
  for(let x=0;x<=p.w;x++){const k=p.w-x,b=k%5===0||x===0;ctx.strokeStyle=b?'rgba(0,0,0,.7)':'rgba(0,0,0,.22)';ctx.lineWidth=b?1.3:.6;ctx.beginPath();ctx.moveTo(x*CS,0);ctx.lineTo(x*CS,p.h*CS);ctx.stroke()}
  for(let y=0;y<=p.h;y++){const k=p.h-y,b=k%5===0||y===0;ctx.strokeStyle=b?'rgba(0,0,0,.7)':'rgba(0,0,0,.22)';ctx.lineWidth=b?1.3:.6;ctx.beginPath();ctx.moveTo(0,y*CS);ctx.lineTo(p.w*CS,y*CS);ctx.stroke()}
- const fs=Math.min(12,Math.max(9,CS*.55));ctx.font=`${fs}px system-ui,sans-serif`;
+ const fs=Math.min(12,Math.max(8,CS*.55));ctx.font=`${fs}px system-ui,sans-serif`;
  for(let dy=0;dy<p.h;dy++){const y=dy*CS+CS/2,x0=p.w*CS+6,st=rowStat(D[dy]);
-  ctx.fillStyle=mut;ctx.textAlign='left';ctx.fillText(String(p.h-dy),x0,y+1);
-  st.used.slice(0,6).forEach((ch,j)=>{const i=ch.charCodeAt(0)-65;ctx.fillStyle=i<nc?p.colors[i].c:'#bbb';ctx.beginPath();ctx.arc(x0+32+j*10,y,4,0,7);ctx.fill();ctx.strokeStyle='rgba(0,0,0,.35)';ctx.lineWidth=.6;ctx.stroke()});
-  if(st.fl){const bad=st.fl>S.ed.flt;ctx.fillStyle=bad?wr:mut;ctx.font=`${bad?'700 ':''}${fs}px system-ui,sans-serif`;ctx.fillText(String(st.fl),x0+30+Math.min(st.used.length,6)*10,y+1);ctx.font=`${fs}px system-ui,sans-serif`}
+  ctx.fillStyle=o.mut;ctx.textAlign='left';ctx.fillText(String(p.h-dy),x0,y+1);
+  st.used.slice(0,6).forEach((ch,j)=>{const i=ch.charCodeAt(0)-65;ctx.fillStyle=i<nc?col(i):'#bbb';ctx.beginPath();ctx.arc(x0+32+j*10,y,4,0,7);ctx.fill();ctx.strokeStyle='rgba(0,0,0,.35)';ctx.lineWidth=.6;ctx.stroke()});
+  if(st.fl){const bad=st.fl>o.flt;ctx.fillStyle=bad?o.warn:o.mut;ctx.font=`${bad?'700 ':''}${fs}px system-ui,sans-serif`;ctx.fillText(String(st.fl),x0+30+Math.min(st.used.length,6)*10,y+1);ctx.font=`${fs}px system-ui,sans-serif`}
  }
- ctx.fillStyle=mut;ctx.textAlign='center';
+ ctx.fillStyle=o.mut;ctx.textAlign='center';
  for(let dx=0;dx<p.w;dx++){const n=p.w-dx;if(CS>=18||n%5===0||n===1)ctx.fillText(String(n),dx*CS+CS/2,p.h*CS+BOT/2+2)}
+ return ctx}
+// Auswahl / Ablage
+let SEL=null,SEL0=null,CB=null,HOV=null;
+const selRect=()=>SEL&&{x:Math.min(SEL[0],SEL[2]),y:Math.min(SEL[1],SEL[3]),w:Math.abs(SEL[2]-SEL[0])+1,h:Math.abs(SEL[3]-SEL[1])+1};
+function drawEd(){
+ const p=P(),nc=p.colors.length;INF=34+Math.min(nc,6)*10+28;
+ let fit=Math.floor(($('cvw').clientWidth-INF-4)/p.w);
+ if(WIDE.matches)fit=Math.min(fit,Math.floor((innerHeight-300)/p.h));
+ CS=Math.max(6,Math.round(Math.max(10,Math.min(44,fit))*S.ed.zoom));
+ const css=getComputedStyle(document.body);
+ const ctx=drawChart($('cv'),p,{cs:CS,letters:S.ed.letters&&CS>=16,mut:css.getPropertyValue('--mut'),warn:css.getPropertyValue('--warn'),flt:S.ed.flt});
+ const r=selRect();
+ if(r&&S.ed.tool==='sel'){ctx.save();ctx.fillStyle='rgba(106,76,147,.15)';ctx.fillRect(r.x*CS,r.y*CS,r.w*CS,r.h*CS);ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.strokeRect(r.x*CS+.5,r.y*CS+.5,r.w*CS-1,r.h*CS-1);
+  ctx.strokeStyle='#6a4c93';ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.strokeRect(r.x*CS+.5,r.y*CS+.5,r.w*CS-1,r.h*CS-1);ctx.restore()}
+ if(S.ed.tool==='paste'&&CB&&HOV){ctx.save();ctx.globalAlpha=.75;
+  CB.forEach((row,y)=>row.forEach((ch,x)=>{const X=HOV[0]+x,Y=HOV[1]+y,i=ch.charCodeAt(0)-65;if(X>=p.w||Y>=p.h)return;ctx.fillStyle=i<nc?gc(p.colors[i].c):'#bbb';ctx.fillRect(X*CS,Y*CS,CS,CS)}));
+  ctx.globalAlpha=1;ctx.strokeStyle='#6a4c93';ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.strokeRect(HOV[0]*CS,HOV[1]*CS,Math.min(CB[0].length,p.w-HOV[0])*CS,Math.min(CB.length,p.h-HOV[1])*CS);ctx.restore()}
 }
-function hit(e){const p=P(),r=$('cv').getBoundingClientRect(),dx=Math.floor((e.clientX-r.left)/CS),dy=Math.floor((e.clientY-r.top)/CS);
+function hit(e,clamp){const p=P(),r=$('cv').getBoundingClientRect();let dx=Math.floor((e.clientX-r.left)/CS),dy=Math.floor((e.clientY-r.top)/CS);
+ if(clamp){dx=Math.min(p.w-1,Math.max(0,dx));dy=Math.min(p.h-1,Math.max(0,dy));return[dx,dy]}
  return dx>=0&&dy>=0&&dx<p.w&&dy<p.h?[dx,dy]:null}
 function paint(dx,dy,ch){const p=P(),pts=[[dx,dy]];
  if(S.ed.mx)pts.push([p.w-1-dx,dy]);if(S.ed.my)pts.push([dx,p.h-1-dy]);if(S.ed.mx&&S.ed.my)pts.push([p.w-1-dx,p.h-1-dy]);
  let chg=false;for(const[x,y]of pts)if(cell(p,p.w-1-x,p.h-1-y)!==ch){put(p,p.w-1-x,p.h-1-y,ch);chg=true}return chg}
 function fill(dx,dy,to){const p=P(),D=disp(p),from=D[dy][dx];if(from===to)return;const st=[[dx,dy]];
  while(st.length){const[x,y]=st.pop();if(x<0||y<0||x>=p.w||y>=p.h||D[y][x]!==from)continue;D[y][x]=to;st.push([x+1,y],[x-1,y],[x,y+1],[x,y-1])}undisp(p,D)}
+function pasteAt(dx,dy){if(!CB)return;const p=P(),D=disp(p);snap();CB.forEach((row,y)=>row.forEach((ch,x)=>{if(dx+x<p.w&&dy+y<p.h)D[dy+y][dx+x]=ch}));undisp(p,D);save();later('ed','pv','knit')}
+function selOp(k){const p=P(),r=selRect();
+ if(k==='paste'){if(!CB)return;setTool('paste');toast('Klicken, um die Ablage einzusetzen – Esc beendet');return}
+ if(k==='cfh'&&CB){CB=CB.map(r=>r.slice().reverse());renderSelbar();drawEd();return}
+ if(k==='cfv'&&CB){CB=CB.slice().reverse();renderSelbar();drawEd();return}
+ if(k==='none'){SEL=null;renderSelbar();drawEd();return}
+ if(k==='all'){setTool('sel');SEL=[0,0,p.w-1,p.h-1];renderSelbar();drawEd();return}
+ if(!r)return;const D=disp(p),part=D.slice(r.y,r.y+r.h).map(row=>row.slice(r.x,r.x+r.w));
+ if(k==='copy'||k==='cut'){CB=part;toast(`${r.w} × ${r.h} in die Ablage kopiert`)}
+ if(k==='cut'||k==='del'||k==='fh'||k==='fv'){snap();let n=part;
+  if(k==='fh')n=part.map(r=>r.slice().reverse());if(k==='fv')n=part.slice().reverse();
+  if(k==='cut'||k==='del')n=part.map(r=>r.map(()=>'A'));
+  n.forEach((row,y)=>row.forEach((ch,x)=>D[r.y+y][r.x+x]=ch));undisp(p,D);save();later('ed','pv','knit')}
+ renderSelbar()}
+function renderSelbar(){const r=selRect(),on=S.ed.tool==='sel'||S.ed.tool==='paste';
+ $('selbar').classList.toggle('hide',!on&&!CB);
+ $('selbar').innerHTML=(S.ed.tool==='sel'?(r?`<span class="mut">Auswahl ${r.w} × ${r.h}</span><button data-sb="copy" title="Strg+C">Kopieren</button><button data-sb="cut" title="Strg+X">Ausschneiden</button><button data-sb="fh">↔</button><button data-sb="fv">↕</button><button data-sb="del" title="Entf">Mit A füllen</button><button data-sb="none" title="Esc">✕</button>`:'<span class="mut">Bereich im Raster aufziehen</span><button data-sb="all">Alles auswählen</button>'):'')
+  +(CB?`<span class="sp" style="flex:1"></span><span class="mut">Ablage ${CB[0].length} × ${CB.length}</span><button data-sb="cfh" title="Ablage spiegeln">↔</button><button data-sb="cfv" title="Ablage spiegeln">↕</button><button class="${S.ed.tool==='paste'?'pri':''}" data-sb="paste" title="Strg+V">📋 Einfügen</button>`:'')}
+function setTool(t){S.ed.tool=t;if(t!=='sel')SEL=null;if(t!=='paste')HOV=null;save();renderEd()}
 let drawing=false,last='',pch='A';
 $('cv').addEventListener('contextmenu',e=>e.preventDefault());
-$('cv').addEventListener('pointerdown',e=>{const h=hit(e);if(!h)return;e.preventDefault();const p=P();
+$('cv').addEventListener('pointerdown',e=>{const t=S.ed.tool,h=hit(e);if(!h)return;e.preventDefault();const p=P();
+ if(t==='sel'){$('cv').setPointerCapture(e.pointerId);drawing=true;SEL=[h[0],h[1],h[0],h[1]];renderSelbar();drawEd();return}
+ if(t==='paste'){if(e.button===2){setTool('pen');return}pasteAt(h[0],h[1]);return}
  pch=e.button===2?'A':L(S.ed.col);
- if(S.ed.tool==='pick'&&e.button!==2){selCol(Math.min(p.colors.length-1,cell(p,p.w-1-h[0],p.h-1-h[1]).charCodeAt(0)-65));S.ed.tool='pen';save();renderEd();if(visible('col'))renderCol();return}
- snap();if(S.ed.tool==='fill'){fill(h[0],h[1],pch);save();later('ed','pv','knit');return}
+ if(t==='pick'&&e.button!==2){selCol(Math.min(p.colors.length-1,cell(p,p.w-1-h[0],p.h-1-h[1]).charCodeAt(0)-65));S.ed.tool='pen';save();renderEd();if(visible('col'))renderCol();return}
+ snap();if(t==='fill'){fill(h[0],h[1],pch);save();later('ed','pv','knit');return}
  $('cv').setPointerCapture(e.pointerId);drawing=true;last=h.join();paint(h[0],h[1],pch);later('ed','pv','knit')});
-$('cv').addEventListener('pointermove',e=>{if(!drawing)return;const h=hit(e);if(!h||h.join()===last)return;last=h.join();if(paint(h[0],h[1],pch))later('ed','pv','knit')});
-const endDraw=()=>{if(drawing){drawing=false;save();if(visible('col'))renderColList()}};
+$('cv').addEventListener('pointermove',e=>{const t=S.ed.tool;
+ if(t==='paste'){const h=hit(e);const k=h?h.join():'';if(k!==(HOV||[]).join()){HOV=h;later('ed')}return}
+ if(!drawing)return;
+ if(t==='sel'){const h=hit(e,true);if(SEL[2]!==h[0]||SEL[3]!==h[1]){SEL[2]=h[0];SEL[3]=h[1];renderSelbar();later('ed')}return}
+ const h=hit(e);if(!h||h.join()===last)return;last=h.join();if(paint(h[0],h[1],pch))later('ed','pv','knit')});
+$('cv').addEventListener('pointerleave',()=>{if(S.ed.tool==='paste'&&HOV){HOV=null;later('ed')}});
+const endDraw=()=>{if(drawing){drawing=false;if(S.ed.tool!=='sel'){save();if(visible('col'))renderColList()}}};
 $('cv').addEventListener('pointerup',endDraw);$('cv').addEventListener('pointercancel',endDraw);
 
 function op(k){const p=P();let D=disp(p);snap();const W=p.w,H=p.h;
@@ -363,14 +441,16 @@ function renderEd(){const p=P();ensure(p);
  $('wv').textContent=p.w;$('hv').textContent=p.h;renderChips();
  document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('on',b.dataset.tool===S.ed.tool));
  $('undo').disabled=!UND.length;$('mx').checked=S.ed.mx;$('my').checked=S.ed.my;$('lt').checked=S.ed.letters;
- $('zv').textContent=Math.round(S.ed.zoom*100)+' %';$('flv').textContent=S.ed.flt;
+ $('zv').textContent=Math.round(S.ed.zoom*100)+' %';$('flv').textContent=S.ed.flt;renderSelbar();
  const o=p.colors.map((c,i)=>`<option value="${L(i)}">${L(i)}${c.n?' – '+esc(c.n):''}</option>`).join('');
  const rf=$('rf').value,rt=$('rt').value;$('rf').innerHTML=o;$('rt').innerHTML=o;
  if(rf&&rf.charCodeAt(0)-65<p.colors.length)$('rf').value=rf;
  $('rt').value=rt&&rt.charCodeAt(0)-65<p.colors.length?rt:L(Math.min(1,p.colors.length-1));
  drawEd()}
 $('chips').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(!b)return;selCol(+b.dataset.c);if(S.ed.tool==='pick')S.ed.tool='pen';save();renderEd();if(visible('col'))renderCol()});
-document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{S.ed.tool=b.dataset.tool;save();renderEd()});
+document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
+$('selbar').addEventListener('click',e=>{const b=e.target.closest('[data-sb]');if(b)selOp(b.dataset.sb)});
+if(S.ed.tool==='paste')S.ed.tool='pen';
 $('undo').onclick=undo;
 $('pname').oninput=()=>{P().name=$('pname').value.slice(0,80);save()};
 document.querySelectorAll('[data-op]').forEach(b=>b.onclick=()=>op(b.dataset.op));
@@ -379,7 +459,14 @@ $('lt').onchange=()=>{S.ed.letters=$('lt').checked;save();drawEd()};
 document.querySelectorAll('[data-zm]').forEach(b=>b.onclick=()=>{S.ed.zoom=Math.min(3,Math.max(.4,Math.round((S.ed.zoom+(b.dataset.zm==='+'?.2:-.2))*10)/10));save();renderEd()});
 document.querySelectorAll('[data-fl]').forEach(b=>b.onclick=()=>{S.ed.flt=Math.min(30,Math.max(2,S.ed.flt+(b.dataset.fl==='+'?1:-1)));save();renderEd()});
 document.addEventListener('keydown',e=>{if(e.target.closest('input,textarea,select'))return;
- if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo();return}
+ const k=e.key.toLowerCase(),mod=e.ctrlKey||e.metaKey;
+ if(mod&&k==='z'){e.preventDefault();undo();return}
+ if(!visible('ed'))return;
+ if(mod&&k==='a'){e.preventDefault();selOp('all');return}
+ if(mod&&(k==='c'||k==='x')&&SEL){e.preventDefault();selOp(k==='c'?'copy':'cut');return}
+ if(mod&&k==='v'&&CB){e.preventDefault();selOp('paste');return}
+ if((k==='delete'||k==='backspace')&&SEL&&S.ed.tool==='sel'){e.preventDefault();selOp('del');return}
+ if(k==='escape'){if(S.ed.tool==='paste')setTool('pen');else if(SEL){SEL=null;renderSelbar();drawEd()}return}
  if(/^[1-9]$/.test(e.key)&&!e.ctrlKey&&!e.metaKey&&!e.altKey){const i=+e.key-1;if(i<P().colors.length){selCol(i);save();render()}}});
 
 /* ---------- Farben ---------- */
@@ -392,9 +479,15 @@ function usage(p){const n={};for(let r=0;r<p.h;r++)for(let c=0;c<p.w;c++){const 
 function renderColList(){const p=P(),u=usage(p);
  $('cols').innerHTML=p.colors.map((c,i)=>`<div class="crow${i===S.ed.col?' on':''}" data-i="${i}">
   <span class="lt" style="background:${c.c};color:${ink(c.c)}">${L(i)}</span>
-  <div class="ci"><b>${esc(c.n)||'<span class="mut">ohne Namen</span>'}</b><small>${c.c} · ${u[L(i)]||0} M.</small></div>
+  <div class="ci"><b>${esc(c.n)||'<span class="mut">ohne Namen</span>'}</b><small>${c.c} · ${u[L(i)]||0} M. · Hell. ${Math.round(Lstar(c.c))}</small></div>
   ${i?`<button class="ib" data-up="${i}" title="Mit ${L(i-1)} tauschen">↑</button>`:''}</div>`).join('');
- $('cdel').disabled=p.colors.length<=1;$('cadd').disabled=p.colors.length>=26}
+ $('cdel').disabled=p.colors.length<=1;$('cadd').disabled=p.colors.length>=26;renderContrast()}
+// Farbpaare, die in einer Reihe zusammen vorkommen und sich in der Helligkeit kaum unterscheiden
+function renderContrast(){const p=P(),pairs=new Map();
+ disp(p).forEach(row=>{const u=[...new Set(row)].filter(ch=>ch.charCodeAt(0)-65<p.colors.length);
+  for(let i=0;i<u.length;i++)for(let j=i+1;j<u.length;j++){const k=[u[i],u[j]].sort().join('');pairs.set(k,(pairs.get(k)||0)+1)}});
+ const bad=[...pairs].map(([k,n])=>{const a=p.colors[k.charCodeAt(0)-65],b=p.colors[k.charCodeAt(1)-65];return{k,n,d:Math.abs(Lstar(a.c)-Lstar(b.c))}}).filter(x=>x.d<20).sort((a,b)=>a.d-b.d);
+ $('contrast').innerHTML=bad.length?`<p class="mut warn" style="margin:8px 0 0">⚠ Wenig Kontrast in denselben Reihen: ${bad.map(x=>`<b>${x.k[0]}/${x.k[1]}</b> (Unterschied ${Math.round(x.d)})`).join(', ')}. Das Motiv hebt sich dort kaum ab – Graustufen-Vorschau zum Prüfen.</p>`:''}
 function renderCol(){const p=P();if(S.ed.col>=p.colors.length)S.ed.col=p.colors.length-1;
  if(!CE||CE.i!==S.ed.col||!P().colors[CE.i])selCol(S.ed.col);
  renderColList();const c=p.colors[CE.i];
@@ -478,12 +571,12 @@ document.addEventListener('paste',e=>{if(e.target.closest('input,textarea'))retu
 const hexOf=(p,ch)=>{const i=ch.charCodeAt(0)-65;return i<p.colors.length?p.colors[i].c:'#bbbbbb'};
 // Zeilen (Hex-Farben) zeichnen. o: {maxW,maxH,mode,maxCell,lines,hl:[y],vl:[[x,y0,y1]]}
 function drawRows(cv,rows,o){
- const H=Math.max(1,rows.length),W=rows.length?rows[0].length:1,dpr=window.devicePixelRatio||1,ar=o.mode==='st'?.85:1;
+ const H=Math.max(1,rows.length),W=rows.length?rows[0].length:1,dpr=o.dpr||window.devicePixelRatio||1,ar=o.mode==='st'?.85:1,gm=new Map(),G=o.gray??S.ui.gray,col=c=>{if(!G)return c;let v=gm.get(c);if(!v){v=grayHex(c);gm.set(c,v)}return v};
  let cw=Math.floor(o.maxW/W);if(o.maxH)cw=Math.min(cw,Math.floor(o.maxH/(H*ar)));cw=Math.max(2,Math.min(o.maxCell,cw));const chh=o.mode==='st'?Math.max(2,Math.round(cw*ar)):cw;
  const w=W*cw,h=H*chh;cv.width=w*dpr;cv.height=h*dpr;cv.style.width=w+'px';cv.style.height=h+'px';
  const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
  if(o.mode==='st'){ctx.fillStyle='#2a2a2a';ctx.fillRect(0,0,w,h)}
- rows.forEach((row,y)=>row.forEach((c,x)=>{const px=x*cw,py=y*chh;ctx.fillStyle=c;
+ rows.forEach((row,y)=>row.forEach((c,x)=>{const px=x*cw,py=y*chh;ctx.fillStyle=col(c);
   if(o.mode==='st'){ctx.beginPath();ctx.ellipse(px+cw*.3,py+chh*.5,cw*.25,chh*.62,-.5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(px+cw*.7,py+chh*.5,cw*.25,chh*.62,.5,0,Math.PI*2);ctx.fill()}
   else ctx.fillRect(px,py,cw,chh)}));
  if(o.mode!=='st'&&cw>=6){ctx.strokeStyle='rgba(0,0,0,.16)';ctx.lineWidth=.5;ctx.beginPath();
@@ -529,7 +622,7 @@ function renderSeq(){const items=seqItems(),cols=[...seqColors().keys()].slice(0
 function renderPv(){const p=P(),{rx,ry,bt,bb}=S.prev;
  document.querySelectorAll('[data-sq]').forEach(b=>b.classList.toggle('on',+b.dataset.sq===+S.seq.on));
  $('pvS').classList.toggle('hide',S.seq.on);$('pvQ').classList.toggle('hide',!S.seq.on);
- $('pvl').checked=S.prev.lines;document.querySelectorAll('[data-pm]').forEach(b=>b.classList.toggle('on',b.dataset.pm===S.prev.mode));
+ $('pvl').checked=S.prev.lines;$('gray').checked=S.ui.gray;document.querySelectorAll('[data-pm]').forEach(b=>b.classList.toggle('on',b.dataset.pm===S.prev.mode));
  if(S.seq.on){renderSeq();drawPv();return}
  $('rxv').textContent=rx;$('ryv').textContent=ry;$('btv').textContent=bt.n;$('bbv').textContent=bb.n;
  const o=p.colors.map((c,i)=>`<option value="${i}">${L(i)}${c.n?' – '+esc(c.n):''}</option>`).join('');
@@ -539,6 +632,7 @@ function renderPv(){const p=P(),{rx,ry,bt,bb}=S.prev;
 document.querySelectorAll('[data-pm]').forEach(b=>b.onclick=()=>{S.prev.mode=b.dataset.pm;save();renderPv()});
 document.querySelectorAll('[data-sq]').forEach(b=>b.onclick=()=>{S.seq.on=b.dataset.sq==='1';if(S.seq.on)initSeq();save();renderPv()});
 $('pvl').onchange=()=>{S.prev.lines=$('pvl').checked;save();renderPv()};
+$('gray').onchange=()=>{S.ui.gray=$('gray').checked;save();render()};
 $('btc').onchange=()=>{S.prev.bt.c=+$('btc').value;if(!S.prev.bt.n)S.prev.bt.n=3;save();renderPv()};
 $('bbc').onchange=()=>{S.prev.bb.c=+$('bbc').value;if(!S.prev.bb.n)S.prev.bb.n=3;save();renderPv()};
 hold('[data-qw]',b=>{S.seq.W=Math.min(600,Math.max(4,S.seq.W+(b.dataset.qw==='+'?1:-1)));save();renderPv()});
@@ -561,11 +655,15 @@ $('qods').onclick=()=>{const m=seqColors();if(m.size>26)return toast('Mehr als 2
 
 /* ---------- Musterliste ---------- */
 function renderPat(){const p=P();$('curn').textContent=p.name||'Ohne Namen';$('del').disabled=S.list.length<2;
- $('newb').innerHTML=Object.entries(TPL).map(([k,t])=>`<button data-new="${k}">${k==='leer'?'＋ Leer':'Vorlage '+esc(t.name)}</button>`).join('');
+ const grp={};Object.entries(TPL).forEach(([k,t])=>(grp[t.g]=grp[t.g]||[]).push([k,t]));
+ $('newb').innerHTML=Object.entries(grp).map(([g,a])=>`<h3>${esc(g)}</h3><div class="plist tpl">${a.map(([k,t])=>{const f=fromLines(t.lines);return`<div class="pt" data-new="${k}" title="Neues Muster aus dieser Vorlage"><b>${esc(t.name)}</b><span class="mut">${f.w} × ${f.h}</span><canvas data-tk="${k}"></canvas>${k==='leer'?'':`<div class="row" style="margin-top:6px"><button data-tcb="${k}" title="In die Ablage legen und im aktuellen Rapport einsetzen">📋 Einsetzen</button></div>`}</div>`}).join('')}</div>`).join('');
+ $('newb').querySelectorAll('[data-tk]').forEach(cv=>{const t=TPL[cv.dataset.tk],q=mkPat(t.name,t.lines,t.cols);drawPat(cv,q,{rx:2,ry:1,maxW:150,maxH:70,mode:'box',maxCell:6})});
  $('plist').innerHTML=S.list.map(x=>`<div class="pt${x.id===S.cur?' on':''}" data-id="${x.id}"><b>${esc(x.name||'Ohne Namen')}</b><span class="mut">${x.w} × ${x.h} · ${x.colors.length} Farben</span><canvas></canvas></div>`).join('');
  $('plist').querySelectorAll('.pt').forEach(el=>{const x=S.list.find(q=>q.id===+el.dataset.id);ensure(x);drawPat(el.querySelector('canvas'),x,{rx:3,ry:Math.max(1,Math.round(x.w*3/x.h/1.8)),maxW:200,maxH:110,mode:'box',maxCell:8})})}
 $('plist').addEventListener('click',e=>{const t=e.target.closest('.pt');if(!t)return;S.cur=+t.dataset.id;CE=null;save();go('ed')});
-$('newb').addEventListener('click',e=>{const b=e.target.closest('[data-new]');if(!b)return;const t=TPL[b.dataset.new];
+$('newb').addEventListener('click',e=>{const c=e.target.closest('[data-tcb]');
+ if(c){const t=TPL[c.dataset.tcb];CB=t.lines.map(l=>[...l]);go('ed');setTool('paste');toast(`„${t.name}“ in der Ablage – im Raster klicken zum Einsetzen`);return}
+ const b=e.target.closest('[data-new]');if(!b)return;const t=TPL[b.dataset.new];
  const p=mkPat(t.name,t.lines,t.cols);S.list.unshift(p);S.cur=p.id;S.ed.col=Math.min(1,p.colors.length-1);CE=null;save();go('ed')});
 $('dup').onclick=()=>{const p=JSON.parse(JSON.stringify(P()));p.id=++uid;p.name+=' (Kopie)';S.list.splice(S.list.indexOf(P())+1,0,p);S.cur=p.id;save();renderPat();toast('Kopie angelegt')};
 $('del').onclick=()=>{if(S.list.length<2)return;const p=P();if(!confirm(`„${p.name}“ wirklich löschen?`))return;S.list=S.list.filter(x=>x!==p);S.cur=S.list[0].id;CE=null;save();renderPat()};
@@ -654,6 +752,23 @@ function odsFiles(p){const D=disp(p),{rx,ry}=S.prev,{bt,bb}=bands(p),W=p.w*rx;
  for(let i=0;i<bb.n;i++)V.push(Array(W).fill(bb.ch));
  return odsPack(p.colors,[{name:'Rapport',title:`${p.name} – Rapport ${p.w} × ${p.h}`,D,nums:true,legend:true},{name:'Vorschau',D:V}],pdata(p))}
 function dl(name,blob){const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),3000)}
+// Drucken / PDF: Diagramm mit Nummern, Farblegende und Vorschau
+function printOut(){const p=P(),u=usage(p),cv=document.createElement('canvas');
+ const cs=Math.max(8,Math.min(26,Math.floor(640/(p.w+5))));
+ drawChart(cv,p,{cs,dpr:3,gray:false,letters:cs>=14,mut:'#555555',warn:'#c2571a',flt:S.ed.flt});
+ const pv=document.createElement('canvas'),{rx,ry,mode,lines}=S.prev;let leg,info;
+ if(S.seq.on){const r=seqRows();drawRows(pv,r.rows,{maxW:680,mode,lines,maxCell:16,hl:r.hl,vl:r.vl,dpr:3,gray:false});
+  info=`Musterfolge · ${S.seq.W} Maschen × ${r.rows.length} Reihen`;leg=[...seqColors()].map(([c,n])=>`<span style="margin-right:5mm"><i style="display:inline-block;width:5mm;height:4mm;border:1px solid #888;background:${c};vertical-align:middle"></i> ${esc(n)||c}</span>`).join('')}
+ else{drawPat(pv,p,{rx,ry,maxW:680,mode,lines,maxCell:16,dpr:3,gray:false,...bands(p)});info=`${p.w*rx} Maschen × ${p.h*ry+S.prev.bt.n+S.prev.bb.n} Reihen`;leg=''}
+ $('print').innerHTML=`<h1>${esc(p.name||'Muster')}</h1><p class="meta">Rapport ${p.w} Maschen × ${p.h} Reihen · ${p.colors.length} Farben · ${new Date().toLocaleDateString('de-CH')}</p>
+ <div class="fig"><img src="${cv.toDataURL()}" style="width:${cv.style.width}" alt="Diagramm"></div>
+ <p class="meta" style="margin-top:2mm">Reihen von unten nach oben, Maschen von rechts nach links lesen. Rechts je Reihe: Farben und längster Spannfaden.</p>
+ <h2>Farben</h2><table><tr><th></th><th>Buchstabe</th><th>Name / Garn</th><th>Farbcode</th><th>Maschen im Rapport</th></tr>
+ ${p.colors.map((c,i)=>`<tr><td><i style="background:${c.c}"></i></td><td><b>${L(i)}</b></td><td>${esc(c.n)}</td><td>${c.c}</td><td>${u[L(i)]||0}</td></tr>`).join('')}</table>
+ <div class="fig"><h2>Vorschau</h2><p class="meta">${info}</p><img src="${pv.toDataURL()}" style="width:${pv.style.width}" alt="Vorschau">${leg?`<p>${leg}</p>`:''}</div>`;
+ setTimeout(()=>window.print(),50)}
+$('fbk').href=`https://tally.so/r/xVVA05?app=fairisle&version=${APPV}`;
+$('printBtn').onclick=$('printBtn2').onclick=printOut;
 $('odsSave').onclick=$('odsSave2').onclick=()=>{const p=P();dl((p.name||'Muster').replace(/[\\/:*?"<>|]+/g,'_').trim()+'.ods',zip(odsFiles(p)));toast('ODS-Datei erstellt')};
 
 // ODS einlesen: bevorzugt eingebettete Daten, sonst Raster + bedingte Formatierung aus content.xml

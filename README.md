@@ -13,7 +13,12 @@ Kleine Web-App (PWA, eine Datei, ohne Server) zum Entwerfen und Anpassen von Fai
 - **Vorschau**: Rapport beliebig oft nebeneinander/übereinander, als Kästchen oder als Maschenbild, mit Rapportgrenzen und einfarbigem Rand oben/unten.
 - **Musterfolge**: mehrere Muster und einfarbige Streifen untereinander anreihen, Reihenfolge und Höhe frei wählbar, gemeinsame Maschenzahl mit Hinweis, wenn ein Rapport nicht aufgeht. Als eigene ODS-Datei speicherbar.
 - **Layout**: für den PC ausgelegt – links Eingabe und Farben, rechts die Vorschau (live), Trenner dazwischen verschiebbar. Auf dem Handy über Reiter unten bedienbar.
-- **Muster**: mehrere Muster im Browser speichern, Vorlagen, Duplizieren, Löschen.
+- **Auswahl & Ablage**: Bereich aufziehen, kopieren, ausschneiden, spiegeln, mit A füllen; Ablage spiegeln und beliebig oft einsetzen (Strg+C / X / V, Entf, Esc).
+- **Kontrast**: Graustufen-Ansicht (Editor und Vorschau), Helligkeit je Farbe und Warnung bei Farbpaaren mit wenig Helligkeitsunterschied in derselben Reihe.
+- **Drucken / PDF**: Diagramm mit Reihen- und Maschennummern, Farblegende mit Maschenzahlen und Vorschau auf A4 (im Druckdialog „Als PDF speichern“).
+- **Motiv-Bibliothek**: Peeries, Bänder (Raute, Welle, OXO) und Motive (Stern, Schneeflocke, Baum, Herz) – als neues Muster oder per „Einsetzen“ in den aktuellen Rapport.
+- **Muster**: mehrere Muster im Browser speichern, Duplizieren, Löschen.
+- **Feedback**: Link zum Feedback-Formular wie in der Eindeckhilfe.
 - **ODS speichern** (LibreOffice Calc): Blatt „Rapport“ mit Reihen-/Maschennummern und Farblegende, Blatt „Vorschau“ mit den eingestellten Wiederholungen. Alle Musterzellen haben bedingte Formatierung: *Zellwert = "A" → Farbe von A* usw.
   Wer die Buchstaben in Calc ändert, sieht sofort die passende Farbe.
 - **Bestehendes Muster aufnehmen**: ODS-Datei öffnen (auch in Calc nachbearbeitete), Buchstaben-Raster einfügen (eine Zeile pro Reihe, oberste zuerst) oder einen Muster-Code (`FI1:…`) einfügen.
