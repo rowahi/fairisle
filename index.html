@@ -90,6 +90,7 @@ button:disabled{opacity:.35;pointer-events:none}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
 .chip{width:38px;height:38px;padding:0;border-radius:10px;font-weight:700;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
 .chip.on{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--ac)}
+.nschip{background:#fff;color:#888;font-size:1.2rem;box-shadow:inset 0 0 0 1.5px #bbb;border:0;outline:1.5px dashed #aaa;outline-offset:-5px}
 .gsc{overflow:auto;margin-top:14px;-webkit-overflow-scrolling:touch}canvas{display:block}
 #cv{touch-action:none;cursor:crosshair}
 .crow{display:flex;align-items:center;gap:10px;padding:6px;border-radius:12px;cursor:pointer;transition:background .15s}
@@ -229,6 +230,7 @@ a.btn{display:flex;align-items:center;justify-content:center;height:38px;backgro
    <div class="szg"><span class="lbl2">Zoom</span><div class="stp"><button data-zm="-">−</button><b class="val" id="zv" style="min-width:3.4em"></b><button data-zm="+">+</button></div></div>
    <div class="szg" style="margin-top:10px"><span class="lbl2" title="Ab dieser Länge wird der Spannfaden orange markiert">Max. Spannfaden</span><div class="stp"><button data-fl="-">−</button><b class="val" id="flv"></b><button data-fl="+">+</button></div></div>
    <label class="ck"><input type="checkbox" id="lt">Buchstaben im Raster zeigen</label>
+   <label class="ck"><input type="checkbox" class="nsh">„Keine Masche“ schraffiert zeigen</label>
    <label class="ck"><input type="checkbox" id="gray2">◐ Graustufen (Kontrast prüfen)</label>
   </div></div>
   <div class="sp"></div>
@@ -285,6 +287,7 @@ a.btn{display:flex;align-items:center;justify-content:center;height:38px;backgro
    <div class="szg" style="margin-top:10px"><span class="lbl2" title="Höhe einer Masche im Verhältnis zur Breite">Maschenhöhe</span><span class="stp"><button data-ar="-">−</button><b class="val" id="arv" style="min-width:3.4em"></b><button data-ar="+">+</button></span><button id="ar0" style="height:32px;font-size:.8rem" title="Standard: 85 % – so wie gestrickte Maschen">Standard</button></div>
    <label class="ck"><input type="checkbox" id="pvl">Rapportgrenzen zeigen</label>
    <label class="ck"><input type="checkbox" id="gray">◐ Graustufen (Kontrast prüfen)</label>
+   <label class="ck"><input type="checkbox" class="nsh">„Keine Masche“ schraffiert zeigen</label>
    <div id="pvS"><hr>
     <div class="szg"><span class="lbl2">Wiederholungen</span><span class="stp"><button data-rp="x-">−</button><b class="val" id="rxv"></b><button data-rp="x+">+</button></span> × <span class="stp"><button data-rp="y-">−</button><b class="val" id="ryv"></b><button data-rp="y+">+</button></span></div>
     <div class="szg" style="margin-top:10px"><span class="lbl2">Rand oben</span><select id="btc" aria-label="Farbe Rand oben" style="width:auto"></select><span class="stp"><button data-bd="t-">−</button><b class="val" id="btv"></b><button data-bd="t+">+</button></span></div>
@@ -394,7 +397,7 @@ a.btn{display:flex;align-items:center;justify-content:center;height:38px;backgro
 
 <script>
 'use strict';
-const APPV='15';
+const APPV='16';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const L=i=>String.fromCharCode(65+i);
@@ -429,7 +432,7 @@ const TPL={
 };
 let uid=Date.now();
 function mkPat(name,lines,cols){const{w,h,g}=fromLines(lines);return{id:++uid,name,w,h,ox:0,oy:0,g,colors:cols.map(i=>({c:PAL[i][0],n:PAL[i][1]}))}}
-const DEF={tab:'ed',cur:0,list:[],yarns:[],prev:{rx:3,ry:3,mode:'box',lines:true,ar:.85,bt:{c:0,n:0},bb:{c:0,n:0}},ed:{tool:'pen',col:1,letters:true,mx:false,my:false,zoom:1,flt:5},seq:{on:false},projs:[],curPj:0,knit:{},ui:{split:56,gray:false,noteOk:false,bk:0}};
+const DEF={tab:'ed',cur:0,list:[],yarns:[],prev:{rx:3,ry:3,mode:'box',lines:true,ar:.85,bt:{c:0,n:0},bb:{c:0,n:0}},ed:{tool:'pen',col:1,letters:true,mx:false,my:false,zoom:1,flt:5},seq:{on:false},projs:[],curPj:0,knit:{},ui:{split:56,gray:false,nsHatch:false,noteOk:false,bk:0}};
 const K='fairisle';
 let S;try{S=JSON.parse(localStorage.getItem(K))}catch(e){}
 if(!S||!Array.isArray(S.list))S=JSON.parse(JSON.stringify(DEF));
@@ -449,12 +452,12 @@ function ensure(p){while(p.g.length<p.oy+p.h)p.g.push('');const n=p.ox+p.w;for(l
 // Anzeige-Raster: D[oben→unten][links→rechts]
 function disp(p){const D=[];for(let dy=0;dy<p.h;dy++){const r=p.h-1-dy,row=[];for(let dx=0;dx<p.w;dx++)row.push(cell(p,p.w-1-dx,r));D.push(row)}return D}
 function undisp(p,D){for(let dy=0;dy<p.h;dy++)for(let dx=0;dx<p.w;dx++)put(p,p.w-1-dx,p.h-1-dy,D[dy][dx])}
-function rowStat(row){const used=[...new Set(row)].sort(),n=row.length;let fl=0;
+function rowStat(row){row=row.filter(c=>c!=='.');const used=[...new Set(row)].sort(),n=row.length;let fl=0;
  if(used.length>1)for(const ch of used){let run=0;for(let i=0;i<2*n;i++){if(row[i%n]!==ch){run++;if(run>fl)fl=Math.min(run,n)}else run=0}}
  return{used,fl}}
 function norm(o){// importierte Daten prüfen
  const cols=(Array.isArray(o.colors)?o.colors:[]).slice(0,26).map((c,i)=>({c:HEX.test(c&&c.c)?c.c.toLowerCase():PAL[i%PAL.length][0],n:String(c&&c.n||'').slice(0,60)}));
- const g=(Array.isArray(o.g)?o.g:[]).slice(0,2*MAXS).map(s=>String(s).toUpperCase().replace(/[^A-Z]/g,'A').slice(0,2*MAXS));
+ const g=(Array.isArray(o.g)?o.g:[]).slice(0,2*MAXS).map(s=>String(s).toUpperCase().replace(/[^A-Z.]/g,'A').slice(0,2*MAXS));
  const cl=(v,a,b)=>Math.min(b,Math.max(a,v|0));
  const p={id:++uid,name:String(o.name||'Import').slice(0,80),w:cl(o.w,1,MAXS)||1,h:cl(o.h,1,MAXS)||1,ox:cl(o.ox,0,MAXS),oy:cl(o.oy,0,MAXS),g,colors:cols};
  let mx=0;g.forEach(s=>{for(const ch of s)mx=Math.max(mx,ch.charCodeAt(0)-64)});
@@ -481,9 +484,15 @@ const relY=h=>{const n=parseInt(h.slice(1),16);return .2126*lin(n>>16&255)+.7152
 const Lstar=h=>{const y=relY(h);return y>.008856?116*Math.cbrt(y)-16:903.3*y};
 const grayHex=h=>{const y=relY(h),s=y<=.0031308?12.92*y:1.055*y**(1/2.4)-.055,v=Math.round(Math.min(1,s)*255).toString(16).padStart(2,'0');return'#'+v+v+v};
 const gc=(h,g=S.ui.gray)=>g?grayHex(h):h;
+// Schraffur für „keine Masche“
+function hatch(ctx,x,y,w,h){ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();ctx.strokeStyle='rgba(0,0,0,.28)';ctx.lineWidth=1;ctx.beginPath();
+ const st=Math.max(4,Math.min(w,h)/3);for(let k=-h;k<w;k+=st){ctx.moveTo(x+k,y+h);ctx.lineTo(x+k+h,y)}ctx.stroke();ctx.restore()}
+// Gitterlinien nur dort, wo mindestens eine angrenzende Zelle eine Masche ist (keine Masche = ohne Rahmen)
+function gridEdges(ctx,W,H,cw,ch,isSt,style){for(let y=0;y<H;y++)for(let x=0;x<=W;x++){const a=x>0&&isSt(x-1,y),b=x<W&&isSt(x,y);if(!a&&!b)continue;const[sc,lw]=style('v',x,y);ctx.strokeStyle=sc;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(x*cw,y*ch);ctx.lineTo(x*cw,(y+1)*ch);ctx.stroke()}
+ for(let y=0;y<=H;y++)for(let x=0;x<W;x++){const a=y>0&&isSt(x,y-1),b=y<H&&isSt(x,y);if(!a&&!b)continue;const[sc,lw]=style('h',x,y);ctx.strokeStyle=sc;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(x*cw,y*ch);ctx.lineTo((x+1)*cw,y*ch);ctx.stroke()}}
 // Diagramm zeichnen (Editor und Druck). o: {cs,gray,letters,mut,warn,flt}
 function drawChart(cv,p,o){
- const ctx=cv.getContext('2d'),D=disp(p),nc=p.colors.length,dpr=o.dpr||window.devicePixelRatio||1,CS=o.cs,inf=34+Math.min(nc,6)*10+28;
+ const ctx=cv.getContext('2d'),D=disp(p),nc=p.colors.length,dpr=o.dpr||window.devicePixelRatio||1,CS=o.cs,NS=hasNS(p),inf=34+Math.min(nc,6)*10+28+(NS?44:0),BG=o.bg||'#ffffff';
  const W=p.w*CS+inf,H=p.h*CS+BOT;
  cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';
  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
@@ -491,14 +500,16 @@ function drawChart(cv,p,o){
  ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`600 ${Math.round(CS*.45)}px system-ui,sans-serif`;
  for(let dy=0;dy<p.h;dy++)for(let dx=0;dx<p.w;dx++){
   const ch=D[dy][dx],i=ch.charCodeAt(0)-65,x=dx*CS,y=dy*CS;
+  if(ch==='.'){ctx.fillStyle=BG;ctx.fillRect(x,y,CS,CS);if(o.hatch)hatch(ctx,x,y,CS,CS);continue}
   if(i<nc){ctx.fillStyle=col(i);ctx.fillRect(x,y,CS,CS)}
   else{ctx.fillStyle='#bbb';ctx.fillRect(x,y,CS,CS);ctx.strokeStyle='#777';ctx.beginPath();ctx.moveTo(x,y+CS);ctx.lineTo(x+CS,y);ctx.stroke()}
-  if(o.letters&&CS>=14){ctx.fillStyle=i<nc?ink(col(i)):'#000';ctx.globalAlpha=.5;ctx.fillText(ch,x+CS/2,y+CS/2+1);ctx.globalAlpha=1}
+  if(o.letters&&CS>=14){ctx.fillStyle=i<nc&&i>=0?ink(col(i)):'#000';ctx.globalAlpha=.5;ctx.fillText(ch,x+CS/2,y+CS/2+1);ctx.globalAlpha=1}
  }
- for(let x=0;x<=p.w;x++){const k=p.w-x,b=k%5===0||x===0;ctx.strokeStyle=b?'rgba(0,0,0,.7)':'rgba(0,0,0,.22)';ctx.lineWidth=b?1.3:.6;ctx.beginPath();ctx.moveTo(x*CS,0);ctx.lineTo(x*CS,p.h*CS);ctx.stroke()}
- for(let y=0;y<=p.h;y++){const k=p.h-y,b=k%5===0||y===0;ctx.strokeStyle=b?'rgba(0,0,0,.7)':'rgba(0,0,0,.22)';ctx.lineWidth=b?1.3:.6;ctx.beginPath();ctx.moveTo(0,y*CS);ctx.lineTo(p.w*CS,y*CS);ctx.stroke()}
+ gridEdges(ctx,p.w,p.h,CS,CS,(x,y)=>D[y][x]!=='.',(d,x,y)=>{const k=d==='v'?p.w-x:p.h-y,b=k%5===0||(d==='v'?x===0:y===0);return b?['rgba(0,0,0,.7)',1.3]:['rgba(0,0,0,.22)',.6]});
  const fs=Math.min(12,Math.max(8,CS*.55));ctx.font=`${fs}px system-ui,sans-serif`;
+ const cnt=r=>r.filter(c=>c!=='.').length;
  for(let dy=0;dy<p.h;dy++){const y=dy*CS+CS/2,x0=p.w*CS+6,st=rowStat(D[dy]);
+  if(NS){const n=cnt(D[dy]),dn=dy<p.h-1?cnt(D[dy+1])-n:0,xr=p.w*CS+inf-4;ctx.textAlign='right';ctx.fillStyle=dn>0?o.warn:o.mut;ctx.font=`${dn>0?'700 ':''}${fs}px system-ui,sans-serif`;ctx.fillText(dn>0?`${n} −${dn}`:String(n),xr,y+1);ctx.font=`${fs}px system-ui,sans-serif`}
   ctx.fillStyle=o.mut;ctx.textAlign='left';ctx.fillText(String(p.h-dy),x0,y+1);
   st.used.slice(0,6).forEach((ch,j)=>{const i=ch.charCodeAt(0)-65;ctx.fillStyle=i<nc?col(i):'#bbb';ctx.beginPath();ctx.arc(x0+32+j*10,y,4,0,7);ctx.fill();ctx.strokeStyle='rgba(0,0,0,.35)';ctx.lineWidth=.6;ctx.stroke()});
   if(st.fl){const bad=st.fl>o.flt;ctx.fillStyle=bad?o.warn:o.mut;ctx.font=`${bad?'700 ':''}${fs}px system-ui,sans-serif`;ctx.fillText(String(st.fl),x0+30+Math.min(st.used.length,6)*10,y+1);ctx.font=`${fs}px system-ui,sans-serif`}
@@ -510,17 +521,17 @@ function drawChart(cv,p,o){
 let SEL=null,SEL0=null,CB=null,HOV=null;
 const selRect=()=>SEL&&{x:Math.min(SEL[0],SEL[2]),y:Math.min(SEL[1],SEL[3]),w:Math.abs(SEL[2]-SEL[0])+1,h:Math.abs(SEL[3]-SEL[1])+1};
 function drawEd(){
- const p=P(),nc=p.colors.length;INF=34+Math.min(nc,6)*10+28;
+ const p=P(),nc=p.colors.length;INF=34+Math.min(nc,6)*10+28+(hasNS(p)?44:0);
  let fit=Math.floor(($('cvw').clientWidth-INF-4)/p.w);
  if(WIDE.matches)fit=Math.min(fit,Math.floor((innerHeight-300)/p.h));
  CS=Math.max(6,Math.round(Math.max(10,Math.min(44,fit))*S.ed.zoom));
  const css=getComputedStyle(document.body);
- const ctx=drawChart($('cv'),p,{cs:CS,letters:S.ed.letters&&CS>=16,mut:css.getPropertyValue('--mut'),warn:css.getPropertyValue('--warn'),flt:S.ed.flt});
+ const ctx=drawChart($('cv'),p,{cs:CS,bg:getComputedStyle(document.body).getPropertyValue('--card').trim()||'#fff',hatch:S.ui.nsHatch,letters:S.ed.letters&&CS>=16,mut:css.getPropertyValue('--mut'),warn:css.getPropertyValue('--warn'),flt:S.ed.flt});
  const r=selRect();
  if(r&&S.ed.tool==='sel'){ctx.save();ctx.fillStyle='rgba(106,76,147,.15)';ctx.fillRect(r.x*CS,r.y*CS,r.w*CS,r.h*CS);ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.strokeRect(r.x*CS+.5,r.y*CS+.5,r.w*CS-1,r.h*CS-1);
   ctx.strokeStyle='#6a4c93';ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.strokeRect(r.x*CS+.5,r.y*CS+.5,r.w*CS-1,r.h*CS-1);ctx.restore()}
  if(S.ed.tool==='paste'&&CB&&HOV){ctx.save();ctx.globalAlpha=.75;
-  CB.forEach((row,y)=>row.forEach((ch,x)=>{const X=HOV[0]+x,Y=HOV[1]+y,i=ch.charCodeAt(0)-65;if(X>=p.w||Y>=p.h)return;ctx.fillStyle=i<nc?gc(p.colors[i].c):'#bbb';ctx.fillRect(X*CS,Y*CS,CS,CS)}));
+  CB.forEach((row,y)=>row.forEach((ch,x)=>{const X=HOV[0]+x,Y=HOV[1]+y,i=ch.charCodeAt(0)-65;if(X>=p.w||Y>=p.h)return;ctx.fillStyle=ch==='.'?'#ffffff':i<nc?gc(p.colors[i].c):'#bbb';ctx.fillRect(X*CS,Y*CS,CS,CS)}));
   ctx.globalAlpha=1;ctx.strokeStyle='#6a4c93';ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.strokeRect(HOV[0]*CS,HOV[1]*CS,Math.min(CB[0].length,p.w-HOV[0])*CS,Math.min(CB.length,p.h-HOV[1])*CS);ctx.restore()}
 }
 function hit(e,clamp){const p=P(),r=$('cv').getBoundingClientRect();let dx=Math.floor((e.clientX-r.left)/CS),dy=Math.floor((e.clientY-r.top)/CS);
@@ -556,8 +567,8 @@ $('cv').addEventListener('contextmenu',e=>e.preventDefault());
 $('cv').addEventListener('pointerdown',e=>{const t=S.ed.tool,h=hit(e);if(!h)return;e.preventDefault();const p=P();
  if(t==='sel'){$('cv').setPointerCapture(e.pointerId);drawing=true;SEL=[h[0],h[1],h[0],h[1]];renderSelbar();drawEd();return}
  if(t==='paste'){if(e.button===2){setTool('pen');return}pasteAt(h[0],h[1]);return}
- pch=e.button===2?'A':L(S.ed.col);
- if(t==='pick'&&e.button!==2){selCol(Math.min(p.colors.length-1,cell(p,p.w-1-h[0],p.h-1-h[1]).charCodeAt(0)-65));S.ed.tool='pen';save();renderEd();if(visible('col'))renderCol();return}
+ pch=e.button===2?'A':S.ed.ns?'.':L(S.ed.col);
+ if(t==='pick'&&e.button!==2){const pc=cell(p,p.w-1-h[0],p.h-1-h[1]);if(pc==='.')S.ed.ns=true;else{S.ed.ns=false;selCol(Math.min(p.colors.length-1,pc.charCodeAt(0)-65))}S.ed.tool='pen';save();renderEd();if(visible('col'))renderCol();return}
  snap();if(t==='fill'){fill(h[0],h[1],pch);save();later('ed','pv','knit');return}
  $('cv').setPointerCapture(e.pointerId);drawing=true;last=h.join();paint(h[0],h[1],pch);later('ed','pv','knit')});
 $('cv').addEventListener('pointermove',e=>{const t=S.ed.tool;
@@ -576,7 +587,7 @@ function op(k){const p=P();let D=disp(p);snap();const W=p.w,H=p.h;
  if(k==='sr')D=D.map(r=>[r[W-1]].concat(r.slice(0,W-1)));
  if(k==='su')D=D.slice(1).concat([D[0]]);
  if(k==='sd')D=[D[H-1]].concat(D.slice(0,H-1));
- if(k==='all')D=D.map(r=>r.map(()=>L(S.ed.col)));
+ if(k==='all')D=D.map(r=>r.map(()=>S.ed.ns?'.':L(S.ed.col)));
  if(k==='rep'){const f=$('rf').value,t=$('rt').value;D=D.map(r=>r.map(c=>c===f?t:c))}
  undisp(p,D);save();render()}
 // Breite/Höhe an beiden Enden. L/T: Fenster wächst/schrumpft links/oben. R/B: über den Versatz ox/oy.
@@ -600,7 +611,8 @@ hold('[data-rp]',b=>{const k=b.dataset.rp,f=k[0]==='x'?'rx':'ry';S.prev[f]=Math.
 hold('[data-bd]',b=>{const k=b.dataset.bd,o=S.prev[k[0]==='t'?'bt':'bb'];o.n=Math.min(60,Math.max(0,o.n+(k[1]==='+'?1:-1)));save();renderPv()});
 
 function renderChips(){const p=P();
- $('chips').innerHTML=p.colors.map((c,i)=>`<button class="chip${i===S.ed.col?' on':''}" data-c="${i}" style="background:${c.c};color:${ink(c.c)}" title="${esc(c.n||L(i))}${i<9?' ('+(i+1)+')':''}">${L(i)}</button>`).join('')}
+ $('chips').innerHTML=p.colors.map((c,i)=>`<button class="chip${i===S.ed.col&&!S.ed.ns?' on':''}" data-c="${i}" style="background:${c.c};color:${ink(c.c)}" title="${esc(c.n||L(i))}${i<9?' ('+(i+1)+')':''}">${L(i)}</button>`).join('')
+  +`<button class="chip nschip${S.ed.ns?' on':''}" data-c="ns" title="Keine Masche (Abnahme) – Taste 0">∅</button>`}
 function renderEd(){const p=P();ensure(p);
  if(S.ed.col>=p.colors.length)S.ed.col=p.colors.length-1;
  if(document.activeElement!==$('pname'))$('pname').value=p.name;
@@ -615,7 +627,7 @@ function renderEd(){const p=P();ensure(p);
  if(rf&&rf.charCodeAt(0)-65<p.colors.length)$('rf').value=rf;
  $('rt').value=rt&&rt.charCodeAt(0)-65<p.colors.length?rt:L(Math.min(1,p.colors.length-1));
  drawEd()}
-$('chips').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(!b)return;selCol(+b.dataset.c);if(S.ed.tool==='pick')S.ed.tool='pen';save();renderEd();if(visible('col'))renderCol()});
+$('chips').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(!b)return;if(b.dataset.c==='ns')S.ed.ns=true;else{S.ed.ns=false;selCol(+b.dataset.c)}if(S.ed.tool==='pick')S.ed.tool='pen';save();renderEd();if(visible('col'))renderCol()});
 document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
 $('selbar').addEventListener('click',e=>{const b=e.target.closest('[data-sb]');if(b)selOp(b.dataset.sb)});
 if(S.ed.tool==='paste')S.ed.tool='pen';
@@ -635,7 +647,7 @@ document.addEventListener('keydown',e=>{if(KM.open||e.target.closest('input,text
  if(mod&&k==='v'&&CB){e.preventDefault();selOp('paste');return}
  if((k==='delete'||k==='backspace')&&SEL&&S.ed.tool==='sel'){e.preventDefault();selOp('del');return}
  if(k==='escape'){if(S.ed.tool==='paste')setTool('pen');else if(SEL){SEL=null;renderSelbar();drawEd()}return}
- if(/^[1-9]$/.test(e.key)&&!e.ctrlKey&&!e.metaKey&&!e.altKey){const i=+e.key-1;if(i<P().colors.length){selCol(i);save();render()}}});
+ if(/^[0-9]$/.test(e.key)&&!e.ctrlKey&&!e.metaKey&&!e.altKey){if(e.key==='0'){S.ed.ns=true;save();render();return}const i=+e.key-1;if(i<P().colors.length){S.ed.ns=false;selCol(i);save();render()}}});
 
 /* ---------- Farben ---------- */
 let CE=null;// Farbeditor: {i,h,s,v,orig}
@@ -643,7 +655,9 @@ function hex2hsv(hex){const n=parseInt(hex.slice(1),16),r=(n>>16&255)/255,g=(n>>
  if(d){if(mx===r)h=((g-b)/d+6)%6;else if(mx===g)h=(b-r)/d+2;else h=(r-g)/d+4;h*=60}return{h,s:mx?d/mx:0,v:mx}}
 function hsv2hex(h,s,v){const f=n=>{const k=(n+h/60)%6;return v-v*s*Math.max(0,Math.min(k,4-k,1))};return'#'+[f(5),f(3),f(1)].map(x=>Math.round(x*255).toString(16).padStart(2,'0')).join('')}
 function selCol(i){S.ed.col=i;const c=P().colors[i];CE={i,...hex2hsv(c.c),orig:c.c}}
-function usage(p){const n={};for(let r=0;r<p.h;r++)for(let c=0;c<p.w;c++){const ch=cell(p,c,r);n[ch]=(n[ch]||0)+1}return n}
+function usage(p){const n={};for(let r=0;r<p.h;r++)for(let c=0;c<p.w;c++){const ch=cell(p,c,r);if(ch!=='.')n[ch]=(n[ch]||0)+1}return n}
+// „keine Masche“ (Abnahme) wird als '.' gespeichert und ohne Rahmen in Hintergrundfarbe gezeigt
+const hasNS=p=>{for(let r=0;r<p.h;r++)for(let c=0;c<p.w;c++)if(cell(p,c,r)==='.')return true;return false};
 function renderSwap(){const p=P(),o=p.colors.map((c,i)=>`<option value="${L(i)}">${L(i)}${c.n?' – '+esc(c.n):''}</option>`).join(''),a=$('swa').value,b=$('swb').value;
  $('swa').innerHTML=o;$('swb').innerHTML=o;$('swa').value=a&&a.charCodeAt(0)-65<p.colors.length?a:'A';$('swb').value=b&&b.charCodeAt(0)-65<p.colors.length&&b!==$('swa').value?b:L(Math.min(1,p.colors.length-1));
  $('swhint').textContent=mates(p).length?'Ändert nur das Raster dieses Musters – die Projektfarben bleiben für alle Rapporte gleich.':'Ändert nur das Raster dieses Musters – die Farben selbst bleiben.'}
@@ -657,7 +671,7 @@ function renderColList(){const p=P(),u=usage(p);renderSwap();
  $('cdel').disabled=p.colors.length<=1;$('cadd').disabled=p.colors.length>=26;renderContrast()}
 // Farbpaare, die in einer Reihe zusammen vorkommen und sich in der Helligkeit kaum unterscheiden
 function renderContrast(){const p=P(),pairs=new Map();
- disp(p).forEach(row=>{const u=[...new Set(row)].filter(ch=>ch.charCodeAt(0)-65<p.colors.length);
+ disp(p).forEach(row=>{const u=[...new Set(row)].filter(ch=>ch!=='.'&&ch.charCodeAt(0)-65<p.colors.length);
   for(let i=0;i<u.length;i++)for(let j=i+1;j<u.length;j++){const k=[u[i],u[j]].sort().join('');pairs.set(k,(pairs.get(k)||0)+1)}});
  const bad=[...pairs].map(([k,n])=>{const a=p.colors[k.charCodeAt(0)-65],b=p.colors[k.charCodeAt(1)-65];return{k,n,d:Math.abs(Lstar(a.c)-Lstar(b.c))}}).filter(x=>x.d<20).sort((a,b)=>a.d-b.d);
  $('contrast').innerHTML=bad.length?`<p class="mut warn" style="margin:8px 0 0" title="Diese Farben kommen in derselben Reihe vor und sind fast gleich hell – das Motiv hebt sich kaum ab. Zum Prüfen: Ansicht → Graustufen.">⚠ Wenig Kontrast: ${bad.map(x=>`<b>${x.k[0]}/${x.k[1]}</b>`).join(', ')}</p>`:''}
@@ -743,21 +757,21 @@ document.addEventListener('paste',e=>{if(e.target.closest('input,textarea'))retu
 
 /* ---------- Vorschau ---------- */
 // o: {rx,ry,maxW,maxH,mode,lines,maxCell,bt:{ch,n},bb:{ch,n}}
-const hexOf=(p,ch)=>{const i=ch.charCodeAt(0)-65;return i<p.colors.length?p.colors[i].c:'#bbbbbb'};
+const hexOf=(p,ch)=>{if(ch==='.')return null;const i=ch.charCodeAt(0)-65;return i<p.colors.length?p.colors[i].c:'#bbbbbb'};
 // Zeilen (Hex-Farben) zeichnen. o: {maxW,maxH,mode,maxCell,lines,hl:[y],vl:[[x,y0,y1]]}
 function drawRows(cv,rows,o){
- const H=Math.max(1,rows.length),W=rows.length?rows[0].length:1,dpr=o.dpr||window.devicePixelRatio||1,ar=o.ar||.85,gm=new Map(),G=o.gray??S.ui.gray,col=c=>{if(!G)return c;let v=gm.get(c);if(!v){v=grayHex(c);gm.set(c,v)}return v};
+ const H=Math.max(1,rows.length),W=rows.length?rows[0].length:1,dpr=o.dpr||window.devicePixelRatio||1,ar=o.ar||.85,BG=o.bg||(o.dpr?'#ffffff':getComputedStyle(document.body).getPropertyValue('--card').trim()||'#fff'),HT=o.hatch??S.ui.nsHatch,gm=new Map(),G=o.gray??S.ui.gray,col=c=>{if(!G)return c;let v=gm.get(c);if(!v){v=grayHex(c);gm.set(c,v)}return v};
  let cw=Math.floor(o.maxW/W);if(o.maxH)cw=Math.min(cw,Math.floor(o.maxH/(H*ar)));cw=Math.max(2,Math.min(o.maxCell,cw));const chh=Math.max(2,Math.round(cw*ar)),ST=o.mode==='st'||o.mode==='felt';
  const w=W*cw,h=H*chh;cv.width=w*dpr;cv.height=h*dpr;cv.style.width=w+'px';cv.style.height=h+'px';
  const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
  if(o.mode==='st'){ctx.fillStyle='#2a2a2a';ctx.fillRect(0,0,w,h)}
- rows.forEach((row,y)=>row.forEach((c,x)=>{const px=x*cw,py=y*chh;ctx.fillStyle=col(c);
+ rows.forEach((row,y)=>row.forEach((c,x)=>{const px=x*cw,py=y*chh;if(c===null){ctx.fillStyle=BG;ctx.fillRect(px,py,cw,chh);if(HT&&cw>=4)hatch(ctx,px,py,cw,chh);return}ctx.fillStyle=col(c);
   if(o.mode==='felt')ctx.fillRect(px,py,cw,chh);
   if(ST){ctx.beginPath();ctx.ellipse(px+cw*.3,py+chh*.5,cw*.25,chh*.62,-.5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(px+cw*.7,py+chh*.5,cw*.25,chh*.62,.5,0,Math.PI*2);ctx.fill()}
   else ctx.fillRect(px,py,cw,chh)}));
  if(o.mode==='felt')felt(cv,ctx,w,h,cw,chh,dpr);
- if(o.mode==='box'&&cw>=6){ctx.strokeStyle='rgba(0,0,0,.16)';ctx.lineWidth=.5;ctx.beginPath();
-  for(let x=1;x<W;x++){ctx.moveTo(x*cw,0);ctx.lineTo(x*cw,h)}for(let y=1;y<H;y++){ctx.moveTo(0,y*chh);ctx.lineTo(w,y*chh)}ctx.stroke()}
+ if(o.mode==='box'&&cw>=6){if(rows.some(r=>r.includes(null)))gridEdges(ctx,W,H,cw,chh,(x,y)=>rows[y][x]!==null,()=>['rgba(0,0,0,.16)',.5]);
+  else{ctx.strokeStyle='rgba(0,0,0,.16)';ctx.lineWidth=.5;ctx.beginPath();for(let x=1;x<W;x++){ctx.moveTo(x*cw,0);ctx.lineTo(x*cw,h)}for(let y=1;y<H;y++){ctx.moveTo(0,y*chh);ctx.lineTo(w,y*chh)}ctx.stroke()}}
  if(o.lines){ctx.strokeStyle='#e0245e';ctx.lineWidth=1.5;ctx.setLineDash([5,4]);ctx.beginPath();
   (o.vl||[]).forEach(([x,y0,y1])=>{ctx.moveTo(x*cw,y0*chh);ctx.lineTo(x*cw,y1*chh)});(o.hl||[]).forEach(y=>{ctx.moveTo(0,y*chh);ctx.lineTo(w,y*chh)});ctx.stroke();ctx.setLineDash([])}}
 // Verfilzt: feine Fasern einstreuen, dann weichzeichnen (verkleinern + wieder vergrössern – funktioniert in jedem Browser)
@@ -844,6 +858,7 @@ hold('[data-ar]',b=>{S.prev.ar=Math.round(Math.min(1.5,Math.max(.4,(S.prev.ar||.
 $('ar0').onclick=()=>{S.prev.ar=.85;save();renderPv()};
 document.querySelectorAll('[data-sq]').forEach(b=>b.onclick=()=>{S.seq.on=b.dataset.sq==='1';if(S.seq.on)initSeq();save();renderPv()});
 $('pvl').onchange=()=>{S.prev.lines=$('pvl').checked;save();renderPv()};
+document.querySelectorAll('.nsh').forEach(c=>c.onchange=()=>{S.ui.nsHatch=c.checked;save();render()});
 $('gray').onchange=$('gray2').onchange=e=>{S.ui.gray=e.target.checked;save();render()};
 $('btc').onchange=()=>{S.prev.bt.c=+$('btc').value;if(!S.prev.bt.n)S.prev.bt.n=3;save();renderPv()};
 $('bbc').onchange=()=>{S.prev.bb.c=+$('bbc').value;if(!S.prev.bb.n)S.prev.bb.n=3;save();renderPv()};
@@ -897,7 +912,7 @@ const dragEnd=()=>{if(!DRAG)return;const{k,to}=DRAG;DRAG=null;
 $('qlist').addEventListener('pointerup',dragEnd);$('qlist').addEventListener('pointercancel',dragEnd);
 function seqOds(pj=PJ()){const m=seqColors(pj);if(m.size>26)return toast('Mehr als 26 verschiedene Farben – ODS nicht möglich');
  const cols=[...m].map(([c,n])=>({c,n})),idx=new Map(cols.map((c,i)=>[c.c,L(i)])),r=seqRows(pj);
- const D=r.rows.map(row=>row.map(c=>idx.get(c)||'A'));
+ const D=r.rows.map(row=>row.map(c=>c===null?'.':idx.get(c)||'A'));
  dl(pjName(pj).replace(/[\\/:*?"<>|]+/g,'_').trim()+'.ods',zip(odsPack(cols,[{name:'Projekt',title:`${pjName(pj)} – ${pj.W} Maschen × ${D.length} Reihen`,D,nums:true,legend:true}])));toast('ODS-Datei erstellt')}
 $('qods').onclick=()=>seqOds();
 
@@ -951,7 +966,7 @@ $('codeCopy').onclick=async()=>{const c=code(P());try{await navigator.clipboard.
 function addPat(p){S.list.unshift(p);S.cur=p.id;S.ed.col=Math.min(1,p.colors.length-1);CE=null;const m=newIntoProject(p);save();closeDrawer();toast(`„${p.name}“ übernommen (${p.w} × ${p.h})${m}`);go('ed')}
 $('impGo').onclick=()=>{const t=$('imp').value.trim();if(!t)return;$('dlgImp').close();
  try{if(/^FI1:/i.test(t))return addPat(norm(JSON.parse(b64d(t.slice(4)))));
-  const lines=t.split(/\r?\n/).map(l=>l.toUpperCase().replace(/[^A-Z]/g,'')).filter(Boolean);
+  const lines=t.split(/\r?\n/).map(l=>l.toUpperCase().replace(/[^A-Z.]/g,'')).filter(Boolean);
   if(!lines.length)throw 0;const f=fromLines(lines);addPat(norm({name:'Import',...f}))}
  catch(e){toast('Konnte den Text nicht lesen')}};
 
@@ -998,10 +1013,11 @@ ${colors.map((c,i)=>`<style:style style:name="Farbe_${L(i)}" style:display-name=
  const tables=sheets.map((s,k)=>{const W=s.D[0]?s.D[0].length:1,H=s.D.length,st='ceG'+k;
   let t=`<table:table table:name="${xe(s.name)}"><table:table-column table:style-name="coG" table:number-columns-repeated="${W}"/>${s.nums?'<table:table-column table:style-name="coN"/>':''}`;
   if(s.title)t+=`<table:table-row table:style-name="roT">${sc(s.title,'ceT')}</table:table-row>`;
-  s.D.forEach((row,dy)=>{t+=`<table:table-row table:style-name="roG">${row.map(ch=>sc(ch,st)).join('')}${s.nums?nm(H-dy):''}</table:table-row>`});
+  s.D.forEach((row,dy)=>{t+=`<table:table-row table:style-name="roG">${row.map(ch=>ch==='.'?sc('.','ceNS'):sc(ch,st)).join('')}${s.nums?nm(H-dy):''}</table:table-row>`});
   if(s.nums)t+=`<table:table-row table:style-name="roG">${Array.from({length:W},(_,dx)=>nm(W-dx)).join('')}</table:table-row>`;
   if(s.legend){t+=`<table:table-row>${E}</table:table-row><table:table-row>${sc('Farben','ceT')}</table:table-row>`;
    colors.forEach((c,i)=>{t+=`<table:table-row table:style-name="roG">${sc(L(i),st)}${E}${sc(`${c.n?c.n+' ':''}(${c.c})`)}</table:table-row>`});
+   if(s.D.some(r=>r.includes('.')))t+=`<table:table-row table:style-name="roG">${sc('.','ceNS')}${E}${sc('„.“ / leer ohne Rahmen = keine Masche (Abnahme)')}</table:table-row>`;
    t+=`<table:table-row>${E}</table:table-row><table:table-row>${sc('Lesen: Reihen von unten nach oben, Maschen von rechts nach links.')}</table:table-row>`}
   return t+'</table:table>'}).join('');
  const content=`<?xml version="1.0" encoding="UTF-8"?>\n<office:document-content ${NS}><office:automatic-styles>
@@ -1010,6 +1026,7 @@ ${colors.map((c,i)=>`<style:style style:name="Farbe_${L(i)}" style:display-name=
 <style:style style:name="roG" style:family="table-row"><style:table-row-properties style:row-height="0.5cm" style:use-optimal-row-height="false"/></style:style>
 <style:style style:name="roT" style:family="table-row"><style:table-row-properties style:row-height="0.8cm" style:use-optimal-row-height="false"/></style:style>
 <style:style style:name="ceT" style:family="table-cell" style:parent-style-name="Default"><style:text-properties fo:font-size="12pt" fo:font-weight="bold"/></style:style>
+<style:style style:name="ceNS" style:family="table-cell" style:parent-style-name="Default"><style:table-cell-properties fo:background-color="#ffffff" fo:border="none"/><style:paragraph-properties fo:text-align="center"/><style:text-properties fo:color="#bbbbbb" fo:font-size="7pt"/></style:style>
 <style:style style:name="ceN" style:family="table-cell" style:parent-style-name="Default"><style:table-cell-properties style:vertical-align="middle"/><style:paragraph-properties fo:text-align="center"/><style:text-properties fo:font-size="7pt" fo:color="#666666"/></style:style>
 ${sheets.map((s,k)=>gst(s.name,k)).join('\n')}
 </office:automatic-styles><office:body><office:spreadsheet>${tables}</office:spreadsheet></office:body></office:document-content>`;
@@ -1032,10 +1049,10 @@ function dl(name,blob){const u=URL.createObjectURL(blob),a=document.createElemen
 // Drucken / PDF: jeder verwendete Rapport möglichst gross auf eigener Seite, dazu Farben und Vorschau
 function chartImg(p){const cv=document.createElement('canvas'),inf=34+Math.min(p.colors.length,6)*10+28;
  const cs=Math.max(8,Math.min(60,Math.floor(Math.min((700-inf)/p.w,(800-BOT)/p.h))));
- drawChart(cv,p,{cs,dpr:3,gray:false,letters:cs>=14,mut:'#555555',warn:'#c2571a',flt:S.ed.flt});
+ drawChart(cv,p,{cs,dpr:3,gray:false,bg:'#ffffff',hatch:S.ui.nsHatch,letters:cs>=14,mut:'#555555',warn:'#c2571a',flt:S.ed.flt});
  return`<div class="fig"><img src="${cv.toDataURL()}" style="width:${cv.style.width}" alt="Diagramm ${esc(p.name)}"></div>`}
 const swI=c=>`<i style="background:${c}"></i>`;
-const READ='<p class="meta" style="margin-top:2mm">Reihen von unten nach oben, Maschen von rechts nach links lesen. Rechts je Reihe: verwendete Farben und längster Spannfaden.</p>';
+const READ='<p class="meta" style="margin-top:2mm">Reihen von unten nach oben, Maschen von rechts nach links lesen. Rechts je Reihe: verwendete Farben und längster Spannfaden.</p>',NSNOTE=p=>hasNS(p)?'<p class="meta">Kästchen ohne Rahmen = keine Masche (Abnahme). Ganz rechts: Maschenzahl der Reihe, „−n“ = n Maschen weniger als in der Reihe darunter.</p>':'';
 function printOut(){const p=P(),{rx,ry,mode,lines}=S.prev,pv=document.createElement('canvas'),date=new Date().toLocaleDateString('de-CH');let html='';
  if(S.seq.on&&PJ()){const pj=PJ(),r=seqRows(pj),m=seqColors(pj),cols=[...m],idx=new Map(cols.map(([c],i)=>[c,L(i)]));
   drawRows(pv,r.rows,{maxW:700,maxH:820,mode,lines,maxCell:18,hl:r.hl,vl:r.vl,dpr:3,gray:false,ar:S.prev.ar});
@@ -1045,10 +1062,10 @@ function printOut(){const p=P(),{rx,ry,mode,lines}=S.prev,pv=document.createElem
   <h2>Farben</h2><table><tr><th></th><th>Buchstabe</th><th>Name / Garn</th><th>Farbcode</th></tr>${cols.map(([c,n])=>`<tr><td>${swI(c)}</td><td><b>${idx.get(c)}</b></td><td>${esc(n)}</td><td>${c}</td></tr>`).join('')}</table>
   <h2>Reihenfolge (von oben nach unten)</h2><ol>${seqItems(pj).map(it=>{if(it.t==='b')return`<li>Farbstreifen ${swI(it.c)} ${idx.get(it.c)||''} – ${it.n} Reihen</li>`;const q=S.list.find(x=>x.id===it.id),f=fitLayout(q,pj.W,it.pad);
    return`<li><b>${esc(q.name)}</b> – ${q.w} × ${q.h}, ${it.ry}× hoch${f.rem&&f.n?`, ${f.rem} M. Rand (${{c:'beidseitig',l:'links',r:'rechts'}[it.pad||'c']})`:''}${it.off?`, Versatz ${it.off>0?'+':''}${it.off} M.`:''}</li>`}).join('')}</ol>`;
-  used.forEach(({p:q},k)=>{const u=usage(q);html+=`<section class="pg"><h1>Rapport ${k+1}: ${esc(q.name||'Muster')}</h1><p class="meta">${q.w} Maschen × ${q.h} Reihen · ${esc(pjName(pj))}</p>${chartImg(q)}${READ}
+  used.forEach(({p:q},k)=>{const u=usage(q);html+=`<section class="pg"><h1>Rapport ${k+1}: ${esc(q.name||'Muster')}</h1><p class="meta">${q.w} Maschen × ${q.h} Reihen · ${esc(pjName(pj))}</p>${chartImg(q)}${READ}${NSNOTE(q)}
    <p class="leg">${q.colors.map((c,i)=>u[L(i)]?`<span>${swI(c.c)} <b>${L(i)}</b> ${esc(c.n)} (${u[L(i)]} M.)</span>`:'').join('')}</p></section>`})}
  else{const u=usage(p);drawPat(pv,p,{rx,ry,maxW:700,maxH:820,mode,lines,maxCell:18,dpr:3,gray:false,ar:S.prev.ar,...bands(p)});
-  html+=`<h1>${esc(p.name||'Muster')}</h1><p class="meta">Rapport ${p.w} Maschen × ${p.h} Reihen · ${p.colors.length} Farben · ${date}</p>${chartImg(p)}${READ}
+  html+=`<h1>${esc(p.name||'Muster')}</h1><p class="meta">Rapport ${p.w} Maschen × ${p.h} Reihen · ${p.colors.length} Farben · ${date}</p>${chartImg(p)}${READ}${NSNOTE(p)}
   <h2>Farben</h2><table><tr><th></th><th>Buchstabe</th><th>Name / Garn</th><th>Farbcode</th><th>Maschen im Rapport</th></tr>
   ${p.colors.map((c,i)=>`<tr><td>${swI(c.c)}</td><td><b>${L(i)}</b></td><td>${esc(c.n)}</td><td>${c.c}</td><td>${u[L(i)]||0}</td></tr>`).join('')}</table>
   <section class="pg"><h1>Vorschau</h1><p class="meta">${p.w*rx} Maschen × ${p.h*ry+S.prev.bt.n+S.prev.bb.n} Reihen</p><div class="fig"><img src="${pv.toDataURL()}" style="width:${pv.style.width}" alt="Vorschau"></div></section>`}
@@ -1095,15 +1112,21 @@ function parseOds(f,fname){
  for(const row of tb.getElementsByTagNameNS(TN,'table-row')){const cells=[];
   for(const c of row.children){if(c.namespaceURI!==TN||!/table-cell$/.test(c.localName))continue;const rep=Math.min(+c.getAttributeNS(TN,'number-columns-repeated')||1,MAXS+2),t=c.textContent.trim();for(let k=0;k<rep;k++)cells.push(t)}
   const rr=Math.min(+row.getAttributeNS(TN,'number-rows-repeated')||1,MAXS);for(let k=0;k<rr;k++)M.push(cells);if(M.length>2000)break}
- const isL=t=>/^[A-Z]$/i.test(t),run2=r=>r.some((t,i)=>isL(t)&&isL(r[i+1]||''));let y0=M.findIndex(run2);if(y0<0)y0=M.findIndex(r=>r.some(isL));if(y0<0)throw new Error('Keine Buchstaben gefunden');
+ const isL=t=>/^[A-Z.]$/i.test(t),run2=r=>r.some((t,i)=>isL(t)&&isL(r[i+1]||''));let y0=M.findIndex(run2);if(y0<0)y0=M.findIndex(r=>r.some(isL));if(y0<0)throw new Error('Keine Buchstaben gefunden');
  let x0=M[y0].findIndex((t,i)=>isL(t)&&isL(M[y0][i+1]||''));if(x0<0)x0=M[y0].findIndex(isL);let x1=x0;while(x1<M[y0].length&&isL(M[y0][x1]))x1++;
- const w=x1-x0,lines=[];for(let y=y0;y<M.length&&isL(M[y][x0]||'');y++)lines.push(Array.from({length:w},(_,x)=>(M[y][x0+x]||'A').toUpperCase()).map(ch=>isL(ch)?ch:'A').join(''));
+ let w=x1-x0,lines=[];for(let y=y0;y<M.length&&isL(M[y][x0]||'');y++)lines.push(Array.from({length:w},(_,x)=>(M[y][x0+x]||'A').toUpperCase()).map(ch=>isL(ch)?ch:'A').join(''));
+ // Legende: Buchstabe, der „keine Masche“ bedeutet (z. B. „D | keine Masche“) → als Kennzeichnung '.' übernehmen
+ let nsL=null;for(const r of M){const i=r.findIndex(t=>/^[A-Z]$/i.test(t));if(i>=0&&r.slice(i+1).some(t=>/keine\s*masche|no\s*stitch/i.test(t))){nsL=r[i].toUpperCase();break}}
+ if(nsL){const k=nsL.charCodeAt(0);lines=lines.map(l=>l.replace(/[A-Z]/g,ch=>ch===nsL?'.':ch.charCodeAt(0)>k?String.fromCharCode(ch.charCodeAt(0)-1):ch))}
  const bg={},cond={};
  for(const d of[doc,sdoc].filter(Boolean)){for(const s of d.getElementsByTagName('*')){if(s.localName==='style'){const n=s.getAttribute('style:name');const pr=[...s.children].find(c=>c.localName==='table-cell-properties');const b=pr&&pr.getAttribute('fo:background-color');if(n&&b&&HEX.test(b))bg[n]=b}
   if(s.localName==='map'){const m=/cell-content\(\)\s*=\s*"([A-Z])"/i.exec(s.getAttribute('style:condition')||'');if(m)cond[m[1].toUpperCase()]=s.getAttribute('style:apply-style-name')}
   if(s.localName==='condition'){const m=/^\s*=?\s*"([A-Z])"\s*$/i.exec(s.getAttribute('calcext:value')||'');if(m)cond[m[1].toUpperCase()]=s.getAttribute('calcext:apply-style-name')}}}
- const f2=fromLines(lines);let mx=0;lines.join('').split('').forEach(ch=>mx=Math.max(mx,ch.charCodeAt(0)-64));
- const colors=Array.from({length:Math.max(2,mx)},(_,i)=>{const b=bg[cond[L(i)]];return{c:b||PAL[i%PAL.length][0],n:b?'':PAL[i%PAL.length][1]}});
+ // Farbnamen aus der Legende („A | Bordeaux (#6a1724)“)
+ const nm={};for(const r of M){const i=r.findIndex(t=>/^[A-Z]$/i.test(t));if(i<0)continue;const t=r.slice(i+1).find(x=>x);if(t&&!/^[A-Z.]$/i.test(t))nm[r[i].toUpperCase()]=t.replace(/\s*\(#[0-9a-f]{6}\)\s*$/i,'').trim().slice(0,60)}
+ const f2=fromLines(lines);let mx=0;lines.join('').split('').forEach(ch=>{if(ch!=='.')mx=Math.max(mx,ch.charCodeAt(0)-64)});
+ const src=i=>{const l=L(i);return nsL&&l>=nsL?String.fromCharCode(l.charCodeAt(0)+1):l};
+ const colors=Array.from({length:Math.max(2,mx)},(_,i)=>{const b=bg[cond[src(i)]];return{c:b||PAL[i%PAL.length][0],n:nm[src(i)]||(b?'':PAL[i%PAL.length][1])}});
  return norm({name:fname.replace(/\.ods$/i,''),...f2,colors})}
 $('odsOpen').onclick=()=>$('odsFile').click();
 $('odsFile').onchange=async()=>{const file=$('odsFile').files[0];$('odsFile').value='';if(!file)return;
@@ -1133,7 +1156,8 @@ function rowRle(row){const a=row.slice().reverse(),W=a.length;let d=W;
  const r=[];a.slice(0,d).forEach(c=>{const l=r[r.length-1];if(l&&l.c===c)l.n++;else r.push({c,n:1})});return{r,rep:W/d,d}}
 function renderKnit(scroll){const H=KD.rows.length,W=KD.rows[0].length,cur=kRow(),ri=H-cur,lb=KD.lab[ri]||{t:'',i:0,n:0};
  $('kname').textContent=KD.name;$('krow').textContent=cur;$('ktot').textContent=H;
- $('ksec').textContent=lb.t?`${lb.t} · Reihe ${lb.i} von ${lb.n}`:'';
+ const cntR=r=>r?r.filter(c=>c!==null).length:0,nNow=cntR(KD.rows[ri]),nBel=ri<H-1?cntR(KD.rows[ri+1]):nNow,NSany=KD.rows.some(r=>r.includes(null));
+ $('ksec').innerHTML=(lb.t?`${esc(lb.t)} · Reihe ${lb.i} von ${lb.n}`:'')+(NSany?` · <b>${nNow} Maschen</b>${nBel>nNow?` <span class="warn">(${nBel-nNow} weniger als in der Reihe darunter)</span>`:''}`:'');
  $('kprog').style.width=Math.round((cur-1)/H*100)+'%';
  const{r,rep,d}=rowRle(KD.rows[ri]);
  renderStrip(KD.rows[ri].slice(W-d),rep>1,rep,r);
@@ -1145,7 +1169,7 @@ function renderKnit(scroll){const H=KD.rows.length,W=KD.rows[0].length,cur=kRow(
  const w=W*cs+NUM,h=yy;cv.width=w*dpr;cv.height=h*dpr;cv.style.width=w+'px';cv.style.height=h+'px';
  const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);
  KD.rows.forEach((row,y)=>{const top=Y[y],rh=y===ri?cc:ch,n=H-y;
-  row.forEach((c,i)=>{x.fillStyle=c;x.fillRect(i*cs,top,cs,rh)});
+  row.forEach((c,i)=>{x.fillStyle=c||'#ffffff';x.fillRect(i*cs,top,cs,rh);if(c===null&&S.ui.nsHatch)hatch(x,i*cs,top,cs,rh)});
   if(n<cur){x.fillStyle='rgba(0,0,0,.55)';x.fillRect(0,top,W*cs,rh)}
   if(cs>=8||y===ri){x.strokeStyle=y===ri?'rgba(0,0,0,.35)':'rgba(0,0,0,.15)';x.lineWidth=y===ri?1:.5;x.beginPath();for(let i=1;i<W;i++){x.moveTo(i*cs,top);x.lineTo(i*cs,top+rh)}x.stroke()}
   x.fillStyle=n===cur?'#6a4c93':'#8a8496';x.font=`${n===cur?'700 ':''}${n===cur?Math.min(16,Math.max(11,rh*.5)):Math.min(12,Math.max(9,ch*.7))}px system-ui,sans-serif`;x.textBaseline='middle';
@@ -1154,7 +1178,8 @@ function renderKnit(scroll){const H=KD.rows.length,W=KD.rows[0].length,cur=kRow(
  const wr=$('kwrap');if(scroll===true){wr.scrollLeft=wr.scrollWidth}
  wr.scrollTop=Math.max(0,cy-wr.clientHeight*.55)}
 // Spannfäden einer Reihe (Lesung von rechts): für jede Farbe die Strecken, über die sie mitgeführt wird
-function floatsOf(seg,cyc,lim){const b=seg.slice().reverse(),n=b.length,used=[...new Set(b)],out=[];if(used.length<2)return out;
+function floatsOf(seg,cyc,lim){const all=seg.slice().reverse(),map=[];all.forEach((c,i)=>{if(c!==null)map.push(i)});const res=floatsRaw(map.map(i=>all[i]),cyc,lim);res.forEach(f=>f.c=f.c.map(i=>map[i]));return res}
+function floatsRaw(b,cyc,lim){const n=b.length,used=[...new Set(b)],out=[];if(used.length<2)return out;
  for(const X of used){const runs=[];
   if(cyc){const s0=b.indexOf(X);let len=0,st=0;for(let k=1;k<=n;k++){const i=(s0+k)%n;if(b[i]!==X){if(!len)st=i;len++}else{if(len)runs.push([st,len]);len=0}}}
   else{let len=0,st=0;for(let i=0;i<=n;i++){if(i<n&&b[i]!==X){if(!len)st=i;len++}else{if(len&&st>0&&i<n)runs.push([st,len]);len=0}}}
@@ -1165,17 +1190,17 @@ function renderStrip(seg,cyc,rep,runs){const d=seg.length,lim=S.ed.flt||5,fl=flo
  const avail=$('kswrap').clientWidth||320,cs=Math.max(14,Math.min(40,Math.floor((avail-2)/d))),ch=Math.round(cs*1.1),LB=16,MK=fl.length?Math.max(20,Math.round(cs*.8)):0;
  const w=d*cs,h=ch+LB+MK;cv.width=w*dpr;cv.height=h*dpr;cv.style.width=w+'px';cv.style.height=h+'px';
  const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);
- seg.forEach((c,i)=>{x.fillStyle=c;x.fillRect(i*cs,0,cs,ch)});
+ seg.forEach((c,i)=>{x.fillStyle=c||'#ffffff';x.fillRect(i*cs,0,cs,ch);if(c===null&&S.ui.nsHatch)hatch(x,i*cs,0,cs,ch)});
  x.strokeStyle='rgba(0,0,0,.25)';x.lineWidth=1;x.beginPath();for(let i=1;i<d;i++){x.moveTo(i*cs+.5,0);x.lineTo(i*cs+.5,ch)}x.stroke();
  x.strokeStyle='rgba(0,0,0,.5)';x.strokeRect(.5,.5,w-1,ch-1);
  // Maschenzahl unter jedem Farbblock (von rechts gezählt)
  const css=getComputedStyle(document.body),mut=css.getPropertyValue('--mut'),wr=css.getPropertyValue('--warn');
  x.font=`600 ${Math.min(13,cs*.5)}px system-ui,sans-serif`;x.textAlign='center';x.textBaseline='middle';
- let pos=d;runs.forEach(r=>{const a=pos-r.n;x.fillStyle=mut;x.fillText(String(r.n),(a+r.n/2)*cs,ch+LB/2+1);x.fillStyle='rgba(0,0,0,.25)';if(a>0)x.fillRect(a*cs,ch+2,1,LB-4);pos=a});
+ let pos=d;runs.forEach(r=>{const a=pos-r.n;x.fillStyle=mut;if(r.c!==null)x.fillText(String(r.n),(a+r.n/2)*cs,ch+LB/2+1);x.fillStyle='rgba(0,0,0,.25)';if(a>0)x.fillRect(a*cs,ch+2,1,LB-4);pos=a});
  // Fang-Markierungen
  x.fillStyle=wr;const tw=Math.max(7,Math.min(cs*.42,13)),th=MK-3;fl.forEach(f=>f.c.forEach(i=>{const px=(d-1-i)*cs+cs/2,py=ch+LB+1;x.beginPath();x.moveTo(px,py);x.lineTo(px-tw,py+th);x.lineTo(px+tw,py+th);x.closePath();x.fill()}));
  $('kswrap').scrollLeft=$('kswrap').scrollWidth;
- $('kone1').textContent=`${rep>1?`Ein Rapport: ${d} Maschen, ${rep}× wiederholen`:`Ganze Reihe: ${d} Maschen`} · von rechts nach links stricken ←`;
+ const dm=seg.filter(c=>c!==null).length;$('kone1').textContent=`${rep>1?`Ein Rapport: ${dm} Maschen, ${rep}× wiederholen`:`Ganze Reihe: ${dm} Maschen`} · von rechts nach links stricken ←`;
  const by={};fl.forEach(f=>{const k=f.X;if(!by[k]||by[k].len<f.len)by[k]=f});
  $('kfloat').innerHTML=Object.values(by).map(f=>{const nm=KD.names.get(f.X)||'',l=KD.idx.get(f.X)||'',k=f.c.length,step=Math.round(f.len/(k+1));
   return`▲ Faden <b>${l}${nm?' ('+esc(nm)+')':''}</b> spannt über <b>${f.len} Maschen</b> – ${k===1?`nach ca. ${step} Maschen einmal`:`etwa alle ${step} Maschen (${k}×)`} einfangen.`}).join('<br>')}
@@ -1204,7 +1229,7 @@ function layout(){document.body.classList.toggle('wide',WIDE.matches);const t=S.
  document.querySelectorAll('main section').forEach(s=>{s.hidden=w?false:s.id.slice(2)!==t});
  document.querySelectorAll('nav.bot button').forEach(b=>b.classList.toggle('on',b.dataset.t===t))}
 function go(t){if(t==='pat'){openDrawer();return}S.tab=t;save();layout();render();window.scrollTo(0,0)}
-function render(){if(visible('ed'))renderEd();if(visible('col'))renderCol();if(visible('pv'))renderPv();if(DR.open)renderPat();
+function render(){document.querySelectorAll('.nsh').forEach(c=>c.checked=!!S.ui.nsHatch);if(visible('ed'))renderEd();if(visible('col'))renderCol();if(visible('pv'))renderPv();if(DR.open)renderPat();
  $('qodsM').classList.toggle('hide',!(S.seq.on&&PJ()))}
 document.querySelectorAll('nav.bot button').forEach(b=>b.onclick=()=>go(b.dataset.t));
 // Menüs: immer nur eines offen; Klick daneben oder Esc schliesst
