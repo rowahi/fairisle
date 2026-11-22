@@ -197,7 +197,7 @@ a.btn{display:flex;align-items:center;justify-content:center;height:38px;backgro
 <section id="v-ed"><div class="card">
  <div class="bar" style="margin-top:0">
   <div class="chips" id="chips"></div><div class="sp"></div>
-  <div class="seg" id="tools"><button data-tool="pen" title="Malen">✏️ Malen</button><button data-tool="fill" title="Fläche füllen">🪣 Füllen</button></div>
+  <div class="seg" id="tools"><button data-tool="pen" title="Malen">✏️ Malen</button><button data-tool="fill" title="Fläche füllen">🪣 Füllen</button><button data-tool="mark" title="V-Zeichen setzen oder entfernen – die Farbe bleibt">V Zeichen</button></div>
  </div>
  <div class="bar">
   <div class="menu" data-mk="size"><button class="mbtn" title="Breite und Höhe an jedem Rand ändern">📐 Grösse <b id="szv"></b> ▾</button><div class="mpanel msec">
@@ -237,6 +237,7 @@ a.btn{display:flex;align-items:center;justify-content:center;height:38px;backgro
   <div class="menu r" data-mk="edhelp"><button class="mbtn ib" title="Hilfe">?</button><div class="mpanel msec help">
    <p><b>Lesen:</b> Reihen von unten nach oben, Maschen von rechts nach links.</p>
    <p><b>Rechts neben jeder Reihe:</b> verwendete Farben und längster Spannfaden (orange = zu lang).</p>
+   <p><b>V Zeichen:</b> Zelle antippen setzt ein V (in Gegenfarbe), nochmals antippen entfernt es. Die Farbe der Zelle bleibt.</p>
    <p><b>Am PC:</b> Rechtsklick malt mit A, Tasten <kbd>1</kbd>–<kbd>9</kbd> wählen die Farbe, <kbd>Strg</kbd>+<kbd>Z</kbd> macht rückgängig.</p>
   </div></div>
  </div>
@@ -397,7 +398,7 @@ a.btn{display:flex;align-items:center;justify-content:center;height:38px;backgro
 
 <script>
 'use strict';
-const APPV='16';
+const APPV='17';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const L=i=>String.fromCharCode(65+i);
@@ -447,20 +448,25 @@ const save=()=>{const el=document.getElementById('saved');try{localStorage.setIt
 const P=()=>S.list.find(p=>p.id===S.cur);
 
 const cell=(p,c,r)=>{const s=p.g[r+p.oy];return s&&s[c+p.ox]||'A'};
+// Zeichen pro Zelle: Grossbuchstabe = Farbe, Kleinbuchstabe = Farbe mit „V“, '.' = keine Masche, ',' = keine Masche mit „V“
+const base=ch=>ch===','?'.':ch.toUpperCase();
+const hasV=ch=>ch===','||(ch>='a'&&ch<='z');
+const withV=(b,on)=>on?(b==='.'?',':b.toLowerCase()):b;
+const mapBase=(s,fn)=>s.replace(/./g,ch=>withV(fn(base(ch)),hasV(ch)));
 function put(p,c,r,ch){r+=p.oy;c+=p.ox;while(p.g.length<=r)p.g.push('');let s=p.g[r];if(s.length<=c)s=s.padEnd(c+1,'A');p.g[r]=s.slice(0,c)+ch+s.slice(c+1)}
 function ensure(p){while(p.g.length<p.oy+p.h)p.g.push('');const n=p.ox+p.w;for(let r=0;r<p.g.length;r++)if(p.g[r].length<n)p.g[r]=p.g[r].padEnd(n,'A')}
 // Anzeige-Raster: D[oben→unten][links→rechts]
 function disp(p){const D=[];for(let dy=0;dy<p.h;dy++){const r=p.h-1-dy,row=[];for(let dx=0;dx<p.w;dx++)row.push(cell(p,p.w-1-dx,r));D.push(row)}return D}
 function undisp(p,D){for(let dy=0;dy<p.h;dy++)for(let dx=0;dx<p.w;dx++)put(p,p.w-1-dx,p.h-1-dy,D[dy][dx])}
-function rowStat(row){row=row.filter(c=>c!=='.');const used=[...new Set(row)].sort(),n=row.length;let fl=0;
+function rowStat(row){row=row.map(base).filter(c=>c!=='.');const used=[...new Set(row)].sort(),n=row.length;let fl=0;
  if(used.length>1)for(const ch of used){let run=0;for(let i=0;i<2*n;i++){if(row[i%n]!==ch){run++;if(run>fl)fl=Math.min(run,n)}else run=0}}
  return{used,fl}}
 function norm(o){// importierte Daten prüfen
  const cols=(Array.isArray(o.colors)?o.colors:[]).slice(0,26).map((c,i)=>({c:HEX.test(c&&c.c)?c.c.toLowerCase():PAL[i%PAL.length][0],n:String(c&&c.n||'').slice(0,60)}));
- const g=(Array.isArray(o.g)?o.g:[]).slice(0,2*MAXS).map(s=>String(s).toUpperCase().replace(/[^A-Z.]/g,'A').slice(0,2*MAXS));
+ const g=(Array.isArray(o.g)?o.g:[]).slice(0,2*MAXS).map(s=>String(s).replace(/[^A-Za-z.,]/g,'A').slice(0,2*MAXS));
  const cl=(v,a,b)=>Math.min(b,Math.max(a,v|0));
  const p={id:++uid,name:String(o.name||'Import').slice(0,80),w:cl(o.w,1,MAXS)||1,h:cl(o.h,1,MAXS)||1,ox:cl(o.ox,0,MAXS),oy:cl(o.oy,0,MAXS),g,colors:cols};
- let mx=0;g.forEach(s=>{for(const ch of s)mx=Math.max(mx,ch.charCodeAt(0)-64)});
+ let mx=0;g.forEach(s=>{for(const ch of s)if(base(ch)!=='.')mx=Math.max(mx,base(ch).charCodeAt(0)-64)});
  while(p.colors.length<Math.max(2,mx)){const i=p.colors.length;p.colors.push({c:PAL[i%PAL.length][0],n:PAL[i%PAL.length][1]})}
  ensure(p);return p}
 
@@ -484,6 +490,9 @@ const relY=h=>{const n=parseInt(h.slice(1),16);return .2126*lin(n>>16&255)+.7152
 const Lstar=h=>{const y=relY(h);return y>.008856?116*Math.cbrt(y)-16:903.3*y};
 const grayHex=h=>{const y=relY(h),s=y<=.0031308?12.92*y:1.055*y**(1/2.4)-.055,v=Math.round(Math.min(1,s)*255).toString(16).padStart(2,'0');return'#'+v+v+v};
 const gc=(h,g=S.ui.gray)=>g?grayHex(h):h;
+// „V“-Zeichen in Gegenfarbe
+function drawV(ctx,x,y,w,h,c){ctx.save();ctx.strokeStyle=c;ctx.lineWidth=Math.max(1.2,Math.min(w,h)*.13);ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();
+ ctx.moveTo(x+w*.27,y+h*.28);ctx.lineTo(x+w*.5,y+h*.74);ctx.lineTo(x+w*.73,y+h*.28);ctx.stroke();ctx.restore()}
 // Schraffur für „keine Masche“
 function hatch(ctx,x,y,w,h){ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();ctx.strokeStyle='rgba(0,0,0,.28)';ctx.lineWidth=1;ctx.beginPath();
  const st=Math.max(4,Math.min(w,h)/3);for(let k=-h;k<w;k+=st){ctx.moveTo(x+k,y+h);ctx.lineTo(x+k+h,y)}ctx.stroke();ctx.restore()}
@@ -497,17 +506,19 @@ function drawChart(cv,p,o){
  cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';
  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
  const col=i=>gc(p.colors[i].c,o.gray);
- ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`600 ${Math.round(CS*.45)}px system-ui,sans-serif`;
+ ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`600 ${Math.round(CS*.45)}px system-ui,sans-serif`;const VS=[];
  for(let dy=0;dy<p.h;dy++)for(let dx=0;dx<p.w;dx++){
-  const ch=D[dy][dx],i=ch.charCodeAt(0)-65,x=dx*CS,y=dy*CS;
+  const raw=D[dy][dx],ch=base(raw),i=ch.charCodeAt(0)-65,x=dx*CS,y=dy*CS;
+  if(hasV(raw))VS.push([x,y,ch==='.'?'#777777':ink(col(i<nc?i:0))]);
   if(ch==='.'){ctx.fillStyle=BG;ctx.fillRect(x,y,CS,CS);if(o.hatch)hatch(ctx,x,y,CS,CS);continue}
   if(i<nc){ctx.fillStyle=col(i);ctx.fillRect(x,y,CS,CS)}
   else{ctx.fillStyle='#bbb';ctx.fillRect(x,y,CS,CS);ctx.strokeStyle='#777';ctx.beginPath();ctx.moveTo(x,y+CS);ctx.lineTo(x+CS,y);ctx.stroke()}
-  if(o.letters&&CS>=14){ctx.fillStyle=i<nc&&i>=0?ink(col(i)):'#000';ctx.globalAlpha=.5;ctx.fillText(ch,x+CS/2,y+CS/2+1);ctx.globalAlpha=1}
+  if(o.letters&&CS>=14&&!hasV(raw)){ctx.fillStyle=i<nc&&i>=0?ink(col(i)):'#000';ctx.globalAlpha=.5;ctx.fillText(ch,x+CS/2,y+CS/2+1);ctx.globalAlpha=1}
  }
- gridEdges(ctx,p.w,p.h,CS,CS,(x,y)=>D[y][x]!=='.',(d,x,y)=>{const k=d==='v'?p.w-x:p.h-y,b=k%5===0||(d==='v'?x===0:y===0);return b?['rgba(0,0,0,.7)',1.3]:['rgba(0,0,0,.22)',.6]});
+ VS.forEach(([x,y,c])=>drawV(ctx,x,y,CS,CS,c));
+ gridEdges(ctx,p.w,p.h,CS,CS,(x,y)=>base(D[y][x])!=='.',(d,x,y)=>{const k=d==='v'?p.w-x:p.h-y,b=k%5===0||(d==='v'?x===0:y===0);return b?['rgba(0,0,0,.7)',1.3]:['rgba(0,0,0,.22)',.6]});
  const fs=Math.min(12,Math.max(8,CS*.55));ctx.font=`${fs}px system-ui,sans-serif`;
- const cnt=r=>r.filter(c=>c!=='.').length;
+ const cnt=r=>r.filter(c=>base(c)!=='.').length;
  for(let dy=0;dy<p.h;dy++){const y=dy*CS+CS/2,x0=p.w*CS+6,st=rowStat(D[dy]);
   if(NS){const n=cnt(D[dy]),dn=dy<p.h-1?cnt(D[dy+1])-n:0,xr=p.w*CS+inf-4;ctx.textAlign='right';ctx.fillStyle=dn>0?o.warn:o.mut;ctx.font=`${dn>0?'700 ':''}${fs}px system-ui,sans-serif`;ctx.fillText(dn>0?`${n} −${dn}`:String(n),xr,y+1);ctx.font=`${fs}px system-ui,sans-serif`}
   ctx.fillStyle=o.mut;ctx.textAlign='left';ctx.fillText(String(p.h-dy),x0,y+1);
@@ -531,7 +542,7 @@ function drawEd(){
  if(r&&S.ed.tool==='sel'){ctx.save();ctx.fillStyle='rgba(106,76,147,.15)';ctx.fillRect(r.x*CS,r.y*CS,r.w*CS,r.h*CS);ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.strokeRect(r.x*CS+.5,r.y*CS+.5,r.w*CS-1,r.h*CS-1);
   ctx.strokeStyle='#6a4c93';ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.strokeRect(r.x*CS+.5,r.y*CS+.5,r.w*CS-1,r.h*CS-1);ctx.restore()}
  if(S.ed.tool==='paste'&&CB&&HOV){ctx.save();ctx.globalAlpha=.75;
-  CB.forEach((row,y)=>row.forEach((ch,x)=>{const X=HOV[0]+x,Y=HOV[1]+y,i=ch.charCodeAt(0)-65;if(X>=p.w||Y>=p.h)return;ctx.fillStyle=ch==='.'?'#ffffff':i<nc?gc(p.colors[i].c):'#bbb';ctx.fillRect(X*CS,Y*CS,CS,CS)}));
+  CB.forEach((row,y)=>row.forEach((c0,x)=>{const ch=base(c0),X=HOV[0]+x,Y=HOV[1]+y,i=ch.charCodeAt(0)-65;if(X>=p.w||Y>=p.h)return;ctx.fillStyle=ch==='.'?'#ffffff':i<nc?gc(p.colors[i].c):'#bbb';ctx.fillRect(X*CS,Y*CS,CS,CS)}));
   ctx.globalAlpha=1;ctx.strokeStyle='#6a4c93';ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.strokeRect(HOV[0]*CS,HOV[1]*CS,Math.min(CB[0].length,p.w-HOV[0])*CS,Math.min(CB.length,p.h-HOV[1])*CS);ctx.restore()}
 }
 function hit(e,clamp){const p=P(),r=$('cv').getBoundingClientRect();let dx=Math.floor((e.clientX-r.left)/CS),dy=Math.floor((e.clientY-r.top)/CS);
@@ -539,9 +550,11 @@ function hit(e,clamp){const p=P(),r=$('cv').getBoundingClientRect();let dx=Math.
  return dx>=0&&dy>=0&&dx<p.w&&dy<p.h?[dx,dy]:null}
 function paint(dx,dy,ch){const p=P(),pts=[[dx,dy]];
  if(S.ed.mx)pts.push([p.w-1-dx,dy]);if(S.ed.my)pts.push([dx,p.h-1-dy]);if(S.ed.mx&&S.ed.my)pts.push([p.w-1-dx,p.h-1-dy]);
- let chg=false;for(const[x,y]of pts)if(cell(p,p.w-1-x,p.h-1-y)!==ch){put(p,p.w-1-x,p.h-1-y,ch);chg=true}return chg}
-function fill(dx,dy,to){const p=P(),D=disp(p),from=D[dy][dx];if(from===to)return;const st=[[dx,dy]];
- while(st.length){const[x,y]=st.pop();if(x<0||y<0||x>=p.w||y>=p.h||D[y][x]!==from)continue;D[y][x]=to;st.push([x+1,y],[x-1,y],[x,y+1],[x,y-1])}undisp(p,D)}
+ // ch: Farbe (Zeichen bleibt), 'V+' / 'V-' = Zeichen setzen/entfernen (Farbe bleibt)
+ let chg=false;for(const[x,y]of pts){const o=cell(p,p.w-1-x,p.h-1-y),n=ch==='V+'?withV(base(o),true):ch==='V-'?withV(base(o),false):withV(ch,hasV(o));
+  if(o!==n){put(p,p.w-1-x,p.h-1-y,n);chg=true}}return chg}
+function fill(dx,dy,to){const p=P(),D=disp(p),from=base(D[dy][dx]);if(from===to)return;const st=[[dx,dy]];
+ while(st.length){const[x,y]=st.pop();if(x<0||y<0||x>=p.w||y>=p.h||base(D[y][x])!==from||base(D[y][x])===to)continue;D[y][x]=withV(to,hasV(D[y][x]));st.push([x+1,y],[x-1,y],[x,y+1],[x,y-1])}undisp(p,D)}
 function pasteAt(dx,dy){if(!CB)return;const p=P(),D=disp(p);snap();CB.forEach((row,y)=>row.forEach((ch,x)=>{if(dx+x<p.w&&dy+y<p.h)D[dy+y][dx+x]=ch}));undisp(p,D);save();later('ed','pv','knit')}
 function selOp(k){const p=P(),r=selRect();
  if(k==='paste'){if(!CB)return;setTool('paste');toast('Klicken, um die Ablage einzusetzen – Esc beendet');return}
@@ -567,8 +580,8 @@ $('cv').addEventListener('contextmenu',e=>e.preventDefault());
 $('cv').addEventListener('pointerdown',e=>{const t=S.ed.tool,h=hit(e);if(!h)return;e.preventDefault();const p=P();
  if(t==='sel'){$('cv').setPointerCapture(e.pointerId);drawing=true;SEL=[h[0],h[1],h[0],h[1]];renderSelbar();drawEd();return}
  if(t==='paste'){if(e.button===2){setTool('pen');return}pasteAt(h[0],h[1]);return}
- pch=e.button===2?'A':S.ed.ns?'.':L(S.ed.col);
- if(t==='pick'&&e.button!==2){const pc=cell(p,p.w-1-h[0],p.h-1-h[1]);if(pc==='.')S.ed.ns=true;else{S.ed.ns=false;selCol(Math.min(p.colors.length-1,pc.charCodeAt(0)-65))}S.ed.tool='pen';save();renderEd();if(visible('col'))renderCol();return}
+ pch=t==='mark'?(e.button===2||hasV(cell(p,p.w-1-h[0],p.h-1-h[1]))?'V-':'V+'):e.button===2?'A':S.ed.ns?'.':L(S.ed.col);
+ if(t==='pick'&&e.button!==2){const pc=base(cell(p,p.w-1-h[0],p.h-1-h[1]));if(pc==='.')S.ed.ns=true;else{S.ed.ns=false;selCol(Math.min(p.colors.length-1,pc.charCodeAt(0)-65))}S.ed.tool='pen';save();renderEd();if(visible('col'))renderCol();return}
  snap();if(t==='fill'){fill(h[0],h[1],pch);save();later('ed','pv','knit');return}
  $('cv').setPointerCapture(e.pointerId);drawing=true;last=h.join();paint(h[0],h[1],pch);later('ed','pv','knit')});
 $('cv').addEventListener('pointermove',e=>{const t=S.ed.tool;
@@ -587,8 +600,8 @@ function op(k){const p=P();let D=disp(p);snap();const W=p.w,H=p.h;
  if(k==='sr')D=D.map(r=>[r[W-1]].concat(r.slice(0,W-1)));
  if(k==='su')D=D.slice(1).concat([D[0]]);
  if(k==='sd')D=[D[H-1]].concat(D.slice(0,H-1));
- if(k==='all')D=D.map(r=>r.map(()=>S.ed.ns?'.':L(S.ed.col)));
- if(k==='rep'){const f=$('rf').value,t=$('rt').value;D=D.map(r=>r.map(c=>c===f?t:c))}
+ if(k==='all')D=D.map(r=>r.map(c=>withV(S.ed.ns?'.':L(S.ed.col),hasV(c))));
+ if(k==='rep'){const f=$('rf').value,t=$('rt').value;D=D.map(r=>r.map(c=>base(c)===f?withV(t,hasV(c)):c))}
  undisp(p,D);save();render()}
 // Breite/Höhe an beiden Enden. L/T: Fenster wächst/schrumpft links/oben. R/B: über den Versatz ox/oy.
 function size(k){const p=P(),plus=k[1]==='+',hor=k[0]==='L'||k[0]==='R';
@@ -655,14 +668,14 @@ function hex2hsv(hex){const n=parseInt(hex.slice(1),16),r=(n>>16&255)/255,g=(n>>
  if(d){if(mx===r)h=((g-b)/d+6)%6;else if(mx===g)h=(b-r)/d+2;else h=(r-g)/d+4;h*=60}return{h,s:mx?d/mx:0,v:mx}}
 function hsv2hex(h,s,v){const f=n=>{const k=(n+h/60)%6;return v-v*s*Math.max(0,Math.min(k,4-k,1))};return'#'+[f(5),f(3),f(1)].map(x=>Math.round(x*255).toString(16).padStart(2,'0')).join('')}
 function selCol(i){S.ed.col=i;const c=P().colors[i];CE={i,...hex2hsv(c.c),orig:c.c}}
-function usage(p){const n={};for(let r=0;r<p.h;r++)for(let c=0;c<p.w;c++){const ch=cell(p,c,r);if(ch!=='.')n[ch]=(n[ch]||0)+1}return n}
+function usage(p){const n={};for(let r=0;r<p.h;r++)for(let c=0;c<p.w;c++){const ch=base(cell(p,c,r));if(ch!=='.')n[ch]=(n[ch]||0)+1}return n}
 // „keine Masche“ (Abnahme) wird als '.' gespeichert und ohne Rahmen in Hintergrundfarbe gezeigt
-const hasNS=p=>{for(let r=0;r<p.h;r++)for(let c=0;c<p.w;c++)if(cell(p,c,r)==='.')return true;return false};
+const hasNS=p=>{for(let r=0;r<p.h;r++)for(let c=0;c<p.w;c++)if(base(cell(p,c,r))==='.')return true;return false};
 function renderSwap(){const p=P(),o=p.colors.map((c,i)=>`<option value="${L(i)}">${L(i)}${c.n?' – '+esc(c.n):''}</option>`).join(''),a=$('swa').value,b=$('swb').value;
  $('swa').innerHTML=o;$('swb').innerHTML=o;$('swa').value=a&&a.charCodeAt(0)-65<p.colors.length?a:'A';$('swb').value=b&&b.charCodeAt(0)-65<p.colors.length&&b!==$('swa').value?b:L(Math.min(1,p.colors.length-1));
  $('swhint').textContent=mates(p).length?'Ändert nur das Raster dieses Musters – die Projektfarben bleiben für alle Rapporte gleich.':'Ändert nur das Raster dieses Musters – die Farben selbst bleiben.'}
 $('swgo').onclick=()=>{const p=P(),a=$('swa').value,b=$('swb').value;if(a===b)return toast('Bitte zwei verschiedene Farben wählen');snap();
- p.g=p.g.map(s=>s.replace(/./g,ch=>ch===a?b:ch===b?a:ch));save();render();toast(`${a} ⇄ ${b} im Muster „${p.name}“ getauscht`)};
+ p.g=p.g.map(s=>mapBase(s,ch=>ch===a?b:ch===b?a:ch));save();render();toast(`${a} ⇄ ${b} im Muster „${p.name}“ getauscht`)};
 function renderColList(){const p=P(),u=usage(p);renderSwap();
  $('cols').innerHTML=p.colors.map((c,i)=>`<div class="crow${i===S.ed.col?' on':''}" data-i="${i}">
   <span class="lt" style="background:${c.c};color:${ink(c.c)}">${L(i)}</span>
@@ -671,7 +684,7 @@ function renderColList(){const p=P(),u=usage(p);renderSwap();
  $('cdel').disabled=p.colors.length<=1;$('cadd').disabled=p.colors.length>=26;renderContrast()}
 // Farbpaare, die in einer Reihe zusammen vorkommen und sich in der Helligkeit kaum unterscheiden
 function renderContrast(){const p=P(),pairs=new Map();
- disp(p).forEach(row=>{const u=[...new Set(row)].filter(ch=>ch!=='.'&&ch.charCodeAt(0)-65<p.colors.length);
+ disp(p).forEach(row=>{const u=[...new Set(row.map(base))].filter(ch=>ch!=='.'&&ch.charCodeAt(0)-65<p.colors.length);
   for(let i=0;i<u.length;i++)for(let j=i+1;j<u.length;j++){const k=[u[i],u[j]].sort().join('');pairs.set(k,(pairs.get(k)||0)+1)}});
  const bad=[...pairs].map(([k,n])=>{const a=p.colors[k.charCodeAt(0)-65],b=p.colors[k.charCodeAt(1)-65];return{k,n,d:Math.abs(Lstar(a.c)-Lstar(b.c))}}).filter(x=>x.d<20).sort((a,b)=>a.d-b.d);
  $('contrast').innerHTML=bad.length?`<p class="mut warn" style="margin:8px 0 0" title="Diese Farben kommen in derselben Reihe vor und sind fast gleich hell – das Motiv hebt sich kaum ab. Zum Prüfen: Ansicht → Graustufen.">⚠ Wenig Kontrast: ${bad.map(x=>`<b>${x.k[0]}/${x.k[1]}</b>`).join(', ')}</p>`:''}
@@ -719,7 +732,7 @@ $('cerev').onclick=()=>setColor(CE.orig);
 $('eyed').onclick=async()=>{try{const r=await new EyeDropper().open();let h=r.sRGBHex;const m=/rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(h);if(m)h='#'+[m[1],m[2],m[3]].map(x=>(+x).toString(16).padStart(2,'0')).join('');setColor(h);renderColList()}catch(e){}};
 $('cols').addEventListener('click',e=>{const up=e.target.closest('[data-up]');
  if(up){const i=+up.dataset.up,p=P(),a=L(i-1),b=L(i);snap();[p.colors[i-1],p.colors[i]]=[p.colors[i],p.colors[i-1]];
-  const sw=s=>s.replace(/./g,ch=>ch===a?b:ch===b?a:ch);p.g=p.g.map(sw);palSync(p,sw);selCol(i-1);save();render();return}
+  const sw=s=>mapBase(s,ch=>ch===a?b:ch===b?a:ch);p.g=p.g.map(sw);palSync(p,sw);selCol(i-1);save();render();return}
  const row=e.target.closest('.crow');if(row){selCol(+row.dataset.i);save();render()}});
 $('sw').addEventListener('click',e=>{const b=e.target.closest('[data-pc]');if(!b)return;const c=P().colors[CE.i];snap();
  if(!c.n||PAL.some(x=>x[1]===c.n)){c.n=b.dataset.pn;$('cename').value=c.n}setColor(b.dataset.pc);renderColList()});
@@ -731,9 +744,9 @@ $('yadd').onclick=()=>{const c=P().colors[CE.i];let n=c.n.trim();if(!n){n=(promp
 $('cadd').onclick=()=>{const p=P();if(p.colors.length>=26)return;snap();const used=p.colors.map(c=>c.c);
  const f=PAL.find(x=>!used.includes(x[0]))||PAL[p.colors.length%PAL.length];p.colors.push({c:f[0],n:f[1]});palSync(p);selCol(p.colors.length-1);save();render()};
 $('cdel').onclick=()=>{const p=P();if(p.colors.length<=1)return;const i=p.colors.length-1,x=L(i);
- const n=[p,...mates(p)].reduce((t,q)=>t+q.g.reduce((s,r)=>s+r.split(x).length-1,0),0);
+ const n=[p,...mates(p)].reduce((t,q)=>t+q.g.reduce((s,r)=>s+[...r].filter(c=>base(c)===x).length,0),0);
  if(n&&!confirm(`Farbe ${x} wird in ${n} Maschen verwendet${mates(p).length?' (alle Rapporte des Projekts)':''}. Diese werden zu A. Fortfahren?`))return;
- snap();p.colors.pop();const rm=s=>s.split(x).join('A');p.g=p.g.map(rm);palSync(p,rm);if(S.ed.col>=p.colors.length)S.ed.col=p.colors.length-1;CE=null;save();render()};
+ snap();p.colors.pop();const rm=s=>mapBase(s,c=>c===x?'A':c);p.g=p.g.map(rm);palSync(p,rm);if(S.ed.col>=p.colors.length)S.ed.col=p.colors.length-1;CE=null;save();render()};
 // Foto-Pipette
 let IMG=null,PM=null;
 async function loadImg(blob){try{IMG=await createImageBitmap(blob);PM=null;$('photo').classList.remove('hide');S.ui.ct='photo';if(!WIDE.matches&&S.tab!=='col')go('col');else renderCol();toast('Foto geladen – auf die Wolle tippen, um die Farbe aufzunehmen')}catch(e){toast('Bild konnte nicht geladen werden')}}
@@ -757,7 +770,7 @@ document.addEventListener('paste',e=>{if(e.target.closest('input,textarea'))retu
 
 /* ---------- Vorschau ---------- */
 // o: {rx,ry,maxW,maxH,mode,lines,maxCell,bt:{ch,n},bb:{ch,n}}
-const hexOf=(p,ch)=>{if(ch==='.')return null;const i=ch.charCodeAt(0)-65;return i<p.colors.length?p.colors[i].c:'#bbbbbb'};
+const hexOf=(p,ch)=>{ch=base(ch);if(ch==='.')return null;const i=ch.charCodeAt(0)-65;return i<p.colors.length?p.colors[i].c:'#bbbbbb'};
 // Zeilen (Hex-Farben) zeichnen. o: {maxW,maxH,mode,maxCell,lines,hl:[y],vl:[[x,y0,y1]]}
 function drawRows(cv,rows,o){
  const H=Math.max(1,rows.length),W=rows.length?rows[0].length:1,dpr=o.dpr||window.devicePixelRatio||1,ar=o.ar||.85,BG=o.bg||(o.dpr?'#ffffff':getComputedStyle(document.body).getPropertyValue('--card').trim()||'#fff'),HT=o.hatch??S.ui.nsHatch,gm=new Map(),G=o.gray??S.ui.gray,col=c=>{if(!G)return c;let v=gm.get(c);if(!v){v=grayHex(c);gm.set(c,v)}return v};
@@ -770,6 +783,7 @@ function drawRows(cv,rows,o){
   if(ST){ctx.beginPath();ctx.ellipse(px+cw*.3,py+chh*.5,cw*.25,chh*.62,-.5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(px+cw*.7,py+chh*.5,cw*.25,chh*.62,.5,0,Math.PI*2);ctx.fill()}
   else ctx.fillRect(px,py,cw,chh)}));
  if(o.mode==='felt')felt(cv,ctx,w,h,cw,chh,dpr);
+ if(o.mode==='box'&&cw>=7)rows.forEach((row,y)=>{if(row.v)row.v.forEach((m,x)=>{if(m)drawV(ctx,x*cw,y*chh,cw,chh,row[x]===null?'#777':ink(col(row[x])))})});
  if(o.mode==='box'&&cw>=6){if(rows.some(r=>r.includes(null)))gridEdges(ctx,W,H,cw,chh,(x,y)=>rows[y][x]!==null,()=>['rgba(0,0,0,.16)',.5]);
   else{ctx.strokeStyle='rgba(0,0,0,.16)';ctx.lineWidth=.5;ctx.beginPath();for(let x=1;x<W;x++){ctx.moveTo(x*cw,0);ctx.lineTo(x*cw,h)}for(let y=1;y<H;y++){ctx.moveTo(0,y*chh);ctx.lineTo(w,y*chh)}ctx.stroke()}}
  if(o.lines){ctx.strokeStyle='#e0245e';ctx.lineWidth=1.5;ctx.setLineDash([5,4]);ctx.beginPath();
@@ -787,8 +801,10 @@ function felt(cv,ctx,w,h,cw,chh,dpr){
 // pad 'c' = beidseitig, 'l' = links, 'r' = rechts. Ist W kleiner als der Rapport, wird abgeschnitten.
 function fitLayout(p,W,pad){const n=Math.floor(W/p.w),rem=W-n*p.w;return{n,rem,lp:!n?0:pad==='l'?rem:pad==='r'?0:Math.floor(rem/2)}}
 // off: Versatz in Maschen (positiv = nach rechts), verschiebt das Motiv innerhalb der Wiederholungen
-function patRows(p,W,ry,pad,bg,off=0){ensure(p);const D=disp(p).map(r=>r.map(ch=>hexOf(p,ch))),out=[],{n,lp}=fitLayout(p,W,pad),fc=hexOf(p,bg||'A'),md=v=>((v%p.w)+p.w)%p.w;
- for(let k=0;k<ry;k++)for(let dy=0;dy<p.h;dy++)out.push(Array.from({length:W},(_,x)=>{if(!n)return D[dy][md(p.w-1-(W-1-x)-off)];const i=x-lp;return i<0||i>=n*p.w?fc:D[dy][md(i-off)]}));
+function patRows(p,W,ry,pad,bg,off=0){ensure(p);const D0=disp(p),D=D0.map(r=>r.map(ch=>hexOf(p,ch))),DV=D0.map(r=>r.map(hasV)),out=[],{n,lp}=fitLayout(p,W,pad),fc=hexOf(p,bg||'A'),md=v=>((v%p.w)+p.w)%p.w;
+ const src=x=>{if(!n)return md(p.w-1-(W-1-x)-off);const i=x-lp;return i<0||i>=n*p.w?-1:md(i-off)};
+ for(let k=0;k<ry;k++)for(let dy=0;dy<p.h;dy++){const row=Array.from({length:W},(_,x)=>{const j=src(x);return j<0?fc:D[dy][j]});
+  if(DV[dy].some(Boolean))row.v=Array.from({length:W},(_,x)=>{const j=src(x);return j>=0&&DV[dy][j]});out.push(row)}
  return out}
 function vlines(p,W,y0,y1,pad,off=0){const{n,lp}=fitLayout(p,W,pad),o=((off%p.w)+p.w)%p.w,e=lp+n*p.w,xs=new Set();if(!n)return[];
  [lp,e].forEach(x=>{if(x>0&&x<W)xs.add(x)});for(let k=0;k<=n;k++){const x=lp+o+k*p.w;if(x>lp&&x<e)xs.add(x)}return[...xs].map(x=>[x,y0,y1])}
@@ -912,7 +928,7 @@ const dragEnd=()=>{if(!DRAG)return;const{k,to}=DRAG;DRAG=null;
 $('qlist').addEventListener('pointerup',dragEnd);$('qlist').addEventListener('pointercancel',dragEnd);
 function seqOds(pj=PJ()){const m=seqColors(pj);if(m.size>26)return toast('Mehr als 26 verschiedene Farben – ODS nicht möglich');
  const cols=[...m].map(([c,n])=>({c,n})),idx=new Map(cols.map((c,i)=>[c.c,L(i)])),r=seqRows(pj);
- const D=r.rows.map(row=>row.map(c=>c===null?'.':idx.get(c)||'A'));
+ const D=r.rows.map(row=>row.map((c,x)=>withV(c===null?'.':idx.get(c)||'A',!!(row.v&&row.v[x]))));
  dl(pjName(pj).replace(/[\\/:*?"<>|]+/g,'_').trim()+'.ods',zip(odsPack(cols,[{name:'Projekt',title:`${pjName(pj)} – ${pj.W} Maschen × ${D.length} Reihen`,D,nums:true,legend:true}])));toast('ODS-Datei erstellt')}
 $('qods').onclick=()=>seqOds();
 
@@ -1005,7 +1021,7 @@ function odsPack(colors,sheets,json){
 <style:style style:name="Default" style:family="table-cell"/>
 ${colors.map((c,i)=>`<style:style style:name="Farbe_${L(i)}" style:display-name="Farbe ${L(i)}" style:family="table-cell" style:parent-style-name="Default"><style:table-cell-properties fo:background-color="${c.c}" ${brd}/><style:paragraph-properties fo:text-align="center"/><style:text-properties fo:color="${ink(c.c)}" fo:font-size="7pt"/></style:style>`).join('\n')}
 </office:styles></office:document-styles>`;
- const maps=sh=>colors.map((c,i)=>`<style:map style:condition="cell-content()=&quot;${L(i)}&quot;" style:apply-style-name="Farbe_${L(i)}" style:base-cell-address="${sh}.A1"/>`).join('');
+ const maps=sh=>colors.map((c,i)=>['',`V`].map(v=>`<style:map style:condition="cell-content()=&quot;${L(i)}${v}&quot;" style:apply-style-name="Farbe_${L(i)}" style:base-cell-address="${sh}.A1"/>`).join('')).join('');
  const gst=(sh,k)=>`<style:style style:name="ceG${k}" style:family="table-cell" style:parent-style-name="Default"><style:table-cell-properties ${brd}/><style:paragraph-properties fo:text-align="center"/><style:text-properties fo:font-size="7pt"/>${maps(sh)}</style:style>`;
  const sc=(t,st)=>`<table:table-cell office:value-type="string"${st?` table:style-name="${st}"`:''}><text:p>${xe(t)}</text:p></table:table-cell>`;
  const nm=n=>`<table:table-cell office:value-type="float" office:value="${n}" table:style-name="ceN"><text:p>${n}</text:p></table:table-cell>`;
@@ -1013,7 +1029,7 @@ ${colors.map((c,i)=>`<style:style style:name="Farbe_${L(i)}" style:display-name=
  const tables=sheets.map((s,k)=>{const W=s.D[0]?s.D[0].length:1,H=s.D.length,st='ceG'+k;
   let t=`<table:table table:name="${xe(s.name)}"><table:table-column table:style-name="coG" table:number-columns-repeated="${W}"/>${s.nums?'<table:table-column table:style-name="coN"/>':''}`;
   if(s.title)t+=`<table:table-row table:style-name="roT">${sc(s.title,'ceT')}</table:table-row>`;
-  s.D.forEach((row,dy)=>{t+=`<table:table-row table:style-name="roG">${row.map(ch=>ch==='.'?sc('.','ceNS'):sc(ch,st)).join('')}${s.nums?nm(H-dy):''}</table:table-row>`});
+  s.D.forEach((row,dy)=>{t+=`<table:table-row table:style-name="roG">${row.map(ch=>{const b=base(ch),t=b+(hasV(ch)?'V':'');return b==='.'?sc(t,'ceNS'):sc(t,st)}).join('')}${s.nums?nm(H-dy):''}</table:table-row>`});
   if(s.nums)t+=`<table:table-row table:style-name="roG">${Array.from({length:W},(_,dx)=>nm(W-dx)).join('')}</table:table-row>`;
   if(s.legend){t+=`<table:table-row>${E}</table:table-row><table:table-row>${sc('Farben','ceT')}</table:table-row>`;
    colors.forEach((c,i)=>{t+=`<table:table-row table:style-name="roG">${sc(L(i),st)}${E}${sc(`${c.n?c.n+' ':''}(${c.c})`)}</table:table-row>`});
@@ -1112,19 +1128,19 @@ function parseOds(f,fname){
  for(const row of tb.getElementsByTagNameNS(TN,'table-row')){const cells=[];
   for(const c of row.children){if(c.namespaceURI!==TN||!/table-cell$/.test(c.localName))continue;const rep=Math.min(+c.getAttributeNS(TN,'number-columns-repeated')||1,MAXS+2),t=c.textContent.trim();for(let k=0;k<rep;k++)cells.push(t)}
   const rr=Math.min(+row.getAttributeNS(TN,'number-rows-repeated')||1,MAXS);for(let k=0;k<rr;k++)M.push(cells);if(M.length>2000)break}
- const isL=t=>/^[A-Z.]$/i.test(t),run2=r=>r.some((t,i)=>isL(t)&&isL(r[i+1]||''));let y0=M.findIndex(run2);if(y0<0)y0=M.findIndex(r=>r.some(isL));if(y0<0)throw new Error('Keine Buchstaben gefunden');
+ const isL=t=>/^[A-Z.]V?$/i.test(t),run2=r=>r.some((t,i)=>isL(t)&&isL(r[i+1]||''));let y0=M.findIndex(run2);if(y0<0)y0=M.findIndex(r=>r.some(isL));if(y0<0)throw new Error('Keine Buchstaben gefunden');
  let x0=M[y0].findIndex((t,i)=>isL(t)&&isL(M[y0][i+1]||''));if(x0<0)x0=M[y0].findIndex(isL);let x1=x0;while(x1<M[y0].length&&isL(M[y0][x1]))x1++;
- let w=x1-x0,lines=[];for(let y=y0;y<M.length&&isL(M[y][x0]||'');y++)lines.push(Array.from({length:w},(_,x)=>(M[y][x0+x]||'A').toUpperCase()).map(ch=>isL(ch)?ch:'A').join(''));
+ let w=x1-x0,lines=[];for(let y=y0;y<M.length&&isL(M[y][x0]||'');y++)lines.push(Array.from({length:w},(_,x)=>(M[y][x0+x]||'A').toUpperCase()).map(t=>isL(t)?withV(t[0],t.length>1):'A').join(''));
  // Legende: Buchstabe, der „keine Masche“ bedeutet (z. B. „D | keine Masche“) → als Kennzeichnung '.' übernehmen
  let nsL=null;for(const r of M){const i=r.findIndex(t=>/^[A-Z]$/i.test(t));if(i>=0&&r.slice(i+1).some(t=>/keine\s*masche|no\s*stitch/i.test(t))){nsL=r[i].toUpperCase();break}}
- if(nsL){const k=nsL.charCodeAt(0);lines=lines.map(l=>l.replace(/[A-Z]/g,ch=>ch===nsL?'.':ch.charCodeAt(0)>k?String.fromCharCode(ch.charCodeAt(0)-1):ch))}
+ if(nsL){const k=nsL.charCodeAt(0);lines=lines.map(l=>mapBase(l,ch=>ch==='.'?ch:ch===nsL?'.':ch.charCodeAt(0)>k?String.fromCharCode(ch.charCodeAt(0)-1):ch))}
  const bg={},cond={};
  for(const d of[doc,sdoc].filter(Boolean)){for(const s of d.getElementsByTagName('*')){if(s.localName==='style'){const n=s.getAttribute('style:name');const pr=[...s.children].find(c=>c.localName==='table-cell-properties');const b=pr&&pr.getAttribute('fo:background-color');if(n&&b&&HEX.test(b))bg[n]=b}
   if(s.localName==='map'){const m=/cell-content\(\)\s*=\s*"([A-Z])"/i.exec(s.getAttribute('style:condition')||'');if(m)cond[m[1].toUpperCase()]=s.getAttribute('style:apply-style-name')}
   if(s.localName==='condition'){const m=/^\s*=?\s*"([A-Z])"\s*$/i.exec(s.getAttribute('calcext:value')||'');if(m)cond[m[1].toUpperCase()]=s.getAttribute('calcext:apply-style-name')}}}
  // Farbnamen aus der Legende („A | Bordeaux (#6a1724)“)
  const nm={};for(const r of M){const i=r.findIndex(t=>/^[A-Z]$/i.test(t));if(i<0)continue;const t=r.slice(i+1).find(x=>x);if(t&&!/^[A-Z.]$/i.test(t))nm[r[i].toUpperCase()]=t.replace(/\s*\(#[0-9a-f]{6}\)\s*$/i,'').trim().slice(0,60)}
- const f2=fromLines(lines);let mx=0;lines.join('').split('').forEach(ch=>{if(ch!=='.')mx=Math.max(mx,ch.charCodeAt(0)-64)});
+ const f2=fromLines(lines);let mx=0;lines.join('').split('').forEach(ch=>{ch=base(ch);if(ch!=='.')mx=Math.max(mx,ch.charCodeAt(0)-64)});
  const src=i=>{const l=L(i);return nsL&&l>=nsL?String.fromCharCode(l.charCodeAt(0)+1):l};
  const colors=Array.from({length:Math.max(2,mx)},(_,i)=>{const b=bg[cond[src(i)]];return{c:b||PAL[i%PAL.length][0],n:nm[src(i)]||(b?'':PAL[i%PAL.length][1])}});
  return norm({name:fname.replace(/\.ods$/i,''),...f2,colors})}
@@ -1160,7 +1176,7 @@ function renderKnit(scroll){const H=KD.rows.length,W=KD.rows[0].length,cur=kRow(
  $('ksec').innerHTML=(lb.t?`${esc(lb.t)} · Reihe ${lb.i} von ${lb.n}`:'')+(NSany?` · <b>${nNow} Maschen</b>${nBel>nNow?` <span class="warn">(${nBel-nNow} weniger als in der Reihe darunter)</span>`:''}`:'');
  $('kprog').style.width=Math.round((cur-1)/H*100)+'%';
  const{r,rep,d}=rowRle(KD.rows[ri]);
- renderStrip(KD.rows[ri].slice(W-d),rep>1,rep,r);
+ const sg=KD.rows[ri].slice(W-d);if(KD.rows[ri].v)sg.v=KD.rows[ri].v.slice(W-d);renderStrip(sg,rep>1,rep,r);
  $('kback').disabled=cur<=1;$('knext').textContent=cur>=H?'🎉 Fertig!':'✓ Reihe fertig';
  // Diagramm – die aktuelle Reihe ist höher und zeigt die Buchstaben
  const cv=$('kcv'),dpr=window.devicePixelRatio||1,cs=S.ui.kz||16,ch=Math.max(4,Math.round(cs*(S.prev.ar||.85))),cc=Math.max(ch+8,Math.round(ch*1.8)),NUM=34;
@@ -1170,6 +1186,7 @@ function renderKnit(scroll){const H=KD.rows.length,W=KD.rows[0].length,cur=kRow(
  const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);
  KD.rows.forEach((row,y)=>{const top=Y[y],rh=y===ri?cc:ch,n=H-y;
   row.forEach((c,i)=>{x.fillStyle=c||'#ffffff';x.fillRect(i*cs,top,cs,rh);if(c===null&&S.ui.nsHatch)hatch(x,i*cs,top,cs,rh)});
+  if(row.v&&cs>=7)row.v.forEach((m,i)=>{if(m)drawV(x,i*cs,top,cs,rh,row[i]===null?'#777':ink(row[i]))});
   if(n<cur){x.fillStyle='rgba(0,0,0,.55)';x.fillRect(0,top,W*cs,rh)}
   if(cs>=8||y===ri){x.strokeStyle=y===ri?'rgba(0,0,0,.35)':'rgba(0,0,0,.15)';x.lineWidth=y===ri?1:.5;x.beginPath();for(let i=1;i<W;i++){x.moveTo(i*cs,top);x.lineTo(i*cs,top+rh)}x.stroke()}
   x.fillStyle=n===cur?'#6a4c93':'#8a8496';x.font=`${n===cur?'700 ':''}${n===cur?Math.min(16,Math.max(11,rh*.5)):Math.min(12,Math.max(9,ch*.7))}px system-ui,sans-serif`;x.textBaseline='middle';
@@ -1190,7 +1207,7 @@ function renderStrip(seg,cyc,rep,runs){const d=seg.length,lim=S.ed.flt||5,fl=flo
  const avail=$('kswrap').clientWidth||320,cs=Math.max(14,Math.min(40,Math.floor((avail-2)/d))),ch=Math.round(cs*1.1),LB=16,MK=fl.length?Math.max(20,Math.round(cs*.8)):0;
  const w=d*cs,h=ch+LB+MK;cv.width=w*dpr;cv.height=h*dpr;cv.style.width=w+'px';cv.style.height=h+'px';
  const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);
- seg.forEach((c,i)=>{x.fillStyle=c||'#ffffff';x.fillRect(i*cs,0,cs,ch);if(c===null&&S.ui.nsHatch)hatch(x,i*cs,0,cs,ch)});
+ seg.forEach((c,i)=>{x.fillStyle=c||'#ffffff';x.fillRect(i*cs,0,cs,ch);if(c===null&&S.ui.nsHatch)hatch(x,i*cs,0,cs,ch);if(seg.v&&seg.v[i])drawV(x,i*cs,0,cs,ch,c===null?'#777':ink(c))});
  x.strokeStyle='rgba(0,0,0,.25)';x.lineWidth=1;x.beginPath();for(let i=1;i<d;i++){x.moveTo(i*cs+.5,0);x.lineTo(i*cs+.5,ch)}x.stroke();
  x.strokeStyle='rgba(0,0,0,.5)';x.strokeRect(.5,.5,w-1,ch-1);
  // Maschenzahl unter jedem Farbblock (von rechts gezählt)
