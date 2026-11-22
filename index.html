@@ -15,8 +15,22 @@ header .sp{flex:1}
 main{max-width:1440px;margin:0 auto;padding:16px}
 section[hidden],.hide{display:none!important}
 .design{display:block}
-body.wide .design{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:16px;align-items:start}
+body.wide .design{display:grid;grid-template-columns:var(--split,56%) 14px minmax(0,1fr);align-items:start}
 body.wide .colR{position:sticky;top:72px;max-height:calc(100vh - 88px);overflow:auto;border-radius:var(--r)}
+.split{display:none}body.wide .split{display:block;align-self:stretch;cursor:col-resize;position:relative;touch-action:none}
+.split::after{content:'';position:absolute;top:0;bottom:16px;left:6px;width:2px;border-radius:2px;background:transparent;transition:background .15s}
+.split:hover::after,.split.on::after{background:var(--ac)}
+.split::before{content:'⋮';position:sticky;top:45vh;display:block;text-align:center;color:var(--mut);font-weight:700}
+body.drag{cursor:col-resize;user-select:none}
+.ccard{container-type:inline-size}.cgrid{display:grid;gap:0 24px}
+@container (min-width:620px){.cgrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.cgrid .ced{margin-top:0;padding-top:0;border-top:0}}
+.qlist{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.qi{display:flex;align-items:center;gap:8px;padding:6px 8px;border:1px solid var(--bd);border-radius:12px;flex-wrap:wrap}
+.qi.cur{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac)}
+.qi .qn{flex:1;min-width:90px}.qi .qn b{display:block;font-size:.88rem;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.qi .qn small{color:var(--mut);font-size:.75rem}
+.qi canvas{border-radius:4px;flex:0 0 auto}.qi input[type=color]{width:40px;height:32px;padding:2px;flex:0 0 auto;cursor:pointer}
+.qi .qsw{display:flex;gap:3px;flex-wrap:wrap}.qi .qsw button{width:18px;height:18px;padding:0;border-radius:5px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+.qi .ib{width:30px;height:30px;font-size:.85rem;background:transparent}.qi .ib:hover{background:var(--soft)}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:16px;margin-bottom:16px;box-shadow:var(--sh)}
 .card>h2,.hd h2{margin:0;font-size:1rem;font-weight:700;letter-spacing:-.01em}
 .hd{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}.hd .sp{flex:1}
@@ -123,25 +137,16 @@ body:not(.wide) main{padding:10px}body:not(.wide) .card{padding:12px;margin-bott
  </details>
 </div></section>
 
-<section id="v-pv"><div class="card">
- <div class="hd"><h2>Vorschau</h2><div class="sp"></div><div class="seg"><button data-pm="box">▦ Kästchen</button><button data-pm="st">∨ Maschen</button></div></div>
- <div class="pvc">
-  <label>Wiederholungen <span class="stp"><button data-rp="x-">−</button><b class="val" id="rxv"></b><button data-rp="x+">+</button></span> × <span class="stp"><button data-rp="y-">−</button><b class="val" id="ryv"></b><button data-rp="y+">+</button></span></label>
-  <label><input type="checkbox" id="pvl">Rapportgrenzen</label>
+<section id="v-col"><div class="card ccard"><div class="cgrid">
+ <div>
+  <div class="hd"><h2>Farben</h2><div class="sp"></div><button class="ib" id="cadd" title="Farbe hinzufügen">＋</button><button class="ib" id="cdel" title="Letzte Farbe entfernen">－</button></div>
+  <div id="cols"></div>
+  <h3>Meine Garne</h3>
+  <div class="yarns" id="yarns"></div>
+  <div class="row"><button id="yadd">＋ Aktuelle Farbe als Garn merken</button></div>
+  <h3>Standardfarben</h3>
+  <div class="sw" id="sw"></div>
  </div>
- <div class="pvc" style="margin-top:10px">
-  <label>Rand oben <select id="btc" aria-label="Farbe Rand oben"></select><span class="stp"><button data-bd="t-">−</button><b class="val" id="btv"></b><button data-bd="t+">+</button></span> Reihen</label>
-  <label>Rand unten <select id="bbc" aria-label="Farbe Rand unten"></select><span class="stp"><button data-bd="b-">−</button><b class="val" id="bbv"></b><button data-bd="b+">+</button></span> Reihen</label>
- </div>
- <div class="gsc" id="pvw"><canvas id="pv"></canvas></div>
- <p class="mut" id="pvi" style="margin:10px 0 0"></p><div class="leg" id="pleg"></div>
-</div></section>
-</div>
-
-<div class="colR">
-<section id="v-col"><div class="card">
- <div class="hd"><h2>Farben</h2><div class="sp"></div><button class="ib" id="cadd" title="Farbe hinzufügen">＋</button><button class="ib" id="cdel" title="Letzte Farbe entfernen">－</button></div>
- <div id="cols"></div>
  <div class="ced">
   <div class="hd" style="margin-bottom:8px"><h2 id="cet"></h2></div>
   <canvas id="sv"></canvas><canvas id="hue"></canvas>
@@ -154,11 +159,33 @@ body:not(.wide) main{padding:10px}body:not(.wide) .card{padding:12px;margin-bott
   <div class="drop" id="drop">Foto der Wolle oder Banderole hierher ziehen, mit <kbd>Strg</kbd>+<kbd>V</kbd> einfügen oder<div class="row" style="justify-content:center"><button id="photoBtn" style="flex:0 1 auto">📷 Foto wählen</button></div></div>
   <input type="file" id="photoFile" accept="image/*" hidden>
   <canvas id="photo" class="hide"></canvas>
-  <h3>Meine Garne</h3>
-  <div class="yarns" id="yarns"></div>
-  <div class="row"><button id="yadd">＋ Aktuelle Farbe als Garn merken</button></div>
-  <h3>Standardfarben</h3>
-  <div class="sw" id="sw"></div>
+ </div>
+</div></div></section>
+</div>
+<div class="split" id="split" title="Ziehen, um die Breite zu ändern (Doppelklick: zurücksetzen)"></div>
+<div class="colR">
+<section id="v-pv"><div class="card">
+ <div class="hd"><h2>Vorschau</h2><div class="sp"></div><div class="seg"><button data-sq="0">Aktuelles Muster</button><button data-sq="1">Musterfolge</button></div></div>
+ <div class="pvc"><div class="seg"><button data-pm="box">▦ Kästchen</button><button data-pm="st">∨ Maschen</button></div><label><input type="checkbox" id="pvl">Rapportgrenzen</label></div>
+ <div class="gsc" id="pvw" style="margin-bottom:4px"><canvas id="pv"></canvas></div>
+ <p class="mut" id="pvi" style="margin:10px 0 0"></p><div class="leg" id="pleg"></div>
+ <div id="pvS">
+  <div class="pvc" style="margin-top:10px">
+   <label>Wiederholungen <span class="stp"><button data-rp="x-">−</button><b class="val" id="rxv"></b><button data-rp="x+">+</button></span> × <span class="stp"><button data-rp="y-">−</button><b class="val" id="ryv"></b><button data-rp="y+">+</button></span></label>
+  </div>
+  <div class="pvc" style="margin-top:10px">
+   <label>Rand oben <select id="btc" aria-label="Farbe Rand oben"></select><span class="stp"><button data-bd="t-">−</button><b class="val" id="btv"></b><button data-bd="t+">+</button></span> Reihen</label>
+   <label>Rand unten <select id="bbc" aria-label="Farbe Rand unten"></select><span class="stp"><button data-bd="b-">−</button><b class="val" id="bbv"></b><button data-bd="b+">+</button></span> Reihen</label>
+  </div>
+ </div>
+ <div id="pvQ">
+  <div class="pvc" style="margin-top:10px">
+   <label>Breite <span class="stp"><button data-qw="-">−</button><b class="val" id="qwv"></b><button data-qw="+">+</button></span> Maschen</label>
+   <button id="qfit" title="Kleinste Maschenzahl, in die alle Rapporte aufgehen">An Rapporte anpassen</button>
+  </div>
+  <div class="qlist" id="qlist"></div>
+  <div class="row"><select id="qsel" aria-label="Muster für die Folge" style="flex:2"></select><button id="qaddp">＋ Muster</button><button id="qaddb">＋ Farbstreifen</button></div>
+  <div class="row"><button id="qods">💾 Folge als ODS speichern</button></div>
  </div>
 </div></section>
 </div>
@@ -208,11 +235,11 @@ const TPL={
 };
 let uid=Date.now();
 function mkPat(name,lines,cols){const{w,h,g}=fromLines(lines);return{id:++uid,name,w,h,ox:0,oy:0,g,colors:cols.map(i=>({c:PAL[i][0],n:PAL[i][1]}))}}
-const DEF={tab:'ed',cur:0,list:[],yarns:[],prev:{rx:3,ry:3,mode:'box',lines:true,bt:{c:0,n:0},bb:{c:0,n:0}},ed:{tool:'pen',col:1,letters:true,mx:false,my:false,zoom:1,flt:5}};
+const DEF={tab:'ed',cur:0,list:[],yarns:[],prev:{rx:3,ry:3,mode:'box',lines:true,bt:{c:0,n:0},bb:{c:0,n:0}},ed:{tool:'pen',col:1,letters:true,mx:false,my:false,zoom:1,flt:5},seq:{on:false,W:0,items:[]},ui:{split:56}};
 const K='fairisle';
 let S;try{S=JSON.parse(localStorage.getItem(K))}catch(e){}
 if(!S||!Array.isArray(S.list))S=JSON.parse(JSON.stringify(DEF));
-S.prev={...DEF.prev,...S.prev};S.ed={...DEF.ed,...S.ed};if(!Array.isArray(S.yarns))S.yarns=[];
+S.prev={...DEF.prev,...S.prev};S.ed={...DEF.ed,...S.ed};S.seq={...DEF.seq,...S.seq};S.ui={...DEF.ui,...S.ui};if(!Array.isArray(S.seq.items))S.seq.items=[];if(!Array.isArray(S.yarns))S.yarns=[];
 if(!S.list.length){const t=TPL.raute;S.list.push(mkPat(t.name,t.lines,t.cols))}
 if(!S.list.some(p=>p.id===S.cur))S.cur=S.list[0].id;
 S.list.forEach(p=>{uid=Math.max(uid,p.id);p.ox=p.ox|0;p.oy=p.oy|0});
@@ -389,7 +416,7 @@ function drawPicker(){if(!CE)return;const sv=$('sv'),hu=$('hue'),dpr=window.devi
  g=x.createLinearGradient(0,0,HW,0);for(let i=0;i<=6;i++)g.addColorStop(i/6,hsv2hex(i*60%360,1,1));x.fillStyle=g;x.fillRect(0,0,HW,HH);
  const hx=CE.h/360*HW;x.fillStyle='#fff';x.strokeStyle='rgba(0,0,0,.5)';x.beginPath();x.roundRect?x.roundRect(hx-4,0,8,HH,3):x.rect(hx-4,0,8,HH);x.fill();x.stroke()}
 function drawCmp(){const c=P().colors[CE.i].c;const o=$('cmpo'),n=$('cmpn');o.style.background=CE.orig;o.style.color=ink(CE.orig);o.textContent='vorher '+CE.orig;n.style.background=c;n.style.color=ink(c);n.textContent='jetzt '+c}
-function drawKnit(){if(!CE)return;const p=P(),cv=$('knit'),w=$('cols').clientWidth||360;
+function drawKnit(){if(!CE)return;const p=P(),cv=$('knit'),w=$('sv').clientWidth||360;
  drawPat(cv,p,{rx:Math.max(1,Math.ceil(28/p.w)),ry:Math.max(1,Math.ceil(10/p.h)),maxW:w,maxH:130,mode:'st',maxCell:16})}
 // Farbe setzen; src: 'picker' | 'hex' | sonst (Foto, Garn, Palette …)
 function setColor(hex,src){if(!CE||!HEX.test(hex))return;hex=hex.toLowerCase();const p=P(),c=p.colors[CE.i];if(c.c===hex&&src!=='force')return;c.c=hex;save();
@@ -428,7 +455,7 @@ $('cdel').onclick=()=>{const p=P();if(p.colors.length<=1)return;const i=p.colors
 // Foto-Pipette
 let IMG=null,PM=null;
 async function loadImg(blob){try{IMG=await createImageBitmap(blob);PM=null;$('photo').classList.remove('hide');if(!WIDE.matches&&S.tab!=='col')go('col');else drawPhoto();toast('Foto geladen – auf die Wolle tippen, um die Farbe aufzunehmen')}catch(e){toast('Bild konnte nicht geladen werden')}}
-function drawPhoto(){if(!IMG)return;const cv=$('photo'),dpr=window.devicePixelRatio||1,maxW=$('cols').clientWidth||360;
+function drawPhoto(){if(!IMG)return;const cv=$('photo'),dpr=window.devicePixelRatio||1,maxW=$('sv').clientWidth||360;
  let w=maxW,h=w*IMG.height/IMG.width;if(h>320){h=320;w=h*IMG.width/IMG.height}
  cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);cv.style.width=w+'px';cv.style.height=h+'px';
  const x=cv.getContext('2d',{willReadFrequently:true});x.setTransform(1,0,0,1,0,0);x.drawImage(IMG,0,0,cv.width,cv.height);
@@ -448,36 +475,89 @@ document.addEventListener('paste',e=>{if(e.target.closest('input,textarea'))retu
 
 /* ---------- Vorschau ---------- */
 // o: {rx,ry,maxW,maxH,mode,lines,maxCell,bt:{ch,n},bb:{ch,n}}
-function drawPat(cv,p,o){
- const D=disp(p),W=p.w*o.rx,dpr=window.devicePixelRatio||1,bt=o.bt||{n:0},bb=o.bb||{n:0};
- const rows=[];for(let i=0;i<bt.n;i++)rows.push(null);for(let y=0;y<p.h*o.ry;y++)rows.push(D[y%p.h]);for(let i=0;i<bb.n;i++)rows.push(undefined);
- const H=rows.length,ar=o.mode==='st'?.85:1;
+const hexOf=(p,ch)=>{const i=ch.charCodeAt(0)-65;return i<p.colors.length?p.colors[i].c:'#bbbbbb'};
+// Zeilen (Hex-Farben) zeichnen. o: {maxW,maxH,mode,maxCell,lines,hl:[y],vl:[[x,y0,y1]]}
+function drawRows(cv,rows,o){
+ const H=Math.max(1,rows.length),W=rows.length?rows[0].length:1,dpr=window.devicePixelRatio||1,ar=o.mode==='st'?.85:1;
  let cw=Math.floor(o.maxW/W);if(o.maxH)cw=Math.min(cw,Math.floor(o.maxH/(H*ar)));cw=Math.max(2,Math.min(o.maxCell,cw));const chh=o.mode==='st'?Math.max(2,Math.round(cw*ar)):cw;
  const w=W*cw,h=H*chh;cv.width=w*dpr;cv.height=h*dpr;cv.style.width=w+'px';cv.style.height=h+'px';
- const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
- const col=ch=>{const i=ch.charCodeAt(0)-65;return i<p.colors.length?p.colors[i].c:'#bbb'};
+ const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
  if(o.mode==='st'){ctx.fillStyle='#2a2a2a';ctx.fillRect(0,0,w,h)}
- rows.forEach((row,y)=>{for(let x=0;x<W;x++){const ch=row===null?bt.ch:row===undefined?bb.ch:row[x%p.w],c=col(ch),px=x*cw,py=y*chh;ctx.fillStyle=c;
+ rows.forEach((row,y)=>row.forEach((c,x)=>{const px=x*cw,py=y*chh;ctx.fillStyle=c;
   if(o.mode==='st'){ctx.beginPath();ctx.ellipse(px+cw*.3,py+chh*.5,cw*.25,chh*.62,-.5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(px+cw*.7,py+chh*.5,cw*.25,chh*.62,.5,0,Math.PI*2);ctx.fill()}
-  else ctx.fillRect(px,py,cw,chh)}});
+  else ctx.fillRect(px,py,cw,chh)}));
  if(o.mode!=='st'&&cw>=6){ctx.strokeStyle='rgba(0,0,0,.16)';ctx.lineWidth=.5;ctx.beginPath();
   for(let x=1;x<W;x++){ctx.moveTo(x*cw,0);ctx.lineTo(x*cw,h)}for(let y=1;y<H;y++){ctx.moveTo(0,y*chh);ctx.lineTo(w,y*chh)}ctx.stroke()}
- if(o.lines){const y0=bt.n*chh,y1=(bt.n+p.h*o.ry)*chh;ctx.strokeStyle='#e0245e';ctx.lineWidth=1.5;ctx.setLineDash([5,4]);ctx.beginPath();
-  for(let x=1;x<o.rx;x++){ctx.moveTo(x*p.w*cw,y0);ctx.lineTo(x*p.w*cw,y1)}for(let y=0;y<=o.ry;y++){if((y===0&&!bt.n)||(y===o.ry&&!bb.n))continue;ctx.moveTo(0,y0+y*p.h*chh);ctx.lineTo(w,y0+y*p.h*chh)}ctx.stroke();ctx.setLineDash([])}}
+ if(o.lines){ctx.strokeStyle='#e0245e';ctx.lineWidth=1.5;ctx.setLineDash([5,4]);ctx.beginPath();
+  (o.vl||[]).forEach(([x,y0,y1])=>{ctx.moveTo(x*cw,y0*chh);ctx.lineTo(x*cw,y1*chh)});(o.hl||[]).forEach(y=>{ctx.moveTo(0,y*chh);ctx.lineTo(w,y*chh)});ctx.stroke();ctx.setLineDash([])}}
+// Muster p auf W Maschen verteilen (rechtsbündig: Masche 1 rechts), ry Wiederholungen hoch
+function patRows(p,W,ry){ensure(p);const D=disp(p).map(r=>r.map(ch=>hexOf(p,ch))),out=[];
+ for(let k=0;k<ry;k++)for(let dy=0;dy<p.h;dy++)out.push(Array.from({length:W},(_,x)=>D[dy][p.w-1-((W-1-x)%p.w)]));return out}
+const vlines=(p,W,y0,y1)=>{const v=[];for(let x=1;x<W;x++)if((W-x)%p.w===0)v.push([x,y0,y1]);return v};
+function drawPat(cv,p,o){const W=p.w*o.rx,bt=o.bt||{n:0},bb=o.bb||{n:0},band=(b,n)=>Array.from({length:n},()=>Array(W).fill(hexOf(p,b.ch||'A')));
+ const rows=[...band(bt,bt.n),...patRows(p,W,o.ry),...band(bb,bb.n)],y0=bt.n,y1=bt.n+p.h*o.ry,hl=[];
+ for(let j=0;j<=o.ry;j++){const y=y0+j*p.h;if(y>0&&y<rows.length)hl.push(y)}
+ drawRows(cv,rows,{...o,hl,vl:vlines(p,W,y0,y1)})}
 const bands=p=>{const f=b=>({ch:L(Math.min(b.c,p.colors.length-1)),n:b.n});return{bt:f(S.prev.bt),bb:f(S.prev.bb)}};
-function drawPv(){const p=P(),{rx,ry,mode,lines}=S.prev;drawPat($('pv'),p,{rx,ry,maxW:$('pvw').clientWidth,mode,lines,maxCell:28,...bands(p)})}
+
+/* Musterfolge: mehrere Muster und Farbstreifen untereinander */
+const seqItems=()=>S.seq.items.filter(it=>it.t==='b'||S.list.some(p=>p.id===it.id));
+const gcd=(a,b)=>b?gcd(b,a%b):a;
+function seqFit(){const ws=seqItems().filter(i=>i.t==='p').map(i=>S.list.find(p=>p.id===i.id).w);if(!ws.length)return P().w*3;
+ let l=ws.reduce((a,b)=>a/gcd(a,b)*b,1);if(l>400)return Math.max(...ws)*3;while(l<40)l*=2;return l}
+function seqRows(){const W=S.seq.W,rows=[],hl=[],vl=[];
+ for(const it of seqItems()){if(rows.length)hl.push(rows.length);
+  if(it.t==='b'){for(let i=0;i<it.n;i++)rows.push(Array(W).fill(it.c))}
+  else{const p=S.list.find(x=>x.id===it.id),y0=rows.length;rows.push(...patRows(p,W,it.ry));vl.push(...vlines(p,W,y0,rows.length));for(let k=1;k<it.ry;k++)hl.push(y0+k*p.h)}}
+ return{rows,hl,vl}}
+function seqColors(){const m=new Map();for(const it of seqItems()){if(it.t==='b'){if(!m.has(it.c))m.set(it.c,'')}else{const p=S.list.find(x=>x.id===it.id);p.colors.forEach(c=>{if(!m.has(c.c)||!m.get(c.c))m.set(c.c,c.n)})}}return m}
+function initSeq(){const p=P();if(!S.seq.items.length)S.seq.items=[{t:'b',c:p.colors[0].c,n:3},{t:'p',id:p.id,ry:2},{t:'b',c:p.colors[0].c,n:3}];if(!S.seq.W)S.seq.W=seqFit()}
+function drawPv(){const p=P(),{rx,ry,mode,lines}=S.prev,maxW=$('pvw').clientWidth;
+ if(S.seq.on){const r=seqRows();drawRows($('pv'),r.rows,{maxW,mode,lines,maxCell:28,hl:r.hl,vl:r.vl});
+  $('pvi').textContent=`Musterfolge · ${S.seq.W} Maschen × ${r.rows.length} Reihen`;return}
+ drawPat($('pv'),p,{rx,ry,maxW,mode,lines,maxCell:28,...bands(p)});
+ $('pvi').textContent=`Rapport ${p.w} × ${p.h} · Vorschau ${p.w*rx} Maschen × ${p.h*ry+S.prev.bt.n+S.prev.bb.n} Reihen`}
+function renderSeq(){const items=seqItems(),cols=[...seqColors().keys()].slice(0,16),W=S.seq.W;
+ $('qwv').textContent=W;
+ $('qlist').innerHTML=items.map((it,k)=>{const nav=`<button class="ib" data-qm="${k},-1" title="Nach oben"${k?'':' disabled'}>↑</button><button class="ib" data-qm="${k},1" title="Nach unten"${k<items.length-1?'':' disabled'}>↓</button><button class="ib" data-qx="${k}" title="Entfernen">✕</button>`;
+  if(it.t==='b')return`<div class="qi" data-k="${k}"><input type="color" value="${it.c}" data-qc="${k}" aria-label="Farbe des Streifens"><div class="qn"><b>Farbstreifen</b><div class="qsw">${cols.map(c=>`<button data-qs="${k}" data-c="${c}" style="background:${c}" title="${c}"></button>`).join('')}</div></div><span class="stp"><button data-qr="${k},-1">−</button><b class="val">${it.n}</b><button data-qr="${k},1">+</button></span><small class="mut">Reihen</small>${nav}</div>`;
+  const p=S.list.find(x=>x.id===it.id),bad=W%p.w;
+  return`<div class="qi${p.id===S.cur?' cur':''}" data-k="${k}"><canvas data-th="${p.id}"></canvas><div class="qn"><b data-qo="${p.id}" title="Zum Bearbeiten öffnen">${esc(p.name||'Ohne Namen')}</b><small>${p.w} × ${p.h}${bad?` · <span class="warn">${W} ist nicht durch ${p.w} teilbar</span>`:''}</small></div><span class="stp"><button data-qr="${k},-1">−</button><b class="val">${it.ry}</b><button data-qr="${k},1">+</button></span><small class="mut">× hoch</small>${nav}</div>`}).join('')||'<p class="mut">Noch leer – unten Muster oder Farbstreifen hinzufügen.</p>';
+ $('qlist').querySelectorAll('[data-th]').forEach(cv=>{const p=S.list.find(x=>x.id===+cv.dataset.th);drawPat(cv,p,{rx:1,ry:1,maxW:40,maxH:32,mode:'box',maxCell:5})});
+ $('qsel').innerHTML=S.list.map(p=>`<option value="${p.id}"${p.id===S.cur?' selected':''}>${esc(p.name||'Ohne Namen')} (${p.w} × ${p.h})</option>`).join('');
+ const m=seqColors();$('pleg').innerHTML=[...m].map(([c,n])=>`<span><i style="background:${c}"></i>${esc(n)||c}</span>`).join('')}
 function renderPv(){const p=P(),{rx,ry,bt,bb}=S.prev;
- $('rxv').textContent=rx;$('ryv').textContent=ry;$('pvl').checked=S.prev.lines;$('btv').textContent=bt.n;$('bbv').textContent=bb.n;
+ document.querySelectorAll('[data-sq]').forEach(b=>b.classList.toggle('on',+b.dataset.sq===+S.seq.on));
+ $('pvS').classList.toggle('hide',S.seq.on);$('pvQ').classList.toggle('hide',!S.seq.on);
+ $('pvl').checked=S.prev.lines;document.querySelectorAll('[data-pm]').forEach(b=>b.classList.toggle('on',b.dataset.pm===S.prev.mode));
+ if(S.seq.on){renderSeq();drawPv();return}
+ $('rxv').textContent=rx;$('ryv').textContent=ry;$('btv').textContent=bt.n;$('bbv').textContent=bb.n;
  const o=p.colors.map((c,i)=>`<option value="${i}">${L(i)}${c.n?' – '+esc(c.n):''}</option>`).join('');
  $('btc').innerHTML=o;$('bbc').innerHTML=o;$('btc').value=Math.min(bt.c,p.colors.length-1);$('bbc').value=Math.min(bb.c,p.colors.length-1);
- document.querySelectorAll('[data-pm]').forEach(b=>b.classList.toggle('on',b.dataset.pm===S.prev.mode));
  drawPv();
- $('pvi').textContent=`Rapport ${p.w} × ${p.h} · Vorschau ${p.w*rx} Maschen × ${p.h*ry+bt.n+bb.n} Reihen`;
  $('pleg').innerHTML=p.colors.map((c,i)=>`<span><i style="background:${c.c}"></i><b>${L(i)}</b> ${esc(c.n)}</span>`).join('')}
 document.querySelectorAll('[data-pm]').forEach(b=>b.onclick=()=>{S.prev.mode=b.dataset.pm;save();renderPv()});
+document.querySelectorAll('[data-sq]').forEach(b=>b.onclick=()=>{S.seq.on=b.dataset.sq==='1';if(S.seq.on)initSeq();save();renderPv()});
 $('pvl').onchange=()=>{S.prev.lines=$('pvl').checked;save();renderPv()};
 $('btc').onchange=()=>{S.prev.bt.c=+$('btc').value;if(!S.prev.bt.n)S.prev.bt.n=3;save();renderPv()};
 $('bbc').onchange=()=>{S.prev.bb.c=+$('bbc').value;if(!S.prev.bb.n)S.prev.bb.n=3;save();renderPv()};
+hold('[data-qw]',b=>{S.seq.W=Math.min(600,Math.max(4,S.seq.W+(b.dataset.qw==='+'?1:-1)));save();renderPv()});
+$('qfit').onclick=()=>{S.seq.W=seqFit();save();renderPv()};
+$('qaddp').onclick=()=>{const id=+$('qsel').value;if(!id)return;S.seq.items=seqItems();S.seq.items.push({t:'p',id,ry:1});save();renderPv()};
+$('qaddb').onclick=()=>{S.seq.items=seqItems();const c=[...seqColors().keys()][0]||P().colors[0].c;S.seq.items.push({t:'b',c,n:2});save();renderPv()};
+$('qlist').addEventListener('click',e=>{const t=e.target.closest('button,[data-qo]');if(!t)return;const it=seqItems();S.seq.items=it;
+ if(t.dataset.qo){S.cur=+t.dataset.qo;CE=null;save();render();return}
+ if(t.dataset.qm){const[k,d]=t.dataset.qm.split(',').map(Number);[it[k],it[k+d]]=[it[k+d],it[k]]}
+ if(t.dataset.qx)it.splice(+t.dataset.qx,1);
+ if(t.dataset.qr){const[k,d]=t.dataset.qr.split(',').map(Number),x=it[k];if(x.t==='b')x.n=Math.min(60,Math.max(0,x.n+d));else x.ry=Math.min(20,Math.max(1,x.ry+d))}
+ if(t.dataset.qs)it[+t.dataset.qs].c=t.dataset.c;
+ save();renderPv()});
+$('qlist').addEventListener('input',e=>{const k=e.target.dataset.qc;if(k==null)return;const it=seqItems()[+k];if(it&&HEX.test(e.target.value)){it.c=e.target.value;save();later('pv')}});
+$('qlist').addEventListener('change',e=>{if(e.target.dataset.qc!=null)renderPv()});
+$('qods').onclick=()=>{const m=seqColors();if(m.size>26)return toast('Mehr als 26 verschiedene Farben – ODS nicht möglich');
+ const cols=[...m].map(([c,n])=>({c,n})),idx=new Map(cols.map((c,i)=>[c.c,L(i)])),r=seqRows();
+ const D=r.rows.map(row=>row.map(c=>idx.get(c)||'A'));
+ dl('Musterfolge.ods',zip(odsPack(cols,[{name:'Musterfolge',title:`Musterfolge – ${S.seq.W} Maschen × ${D.length} Reihen`,D,nums:true,legend:true}])));toast('ODS-Datei erstellt')};
 
 /* ---------- Musterliste ---------- */
 function renderPat(){const p=P();$('curn').textContent=p.name||'Ohne Namen';$('del').disabled=S.list.length<2;
@@ -528,31 +608,28 @@ async function unzip(buf){const v=new DataView(buf),u8=new Uint8Array(buf),out={
  return out}
 const xe=s=>String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 const NS='xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" xmlns:meta="urn:oasis:names:tc:opendocument:xmlns:meta:1.0" office:version="1.2"';
-function odsFiles(p){const D=disp(p),{rx,ry}=S.prev,{bt,bb}=bands(p);
+// ODS bauen. colors: [{c,n}] → Buchstaben A, B, …; sheets: [{name,title,D:[[Buchstaben]],nums,legend}]
+function odsPack(colors,sheets,json){
  const brd='fo:border="0.5pt solid #808080" style:vertical-align="middle"';
  const styles=`<?xml version="1.0" encoding="UTF-8"?>\n<office:document-styles ${NS}><office:styles>
 <style:default-style style:family="table-cell"><style:text-properties style:font-name="Liberation Sans" fo:font-size="10pt"/></style:default-style>
 <style:style style:name="Default" style:family="table-cell"/>
-${p.colors.map((c,i)=>`<style:style style:name="Farbe_${L(i)}" style:display-name="Farbe ${L(i)}" style:family="table-cell" style:parent-style-name="Default"><style:table-cell-properties fo:background-color="${c.c}" ${brd}/><style:paragraph-properties fo:text-align="center"/><style:text-properties fo:color="${ink(c.c)}" fo:font-size="7pt"/></style:style>`).join('\n')}
+${colors.map((c,i)=>`<style:style style:name="Farbe_${L(i)}" style:display-name="Farbe ${L(i)}" style:family="table-cell" style:parent-style-name="Default"><style:table-cell-properties fo:background-color="${c.c}" ${brd}/><style:paragraph-properties fo:text-align="center"/><style:text-properties fo:color="${ink(c.c)}" fo:font-size="7pt"/></style:style>`).join('\n')}
 </office:styles></office:document-styles>`;
- const maps=sh=>p.colors.map((c,i)=>`<style:map style:condition="cell-content()=&quot;${L(i)}&quot;" style:apply-style-name="Farbe_${L(i)}" style:base-cell-address="${sh}.A1"/>`).join('');
- const gst=sh=>`<style:style style:name="ce${sh[0]}" style:family="table-cell" style:parent-style-name="Default"><style:table-cell-properties ${brd}/><style:paragraph-properties fo:text-align="center"/><style:text-properties fo:font-size="7pt"/>${maps(sh)}</style:style>`;
+ const maps=sh=>colors.map((c,i)=>`<style:map style:condition="cell-content()=&quot;${L(i)}&quot;" style:apply-style-name="Farbe_${L(i)}" style:base-cell-address="${sh}.A1"/>`).join('');
+ const gst=(sh,k)=>`<style:style style:name="ceG${k}" style:family="table-cell" style:parent-style-name="Default"><style:table-cell-properties ${brd}/><style:paragraph-properties fo:text-align="center"/><style:text-properties fo:font-size="7pt"/>${maps(sh)}</style:style>`;
  const sc=(t,st)=>`<table:table-cell office:value-type="string"${st?` table:style-name="${st}"`:''}><text:p>${xe(t)}</text:p></table:table-cell>`;
  const nm=n=>`<table:table-cell office:value-type="float" office:value="${n}" table:style-name="ceN"><text:p>${n}</text:p></table:table-cell>`;
  const E='<table:table-cell/>';
- let r1=`<table:table table:name="Rapport"><table:table-column table:style-name="coG" table:number-columns-repeated="${p.w}"/><table:table-column table:style-name="coN"/>`;
- r1+=`<table:table-row table:style-name="roT">${sc(`${p.name} – Rapport ${p.w} × ${p.h}`,'ceT')}</table:table-row>`;
- D.forEach((row,dy)=>{r1+=`<table:table-row table:style-name="roG">${row.map(ch=>sc(ch,'ceR')).join('')}${nm(p.h-dy)}</table:table-row>`});
- r1+=`<table:table-row table:style-name="roG">${Array.from({length:p.w},(_,dx)=>nm(p.w-dx)).join('')}</table:table-row>`;
- r1+=`<table:table-row>${E}</table:table-row><table:table-row>${sc('Farben','ceT')}</table:table-row>`;
- p.colors.forEach((c,i)=>{r1+=`<table:table-row table:style-name="roG">${sc(L(i),'ceR')}${E}${sc(`${c.n?c.n+' ':''}(${c.c})`)}</table:table-row>`});
- r1+=`<table:table-row>${E}</table:table-row><table:table-row>${sc('Lesen: Reihen von unten nach oben, Maschen von rechts nach links.')}</table:table-row></table:table>`;
- const W=p.w*rx,band=ch=>`<table:table-row table:style-name="roG">${Array.from({length:W},()=>sc(ch,'ceV')).join('')}</table:table-row>`;
- let r2=`<table:table table:name="Vorschau"><table:table-column table:style-name="coG" table:number-columns-repeated="${W}"/>`;
- for(let i=0;i<bt.n;i++)r2+=band(bt.ch);
- for(let y=0;y<p.h*ry;y++)r2+=`<table:table-row table:style-name="roG">${Array.from({length:W},(_,x)=>sc(D[y%p.h][x%p.w],'ceV')).join('')}</table:table-row>`;
- for(let i=0;i<bb.n;i++)r2+=band(bb.ch);
- r2+='</table:table>';
+ const tables=sheets.map((s,k)=>{const W=s.D[0]?s.D[0].length:1,H=s.D.length,st='ceG'+k;
+  let t=`<table:table table:name="${xe(s.name)}"><table:table-column table:style-name="coG" table:number-columns-repeated="${W}"/>${s.nums?'<table:table-column table:style-name="coN"/>':''}`;
+  if(s.title)t+=`<table:table-row table:style-name="roT">${sc(s.title,'ceT')}</table:table-row>`;
+  s.D.forEach((row,dy)=>{t+=`<table:table-row table:style-name="roG">${row.map(ch=>sc(ch,st)).join('')}${s.nums?nm(H-dy):''}</table:table-row>`});
+  if(s.nums)t+=`<table:table-row table:style-name="roG">${Array.from({length:W},(_,dx)=>nm(W-dx)).join('')}</table:table-row>`;
+  if(s.legend){t+=`<table:table-row>${E}</table:table-row><table:table-row>${sc('Farben','ceT')}</table:table-row>`;
+   colors.forEach((c,i)=>{t+=`<table:table-row table:style-name="roG">${sc(L(i),st)}${E}${sc(`${c.n?c.n+' ':''}(${c.c})`)}</table:table-row>`});
+   t+=`<table:table-row>${E}</table:table-row><table:table-row>${sc('Lesen: Reihen von unten nach oben, Maschen von rechts nach links.')}</table:table-row>`}
+  return t+'</table:table>'}).join('');
  const content=`<?xml version="1.0" encoding="UTF-8"?>\n<office:document-content ${NS}><office:automatic-styles>
 <style:style style:name="coG" style:family="table-column"><style:table-column-properties style:column-width="0.5cm"/></style:style>
 <style:style style:name="coN" style:family="table-column"><style:table-column-properties style:column-width="0.8cm"/></style:style>
@@ -560,19 +637,22 @@ ${p.colors.map((c,i)=>`<style:style style:name="Farbe_${L(i)}" style:display-nam
 <style:style style:name="roT" style:family="table-row"><style:table-row-properties style:row-height="0.8cm" style:use-optimal-row-height="false"/></style:style>
 <style:style style:name="ceT" style:family="table-cell" style:parent-style-name="Default"><style:text-properties fo:font-size="12pt" fo:font-weight="bold"/></style:style>
 <style:style style:name="ceN" style:family="table-cell" style:parent-style-name="Default"><style:table-cell-properties style:vertical-align="middle"/><style:paragraph-properties fo:text-align="center"/><style:text-properties fo:font-size="7pt" fo:color="#666666"/></style:style>
-${gst('Rapport')}
-${gst('Vorschau')}
-</office:automatic-styles><office:body><office:spreadsheet>${r1}${r2}</office:spreadsheet></office:body></office:document-content>`;
+${sheets.map((s,k)=>gst(s.name,k)).join('\n')}
+</office:automatic-styles><office:body><office:spreadsheet>${tables}</office:spreadsheet></office:body></office:document-content>`;
  const meta=`<?xml version="1.0" encoding="UTF-8"?>\n<office:document-meta ${NS}><office:meta><meta:generator>Fair-Isle-Musterhilfe</meta:generator></office:meta></office:document-meta>`;
  const man=`<?xml version="1.0" encoding="UTF-8"?>\n<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.2">
 <manifest:file-entry manifest:full-path="/" manifest:version="1.2" manifest:media-type="application/vnd.oasis.opendocument.spreadsheet"/>
 <manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/>
 <manifest:file-entry manifest:full-path="styles.xml" manifest:media-type="text/xml"/>
 <manifest:file-entry manifest:full-path="meta.xml" manifest:media-type="text/xml"/>
-<manifest:file-entry manifest:full-path="fairisle.json" manifest:media-type="application/json"/>
-</manifest:manifest>`;
- return[{name:'mimetype',data:'application/vnd.oasis.opendocument.spreadsheet'},{name:'META-INF/manifest.xml',data:man},{name:'content.xml',data:content},{name:'styles.xml',data:styles},{name:'meta.xml',data:meta},
-  {name:'fairisle.json',data:JSON.stringify(pdata(p))}]}
+${json?'<manifest:file-entry manifest:full-path="fairisle.json" manifest:media-type="application/json"/>\n':''}</manifest:manifest>`;
+ const f=[{name:'mimetype',data:'application/vnd.oasis.opendocument.spreadsheet'},{name:'META-INF/manifest.xml',data:man},{name:'content.xml',data:content},{name:'styles.xml',data:styles},{name:'meta.xml',data:meta}];
+ if(json)f.push({name:'fairisle.json',data:JSON.stringify(json)});return f}
+function odsFiles(p){const D=disp(p),{rx,ry}=S.prev,{bt,bb}=bands(p),W=p.w*rx;
+ const V=[];for(let i=0;i<bt.n;i++)V.push(Array(W).fill(bt.ch));
+ for(let y=0;y<p.h*ry;y++)V.push(Array.from({length:W},(_,x)=>D[y%p.h][p.w-1-((W-1-x)%p.w)]));
+ for(let i=0;i<bb.n;i++)V.push(Array(W).fill(bb.ch));
+ return odsPack(p.colors,[{name:'Rapport',title:`${p.name} – Rapport ${p.w} × ${p.h}`,D,nums:true,legend:true},{name:'Vorschau',D:V}],pdata(p))}
 function dl(name,blob){const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),3000)}
 $('odsSave').onclick=$('odsSave2').onclick=()=>{const p=P();dl((p.name||'Muster').replace(/[\\/:*?"<>|]+/g,'_').trim()+'.ods',zip(odsFiles(p)));toast('ODS-Datei erstellt')};
 
@@ -588,8 +668,8 @@ function parseOds(f,fname){
  for(const row of tb.getElementsByTagNameNS(TN,'table-row')){const cells=[];
   for(const c of row.children){if(c.namespaceURI!==TN||!/table-cell$/.test(c.localName))continue;const rep=Math.min(+c.getAttributeNS(TN,'number-columns-repeated')||1,MAXS+2),t=c.textContent.trim();for(let k=0;k<rep;k++)cells.push(t)}
   const rr=Math.min(+row.getAttributeNS(TN,'number-rows-repeated')||1,MAXS);for(let k=0;k<rr;k++)M.push(cells);if(M.length>2000)break}
- const isL=t=>/^[A-Z]$/i.test(t);let y0=M.findIndex(r=>r.some(isL));if(y0<0)throw new Error('Keine Buchstaben gefunden');
- const x0=M[y0].findIndex(isL);let x1=x0;while(x1<M[y0].length&&isL(M[y0][x1]))x1++;
+ const isL=t=>/^[A-Z]$/i.test(t),run2=r=>r.some((t,i)=>isL(t)&&isL(r[i+1]||''));let y0=M.findIndex(run2);if(y0<0)y0=M.findIndex(r=>r.some(isL));if(y0<0)throw new Error('Keine Buchstaben gefunden');
+ let x0=M[y0].findIndex((t,i)=>isL(t)&&isL(M[y0][i+1]||''));if(x0<0)x0=M[y0].findIndex(isL);let x1=x0;while(x1<M[y0].length&&isL(M[y0][x1]))x1++;
  const w=x1-x0,lines=[];for(let y=y0;y<M.length&&isL(M[y][x0]||'');y++)lines.push(Array.from({length:w},(_,x)=>(M[y][x0+x]||'A').toUpperCase()).map(ch=>isL(ch)?ch:'A').join(''));
  const bg={},cond={};
  for(const d of[doc,sdoc].filter(Boolean)){for(const s of d.getElementsByTagName('*')){if(s.localName==='style'){const n=s.getAttribute('style:name');const pr=[...s.children].find(c=>c.localName==='table-cell-properties');const b=pr&&pr.getAttribute('fo:background-color');if(n&&b&&HEX.test(b))bg[n]=b}
@@ -614,6 +694,15 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.t)
 WIDE.addEventListener('change',()=>{layout();render()});
 let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(render,120)});
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',render);
+// Verschiebbarer Trenner zwischen Eingabe (links) und Vorschau (rechts)
+const setSplit=v=>{S.ui.split=Math.min(75,Math.max(30,v));document.querySelector('.design').style.setProperty('--split',S.ui.split+'%')};
+setSplit(S.ui.split);
+(()=>{const sp=$('split');let on=false;
+ sp.addEventListener('pointerdown',e=>{on=true;sp.setPointerCapture(e.pointerId);sp.classList.add('on');document.body.classList.add('drag')});
+ sp.addEventListener('pointermove',e=>{if(!on)return;const r=document.querySelector('.design').getBoundingClientRect();setSplit((e.clientX-r.left)/r.width*100);later('ed','pv','knit')});
+ const end=()=>{if(!on)return;on=false;sp.classList.remove('on');document.body.classList.remove('drag');save();render()};
+ sp.addEventListener('pointerup',end);sp.addEventListener('pointercancel',end);
+ sp.addEventListener('dblclick',()=>{setSplit(56);save();render()})})();
 go(['ed','col','pv','pat'].includes(S.tab)?S.tab:'ed');
 if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script></body></html>

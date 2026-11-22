@@ -11,7 +11,8 @@ Kleine Web-App (PWA, eine Datei, ohne Server) zum Entwerfen und Anpassen von Fai
 - **Farben**: Buchstaben A, B, C … stehen je für eine Farbe. Wahl über Farbverlaufsfläche mit Farbton-Leiste, Hex-Code, Pipette vom Bildschirm (Chrome/Edge) oder aus einem Foto (hochladen, hineinziehen oder mit Strg+V einfügen).
   Vergleich vorher/jetzt und als Maschenbild. „Meine Garne“ speichert gekaufte Garne mit Namen zur Wiederverwendung.
 - **Vorschau**: Rapport beliebig oft nebeneinander/übereinander, als Kästchen oder als Maschenbild, mit Rapportgrenzen und einfarbigem Rand oben/unten.
-- **Layout**: für den PC ausgelegt (Editor, Vorschau und Farben gleichzeitig sichtbar, Vorschau aktualisiert live); auf dem Handy über Reiter unten bedienbar.
+- **Musterfolge**: mehrere Muster und einfarbige Streifen untereinander anreihen, Reihenfolge und Höhe frei wählbar, gemeinsame Maschenzahl mit Hinweis, wenn ein Rapport nicht aufgeht. Als eigene ODS-Datei speicherbar.
+- **Layout**: für den PC ausgelegt – links Eingabe und Farben, rechts die Vorschau (live), Trenner dazwischen verschiebbar. Auf dem Handy über Reiter unten bedienbar.
 - **Muster**: mehrere Muster im Browser speichern, Vorlagen, Duplizieren, Löschen.
 - **ODS speichern** (LibreOffice Calc): Blatt „Rapport“ mit Reihen-/Maschennummern und Farblegende, Blatt „Vorschau“ mit den eingestellten Wiederholungen. Alle Musterzellen haben bedingte Formatierung: *Zellwert = "A" → Farbe von A* usw.
   Wer die Buchstaben in Calc ändert, sieht sofort die passende Farbe.
