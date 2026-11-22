@@ -1149,7 +1149,7 @@ function floatsOf(seg,cyc,lim){const b=seg.slice().reverse(),n=b.length,used=[..
  return out}
 // Ein Rapport der aktuellen Reihe vergrössert, mit Maschenzahl je Farbblock und Fang-Markierungen
 function renderStrip(seg,cyc,rep,runs){const d=seg.length,lim=S.ed.flt||5,fl=floatsOf(seg,cyc,lim),cv=$('kstrip'),dpr=window.devicePixelRatio||1;
- const avail=$('kswrap').clientWidth||320,cs=Math.max(14,Math.min(40,Math.floor((avail-2)/d))),ch=Math.round(cs*1.1),LB=16,MK=fl.length?12:0;
+ const avail=$('kswrap').clientWidth||320,cs=Math.max(14,Math.min(40,Math.floor((avail-2)/d))),ch=Math.round(cs*1.1),LB=16,MK=fl.length?Math.max(20,Math.round(cs*.8)):0;
  const w=d*cs,h=ch+LB+MK;cv.width=w*dpr;cv.height=h*dpr;cv.style.width=w+'px';cv.style.height=h+'px';
  const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);
  seg.forEach((c,i)=>{x.fillStyle=c;x.fillRect(i*cs,0,cs,ch)});
@@ -1160,7 +1160,7 @@ function renderStrip(seg,cyc,rep,runs){const d=seg.length,lim=S.ed.flt||5,fl=flo
  x.font=`600 ${Math.min(13,cs*.5)}px system-ui,sans-serif`;x.textAlign='center';x.textBaseline='middle';
  let pos=d;runs.forEach(r=>{const a=pos-r.n;x.fillStyle=mut;x.fillText(String(r.n),(a+r.n/2)*cs,ch+LB/2+1);x.fillStyle='rgba(0,0,0,.25)';if(a>0)x.fillRect(a*cs,ch+2,1,LB-4);pos=a});
  // Fang-Markierungen
- x.fillStyle=wr;fl.forEach(f=>f.c.forEach(i=>{const px=(d-1-i)*cs+cs/2,py=ch+LB+2;x.beginPath();x.moveTo(px,py);x.lineTo(px-5,py+8);x.lineTo(px+5,py+8);x.closePath();x.fill()}));
+ x.fillStyle=wr;const tw=Math.max(7,Math.min(cs*.42,13)),th=MK-3;fl.forEach(f=>f.c.forEach(i=>{const px=(d-1-i)*cs+cs/2,py=ch+LB+1;x.beginPath();x.moveTo(px,py);x.lineTo(px-tw,py+th);x.lineTo(px+tw,py+th);x.closePath();x.fill()}));
  $('kswrap').scrollLeft=$('kswrap').scrollWidth;
  $('kone1').textContent=`${rep>1?`Ein Rapport: ${d} Maschen, ${rep}× wiederholen`:`Ganze Reihe: ${d} Maschen`} · von rechts nach links stricken ←`;
  const by={};fl.forEach(f=>{const k=f.X;if(!by[k]||by[k].len<f.len)by[k]=f});
