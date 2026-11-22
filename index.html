@@ -784,6 +784,10 @@ function drawRows(cv,rows,o){
   else ctx.fillRect(px,py,cw,chh)}));
  if(o.mode==='felt')felt(cv,ctx,w,h,cw,chh,dpr);
  if(o.mode==='box'&&cw>=7)rows.forEach((row,y)=>{if(row.v)row.v.forEach((m,x)=>{if(m)drawV(ctx,x*cw,y*chh,cw,chh,row[x]===null?'#777':ink(col(row[x])))})});
+ // Maschen-Ansicht: dünnes V in Schwarz/Weiss, damit die Farbe dominiert
+ if(o.mode==='st'&&cw>=5)rows.forEach((row,y)=>{if(row.v)row.v.forEach((m,x)=>{if(!m||row[x]===null)return;const px=x*cw,py=y*chh;
+  ctx.save();ctx.strokeStyle=ink(col(row[x]));ctx.globalAlpha=.8;ctx.lineWidth=Math.max(.7,cw*.07);ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();
+  ctx.moveTo(px+cw*.2,py+chh*.18);ctx.lineTo(px+cw*.5,py+chh*.88);ctx.lineTo(px+cw*.8,py+chh*.18);ctx.stroke();ctx.restore()})});
  if(o.mode==='box'&&cw>=6){if(rows.some(r=>r.includes(null)))gridEdges(ctx,W,H,cw,chh,(x,y)=>rows[y][x]!==null,()=>['rgba(0,0,0,.16)',.5]);
   else{ctx.strokeStyle='rgba(0,0,0,.16)';ctx.lineWidth=.5;ctx.beginPath();for(let x=1;x<W;x++){ctx.moveTo(x*cw,0);ctx.lineTo(x*cw,h)}for(let y=1;y<H;y++){ctx.moveTo(0,y*chh);ctx.lineTo(w,y*chh)}ctx.stroke()}}
  if(o.lines){ctx.strokeStyle='#e0245e';ctx.lineWidth=1.5;ctx.setLineDash([5,4]);ctx.beginPath();
