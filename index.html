@@ -156,6 +156,9 @@ a.btn{display:flex;align-items:center;justify-content:center;height:38px;backgro
  #print table{border-collapse:collapse;break-inside:avoid}#print td,#print th{border:1px solid #bbb;padding:1.2mm 2.5mm;text-align:left}
  #print td i{display:inline-block;width:9mm;height:5mm;border:1px solid #888;vertical-align:middle}
  #print .fig{break-inside:avoid}
+ #print .pg{break-before:page}
+ #print .leg{display:flex;flex-wrap:wrap;gap:2mm 6mm;margin-top:3mm}#print .leg i,#print li i{display:inline-block;width:6mm;height:4mm;border:1px solid #888;vertical-align:middle}
+ #print ol{margin:0;padding-left:6mm}#print li{margin:1mm 0}
 }
 </style></head><body>
 <header>
@@ -391,7 +394,7 @@ a.btn{display:flex;align-items:center;justify-content:center;height:38px;backgro
 
 <script>
 'use strict';
-const APPV='14';
+const APPV='15';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const L=i=>String.fromCharCode(65+i);
@@ -1026,20 +1029,30 @@ function odsFiles(p){const D=disp(p),{rx,ry}=S.prev,{bt,bb}=bands(p),W=p.w*rx;
  return odsPack(p.colors,[{name:'Rapport',title:`${p.name} – Rapport ${p.w} × ${p.h}`,D,nums:true,legend:true},{name:'Vorschau',D:V}],pdata(p))}
 function dl(name,blob){const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),3000)}
 // Drucken / PDF: Diagramm mit Nummern, Farblegende und Vorschau
-function printOut(){const p=P(),u=usage(p),cv=document.createElement('canvas');
- const cs=Math.max(8,Math.min(26,Math.floor(640/(p.w+5))));
+// Drucken / PDF: jeder verwendete Rapport möglichst gross auf eigener Seite, dazu Farben und Vorschau
+function chartImg(p){const cv=document.createElement('canvas'),inf=34+Math.min(p.colors.length,6)*10+28;
+ const cs=Math.max(8,Math.min(60,Math.floor(Math.min((700-inf)/p.w,(800-BOT)/p.h))));
  drawChart(cv,p,{cs,dpr:3,gray:false,letters:cs>=14,mut:'#555555',warn:'#c2571a',flt:S.ed.flt});
- const pv=document.createElement('canvas'),{rx,ry,mode,lines}=S.prev;let leg,info;
- if(S.seq.on&&PJ()){const r=seqRows();drawRows(pv,r.rows,{maxW:680,mode,lines,maxCell:16,hl:r.hl,vl:r.vl,dpr:3,gray:false,ar:S.prev.ar});
-  info=`${esc(pjName(PJ()))} · ${PJ().W} Maschen × ${r.rows.length} Reihen`;leg=[...seqColors()].map(([c,n])=>`<span style="margin-right:5mm"><i style="display:inline-block;width:5mm;height:4mm;border:1px solid #888;background:${c};vertical-align:middle"></i> ${esc(n)||c}</span>`).join('')}
- else{drawPat(pv,p,{rx,ry,maxW:680,mode,lines,maxCell:16,dpr:3,gray:false,ar:S.prev.ar,...bands(p)});info=`${p.w*rx} Maschen × ${p.h*ry+S.prev.bt.n+S.prev.bb.n} Reihen`;leg=''}
- $('print').innerHTML=`<h1>${esc(p.name||'Muster')}</h1><p class="meta">Rapport ${p.w} Maschen × ${p.h} Reihen · ${p.colors.length} Farben · ${new Date().toLocaleDateString('de-CH')}</p>
- <div class="fig"><img src="${cv.toDataURL()}" style="width:${cv.style.width}" alt="Diagramm"></div>
- <p class="meta" style="margin-top:2mm">Reihen von unten nach oben, Maschen von rechts nach links lesen. Rechts je Reihe: Farben und längster Spannfaden.</p>
- <h2>Farben</h2><table><tr><th></th><th>Buchstabe</th><th>Name / Garn</th><th>Farbcode</th><th>Maschen im Rapport</th></tr>
- ${p.colors.map((c,i)=>`<tr><td><i style="background:${c.c}"></i></td><td><b>${L(i)}</b></td><td>${esc(c.n)}</td><td>${c.c}</td><td>${u[L(i)]||0}</td></tr>`).join('')}</table>
- <div class="fig"><h2>Vorschau</h2><p class="meta">${info}</p><img src="${pv.toDataURL()}" style="width:${pv.style.width}" alt="Vorschau">${leg?`<p>${leg}</p>`:''}</div>`;
- setTimeout(()=>window.print(),50)}
+ return`<div class="fig"><img src="${cv.toDataURL()}" style="width:${cv.style.width}" alt="Diagramm ${esc(p.name)}"></div>`}
+const swI=c=>`<i style="background:${c}"></i>`;
+const READ='<p class="meta" style="margin-top:2mm">Reihen von unten nach oben, Maschen von rechts nach links lesen. Rechts je Reihe: verwendete Farben und längster Spannfaden.</p>';
+function printOut(){const p=P(),{rx,ry,mode,lines}=S.prev,pv=document.createElement('canvas'),date=new Date().toLocaleDateString('de-CH');let html='';
+ if(S.seq.on&&PJ()){const pj=PJ(),r=seqRows(pj),m=seqColors(pj),cols=[...m],idx=new Map(cols.map(([c],i)=>[c,L(i)]));
+  drawRows(pv,r.rows,{maxW:700,maxH:820,mode,lines,maxCell:18,hl:r.hl,vl:r.vl,dpr:3,gray:false,ar:S.prev.ar});
+  const used=[];seqItems(pj).forEach(it=>{if(it.t==='p'&&!used.some(u=>u.p.id===it.id))used.push({p:S.list.find(x=>x.id===it.id),it})});
+  html+=`<h1>${esc(pjName(pj))}</h1><p class="meta">Projekt · ${pj.W} Maschen × ${r.rows.length} Reihen · ${used.length} Rapport${used.length===1?'':'e'} · ${date}</p>
+  <div class="fig"><img src="${pv.toDataURL()}" style="width:${pv.style.width}" alt="Vorschau"></div>
+  <h2>Farben</h2><table><tr><th></th><th>Buchstabe</th><th>Name / Garn</th><th>Farbcode</th></tr>${cols.map(([c,n])=>`<tr><td>${swI(c)}</td><td><b>${idx.get(c)}</b></td><td>${esc(n)}</td><td>${c}</td></tr>`).join('')}</table>
+  <h2>Reihenfolge (von oben nach unten)</h2><ol>${seqItems(pj).map(it=>{if(it.t==='b')return`<li>Farbstreifen ${swI(it.c)} ${idx.get(it.c)||''} – ${it.n} Reihen</li>`;const q=S.list.find(x=>x.id===it.id),f=fitLayout(q,pj.W,it.pad);
+   return`<li><b>${esc(q.name)}</b> – ${q.w} × ${q.h}, ${it.ry}× hoch${f.rem&&f.n?`, ${f.rem} M. Rand (${{c:'beidseitig',l:'links',r:'rechts'}[it.pad||'c']})`:''}${it.off?`, Versatz ${it.off>0?'+':''}${it.off} M.`:''}</li>`}).join('')}</ol>`;
+  used.forEach(({p:q},k)=>{const u=usage(q);html+=`<section class="pg"><h1>Rapport ${k+1}: ${esc(q.name||'Muster')}</h1><p class="meta">${q.w} Maschen × ${q.h} Reihen · ${esc(pjName(pj))}</p>${chartImg(q)}${READ}
+   <p class="leg">${q.colors.map((c,i)=>u[L(i)]?`<span>${swI(c.c)} <b>${L(i)}</b> ${esc(c.n)} (${u[L(i)]} M.)</span>`:'').join('')}</p></section>`})}
+ else{const u=usage(p);drawPat(pv,p,{rx,ry,maxW:700,maxH:820,mode,lines,maxCell:18,dpr:3,gray:false,ar:S.prev.ar,...bands(p)});
+  html+=`<h1>${esc(p.name||'Muster')}</h1><p class="meta">Rapport ${p.w} Maschen × ${p.h} Reihen · ${p.colors.length} Farben · ${date}</p>${chartImg(p)}${READ}
+  <h2>Farben</h2><table><tr><th></th><th>Buchstabe</th><th>Name / Garn</th><th>Farbcode</th><th>Maschen im Rapport</th></tr>
+  ${p.colors.map((c,i)=>`<tr><td>${swI(c.c)}</td><td><b>${L(i)}</b></td><td>${esc(c.n)}</td><td>${c.c}</td><td>${u[L(i)]||0}</td></tr>`).join('')}</table>
+  <section class="pg"><h1>Vorschau</h1><p class="meta">${p.w*rx} Maschen × ${p.h*ry+S.prev.bt.n+S.prev.bb.n} Reihen</p><div class="fig"><img src="${pv.toDataURL()}" style="width:${pv.style.width}" alt="Vorschau"></div></section>`}
+ $('print').innerHTML=html;setTimeout(()=>window.print(),50)}
 // Hinweis beim ersten Start; Gesamtsicherung
 $('note').classList.toggle('hide',!!S.ui.noteOk);
 $('noteOk').onclick=()=>{S.ui.noteOk=true;save();$('note').classList.add('hide')};
