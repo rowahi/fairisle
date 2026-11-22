@@ -11,7 +11,7 @@ Kleine Web-App (PWA, eine Datei, ohne Server) zum Entwerfen und Anpassen von Fai
 - **Farben**: Buchstaben A, B, C … stehen je für eine Farbe. Wahl über Farbverlaufsfläche mit Farbton-Leiste, Hex-Code, Pipette vom Bildschirm (Chrome/Edge) oder aus einem Foto (hochladen, hineinziehen oder mit Strg+V einfügen).
   Vergleich vorher/jetzt und als Maschenbild. „Meine Garne“ speichert gekaufte Garne mit Namen zur Wiederverwendung.
 - **Vorschau**: Rapport beliebig oft nebeneinander/übereinander, als Kästchen oder als Maschenbild, mit Rapportgrenzen und einfarbigem Rand oben/unten.
-- **Musterfolge**: mehrere Muster und einfarbige Streifen untereinander anreihen, Reihenfolge und Höhe frei wählbar, gemeinsame Maschenzahl mit Hinweis, wenn ein Rapport nicht aufgeht. Als eigene ODS-Datei speicherbar.
+- **Projekte**: beliebig viele Projekte, jedes reiht mehrere Rapporte und einfarbige Streifen untereinander. Reihenfolge per Ziehen am Griff ⠿ (Maus und Finger) oder mit ↑ ↓. Rapporte dürfen unterschiedlich breit sein: geht einer in der Projektbreite nicht auf, wird der Rest mit seiner Hintergrundfarbe gefüllt (beidseitig, links oder rechts, Farbe wählbar). Projekte lassen sich duplizieren, löschen und als ODS speichern.
 - **Layout**: für den PC ausgelegt – links Eingabe und Farben, rechts die Vorschau (live), Trenner dazwischen verschiebbar. Auf dem Handy über Reiter unten bedienbar.
 - **Auswahl & Ablage**: Bereich aufziehen, kopieren, ausschneiden, spiegeln, mit A füllen; Ablage spiegeln und beliebig oft einsetzen (Strg+C / X / V, Entf, Esc).
 - **Kontrast**: Graustufen-Ansicht (Editor und Vorschau), Helligkeit je Farbe und Warnung bei Farbpaaren mit wenig Helligkeitsunterschied in derselben Reihe.
