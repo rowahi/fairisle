@@ -26,6 +26,7 @@ Kleine Web-App (PWA, eine Datei, ohne Server) zum Entwerfen und Anpassen von Fai
 - **Kontrast**: Graustufen-Ansicht (Editor und Vorschau), Helligkeit je Farbe und Warnung bei Farbpaaren mit wenig Helligkeitsunterschied in derselben Reihe.
 - **Drucken / PDF**: Diagramm mit Reihen- und Maschennummern, Farblegende mit Maschenzahlen und Vorschau auf A4 (im Druckdialog „Als PDF speichern“).
 - **Motiv-Bibliothek**: Peeries, Bänder (Raute, Welle, OXO) und Motive (Stern, Schneeflocke, Baum, Herz) – als neues Muster oder per „Einsetzen“ in den aktuellen Rapport.
+- **🧶 Strick-Modus**: Vollbild nur zum Stricken – grosser Reihenzähler, aktuelle Reihe hervorgehoben, erledigte Reihen abgedunkelt, Farbfolge der Reihe von rechts nach links (bei Wiederholung nur ein Rapport). Riesige Knöpfe „Reihe fertig“ / „Zurück“, Reihe antippen zum Springen, Fortschritt je Muster/Projekt gespeichert, Bildschirm bleibt an (falls der Browser das unterstützt). Am PC: Leertaste = weiter, ↓ = zurück, Esc = beenden.
 - **Muster**: mehrere Muster im Browser speichern, Duplizieren, Löschen.
 - **Feedback**: Link zum eigenen Feedback-Formular (Tally), wie in der Eindeckhilfe.
 - **ODS speichern** (LibreOffice Calc): Blatt „Rapport“ mit Reihen-/Maschennummern und Farblegende, Blatt „Vorschau“ mit den eingestellten Wiederholungen. Alle Musterzellen haben bedingte Formatierung: *Zellwert = "A" → Farbe von A* usw.

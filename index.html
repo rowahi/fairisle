@@ -133,6 +133,16 @@ body:not(.wide) header #openDrawer{padding:0 12px}body:not(.wide) header #pname{
 body:not(.wide) main{padding:10px}body:not(.wide) #tools{flex-wrap:wrap;width:100%}body:not(.wide) #tools button{flex:1 1 40%;padding:0 6px}body:not(.wide) .card{padding:12px;margin-bottom:10px}
 #toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:9px 16px;border-radius:10px;font-size:.88rem;opacity:0;transition:opacity .3s;pointer-events:none;z-index:20}#toast.on{opacity:.94}
 #print{display:none}
+#knitmode{position:fixed;inset:0;z-index:70;background:var(--bg);display:flex;flex-direction:column;padding:calc(10px + env(safe-area-inset-top)) 12px calc(10px + env(safe-area-inset-bottom))}
+body.knitting{overflow:hidden}
+.khead{display:flex;align-items:center;gap:8px}.khead .kn{display:block;font-size:1.05rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kinfo{margin:10px 0 8px}.kcount{font-size:1.6rem;font-weight:700;letter-spacing:-.01em}.kcount b{color:var(--ac);font-size:2.2rem}
+.kbar{height:6px;background:var(--soft);border-radius:3px;margin:8px 0;overflow:hidden}.kbar i{display:block;height:100%;background:var(--ac);border-radius:3px;transition:width .2s}
+.krle{display:flex;flex-wrap:wrap;gap:6px;max-height:84px;overflow:auto}.rl{display:inline-flex;align-items:center;gap:4px;background:var(--card);border:1px solid var(--bd);border-radius:9px;padding:3px 8px 3px 3px;font-weight:700;font-variant-numeric:tabular-nums}
+.rl i{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;font-style:normal;font-size:.75rem;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+#kwrap{flex:1;overflow:auto;border-radius:12px;background:var(--card);border:1px solid var(--bd);-webkit-overflow-scrolling:touch}#kcv{cursor:pointer}
+.kfoot{display:flex;gap:10px;margin-top:10px}.kfoot button{height:64px;font-size:1.1rem;border-radius:14px}.kfoot #kback{flex:1}.kfoot #knext{flex:2.2}
+.kfh{text-align:center;margin:6px 0 0;font-size:.78rem}
 .note{border-color:color-mix(in srgb,var(--warn) 45%,var(--bd));background:color-mix(in srgb,var(--warn) 6%,var(--card))}.note li{margin:3px 0;font-size:.9rem}
 a.btn{display:flex;align-items:center;justify-content:center;height:38px;background:var(--soft);color:var(--tx);border-radius:10px;padding:0 14px;text-decoration:none;font-weight:600;font-size:.9rem}a.btn:hover{background:color-mix(in srgb,var(--soft) 80%,var(--ac) 12%)}
 @media print{
@@ -155,6 +165,7 @@ a.btn{display:flex;align-items:center;justify-content:center;height:38px;backgro
  <span id="saved" class="saved" title="Alles wird automatisch in diesem Browser gespeichert">✓ <span class="lbl">Gespeichert</span></span>
  <div class="sp"></div>
  <button id="undo" title="Rückgängig (Strg+Z)">↶ <span class="lbl">Rückgängig</span></button>
+ <button id="knitBtn" title="Strick-Modus: Reihe für Reihe mit Zähler – ideal am Handy beim Stricken">🧶 <span class="lbl">Stricken</span></button>
  <div class="menu r" data-mk="file"><button class="mbtn" title="Dateien speichern, öffnen, drucken, sichern">📄 <span class="lbl">Datei</span> ▾</button><div class="mpanel">
   <div class="mh">Als Datei speichern</div>
   <button class="mi" id="odsSave">💾 Muster als ODS (LibreOffice)</button>
@@ -361,12 +372,25 @@ a.btn{display:flex;align-items:center;justify-content:center;height:38px;backgro
 <input type="file" id="odsFile" accept=".ods,application/vnd.oasis.opendocument.spreadsheet" hidden>
 <input type="file" id="bkFile" accept=".json,application/json" hidden>
 <input type="file" id="photoFile" accept="image/*" hidden>
+<div id="knitmode" class="hide" role="dialog" aria-label="Strick-Modus">
+ <div class="khead"><div style="min-width:0;flex:1"><div class="mut" style="font-size:.78rem">🧶 Strick-Modus</div><b id="kname" class="kn"></b></div>
+  <div class="menu r" data-mk="knit"><button class="mbtn ib" title="Mehr">⋯</button><div class="mpanel">
+   <div class="msec"><div class="mh" style="padding:0 0 6px">Diagramm-Grösse</div><span class="stp"><button data-kz="-">−</button><button data-kz="+">+</button></span></div>
+   <button class="mi" id="kreset">↺ Wieder bei Reihe 1 beginnen</button></div></div>
+  <button id="kclose" title="Strick-Modus beenden (Esc)">✕ Beenden</button></div>
+ <div class="kinfo"><div class="kcount">Reihe <b id="krow"></b> <span class="mut">von <span id="ktot"></span></span></div><div class="mut" id="ksec"></div>
+  <div class="kbar"><i id="kprog"></i></div>
+  <div class="krle" id="krle" title="Farbfolge dieser Reihe, von rechts nach links"></div></div>
+ <div id="kwrap"><canvas id="kcv"></canvas></div>
+ <div class="kfoot"><button id="kback" title="Eine Reihe zurück (↓)">◀ Zurück</button><button class="pri" id="knext" title="Reihe fertig (Leertaste)">✓ Reihe fertig</button></div>
+ <p class="mut kfh">Reihe antippen, um dorthin zu springen · Gelesen wird von rechts nach links</p>
+</div>
 <div id="toast"></div>
 <div id="print"></div>
 
 <script>
 'use strict';
-const APPV='11';
+const APPV='12';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const L=i=>String.fromCharCode(65+i);
@@ -401,7 +425,7 @@ const TPL={
 };
 let uid=Date.now();
 function mkPat(name,lines,cols){const{w,h,g}=fromLines(lines);return{id:++uid,name,w,h,ox:0,oy:0,g,colors:cols.map(i=>({c:PAL[i][0],n:PAL[i][1]}))}}
-const DEF={tab:'ed',cur:0,list:[],yarns:[],prev:{rx:3,ry:3,mode:'box',lines:true,ar:.85,bt:{c:0,n:0},bb:{c:0,n:0}},ed:{tool:'pen',col:1,letters:true,mx:false,my:false,zoom:1,flt:5},seq:{on:false},projs:[],curPj:0,ui:{split:56,gray:false,noteOk:false,bk:0}};
+const DEF={tab:'ed',cur:0,list:[],yarns:[],prev:{rx:3,ry:3,mode:'box',lines:true,ar:.85,bt:{c:0,n:0},bb:{c:0,n:0}},ed:{tool:'pen',col:1,letters:true,mx:false,my:false,zoom:1,flt:5},seq:{on:false},projs:[],curPj:0,knit:{},ui:{split:56,gray:false,noteOk:false,bk:0}};
 const K='fairisle';
 let S;try{S=JSON.parse(localStorage.getItem(K))}catch(e){}
 if(!S||!Array.isArray(S.list))S=JSON.parse(JSON.stringify(DEF));
@@ -598,7 +622,7 @@ $('mx').onchange=()=>{S.ed.mx=$('mx').checked;save()};$('my').onchange=()=>{S.ed
 $('lt').onchange=()=>{S.ed.letters=$('lt').checked;save();drawEd()};
 document.querySelectorAll('[data-zm]').forEach(b=>b.onclick=()=>{S.ed.zoom=Math.min(3,Math.max(.4,Math.round((S.ed.zoom+(b.dataset.zm==='+'?.2:-.2))*10)/10));save();renderEd()});
 document.querySelectorAll('[data-fl]').forEach(b=>b.onclick=()=>{S.ed.flt=Math.min(30,Math.max(2,S.ed.flt+(b.dataset.fl==='+'?1:-1)));save();renderEd()});
-document.addEventListener('keydown',e=>{if(e.target.closest('input,textarea,select'))return;
+document.addEventListener('keydown',e=>{if(KM.open||e.target.closest('input,textarea,select'))return;
  const k=e.key.toLowerCase(),mod=e.ctrlKey||e.metaKey;
  if(mod&&k==='z'){e.preventDefault();undo();return}
  if(!visible('ed'))return;
@@ -1070,6 +1094,64 @@ function parseOds(f,fname){
 $('odsOpen').onclick=()=>$('odsFile').click();
 $('odsFile').onchange=async()=>{const file=$('odsFile').files[0];$('odsFile').value='';if(!file)return;
  try{addPat(parseOds(await unzip(await file.arrayBuffer()),file.name))}catch(e){toast('ODS konnte nicht gelesen werden: '+e.message)}};
+
+/* ---------- Strick-Modus: Vollbild mit Reihenzähler ---------- */
+const KM={open:false,lock:null};
+// Was gestrickt wird: aktuelles Projekt (falls Projekt-Vorschau aktiv) sonst das aktuelle Muster mit Vorschau-Einstellungen
+function knitData(){
+ if(S.seq.on&&PJ()){const pj=PJ(),r=seqRows(pj),lab=[],m=seqColors(pj),idx=new Map([...m.keys()].map((c,i)=>[c,L(i)]));
+  for(const it of seqItems(pj)){if(it.t==='b'){for(let i=0;i<it.n;i++)lab.push({t:'Farbstreifen',i:it.n-i,n:it.n})}
+   else{const p=S.list.find(x=>x.id===it.id);for(let k=0;k<it.ry;k++)for(let dy=0;dy<p.h;dy++)lab.push({t:p.name||'Muster',i:p.h-dy,n:p.h})}}
+  return{key:'j'+pj.id,name:pjName(pj),rows:r.rows,lab,idx,names:m}}
+ const p=P(),{rx,ry}=S.prev,{bt,bb}=bands(p),W=p.w*rx,band=(b,n)=>Array.from({length:n},()=>Array(W).fill(hexOf(p,b.ch))),lab=[];
+ for(let i=0;i<bt.n;i++)lab.push({t:'Rand oben',i:bt.n-i,n:bt.n});for(let k=0;k<ry;k++)for(let dy=0;dy<p.h;dy++)lab.push({t:p.name||'Muster',i:p.h-dy,n:p.h});for(let i=0;i<bb.n;i++)lab.push({t:'Rand unten',i:bb.n-i,n:bb.n});
+ return{key:'p'+p.id,name:p.name||'Muster',rows:[...band(bt,bt.n),...patRows(p,W,ry),...band(bb,bb.n)],lab,idx:new Map(p.colors.map((c,i)=>[c.c,L(i)])),names:new Map(p.colors.map(c=>[c.c,c.n]))}}
+let KD=null;
+const kRow=()=>{S.knit=S.knit||{};return Math.min(KD.rows.length,Math.max(1,S.knit[KD.key]||1))};
+function openKnit(){closeMenus();closeDrawer();KD=knitData();if(!KD.rows.length)return toast('Nichts zu stricken');KM.open=true;
+ $('knitmode').classList.remove('hide');document.body.classList.add('knitting');renderKnit(true);wake(true)}
+function closeKnit(){KM.open=false;$('knitmode').classList.add('hide');document.body.classList.remove('knitting');wake(false);render()}
+async function wake(on){try{if(on&&'wakeLock'in navigator)KM.lock=await navigator.wakeLock.request('screen');else if(KM.lock){await KM.lock.release();KM.lock=null}}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(KM.open&&document.visibilityState==='visible')wake(true)});
+// Farbfolge einer Reihe, von rechts nach links gelesen; wiederholt sich die Reihe, nur ein Rapport
+function rowRle(row){const a=row.slice().reverse(),W=a.length;let d=W;
+ for(let k=1;k<=W/2;k++)if(W%k===0&&a.every((c,i)=>c===a[i%k])){d=k;break}
+ const r=[];a.slice(0,d).forEach(c=>{const l=r[r.length-1];if(l&&l.c===c)l.n++;else r.push({c,n:1})});return{r,rep:W/d,d}}
+function renderKnit(scroll){const H=KD.rows.length,W=KD.rows[0].length,cur=kRow(),ri=H-cur,lb=KD.lab[ri]||{t:'',i:0,n:0};
+ $('kname').textContent=KD.name;$('krow').textContent=cur;$('ktot').textContent=H;
+ $('ksec').textContent=lb.t?`${lb.t} · Reihe ${lb.i} von ${lb.n}`:'';
+ $('kprog').style.width=Math.round((cur-1)/H*100)+'%';
+ const{r,rep,d}=rowRle(KD.rows[ri]);
+ $('krle').innerHTML=r.map(x=>{const l=KD.idx.get(x.c)||'',n=KD.names.get(x.c)||'';return`<span class="rl" title="${esc(n)}"><i style="background:${x.c};color:${ink(x.c)}">${l}</i>${x.n}</span>`}).join('')
+  +`<span class="mut" style="align-self:center">${rep>1?`→ ${d} M. × ${rep} wiederholen`:`= ${W} Maschen`}</span>`;
+ $('kback').disabled=cur<=1;$('knext').textContent=cur>=H?'🎉 Fertig!':'✓ Reihe fertig';
+ // Diagramm
+ const cv=$('kcv'),dpr=window.devicePixelRatio||1,cs=S.ui.kz||16,ch=Math.max(4,Math.round(cs*(S.prev.ar||.85))),NUM=30;
+ const w=W*cs+NUM,h=H*ch;cv.width=w*dpr;cv.height=h*dpr;cv.style.width=w+'px';cv.style.height=h+'px';
+ const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);
+ KD.rows.forEach((row,y)=>{row.forEach((c,i)=>{x.fillStyle=c;x.fillRect(i*cs,y*ch,cs,ch)});
+  const n=H-y;if(n<cur){x.fillStyle='rgba(0,0,0,.55)';x.fillRect(0,y*ch,W*cs,ch)}
+  if(cs>=8){x.strokeStyle='rgba(0,0,0,.15)';x.lineWidth=.5;x.beginPath();for(let i=1;i<W;i++){x.moveTo(i*cs,y*ch);x.lineTo(i*cs,y*ch+ch)}x.stroke()}
+  x.fillStyle=n===cur?'#6a4c93':'#8a8496';x.font=`${n===cur?'700 ':''}${Math.min(12,Math.max(9,ch*.7))}px system-ui,sans-serif`;x.textBaseline='middle';
+  if(n===cur||n%5===0||n===1)x.fillText(String(n),W*cs+5,y*ch+ch/2)});
+ const cy=ri*ch;x.lineWidth=3;x.strokeStyle='#fff';x.strokeRect(1.5,cy-1.5,W*cs-3,ch+3);x.lineWidth=2;x.strokeStyle='#6a4c93';x.strokeRect(1.5,cy-1.5,W*cs-3,ch+3);
+ x.fillStyle='#6a4c93';x.beginPath();x.moveTo(W*cs+2,cy+ch/2);x.lineTo(W*cs+NUM-2,cy-2);x.lineTo(W*cs+NUM-2,cy+ch+2);x.closePath();x.globalAlpha=.25;x.fill();x.globalAlpha=1;
+ const wr=$('kwrap');if(scroll===true){wr.scrollLeft=wr.scrollWidth}
+ wr.scrollTop=Math.max(0,cy-wr.clientHeight*.6)}
+function knitStep(d){const H=KD.rows.length,cur=kRow();if(d>0&&cur>=H){toast('🎉 Geschafft – alle Reihen gestrickt!');return}
+ S.knit[KD.key]=Math.min(H,Math.max(1,cur+d));save();renderKnit();if(navigator.vibrate)try{navigator.vibrate(15)}catch(e){}}
+$('knitBtn').onclick=openKnit;$('kclose').onclick=closeKnit;
+$('knext').onclick=()=>knitStep(1);$('kback').onclick=()=>knitStep(-1);
+document.querySelectorAll('[data-kz]').forEach(b=>b.onclick=()=>{S.ui.kz=Math.min(40,Math.max(4,(S.ui.kz||16)+(b.dataset.kz==='+'?3:-3)));save();renderKnit()});
+$('kreset').onclick=()=>{if(!confirm('Wieder bei Reihe 1 beginnen?'))return;S.knit[KD.key]=1;save();renderKnit(true)};
+$('kcv').addEventListener('click',e=>{const r=$('kcv').getBoundingClientRect(),ch=r.height/KD.rows.length,y=Math.floor((e.clientY-r.top)/ch);
+ const n=KD.rows.length-y;if(n<1||n>KD.rows.length)return;S.knit[KD.key]=n;save();renderKnit();toast(`Weiter bei Reihe ${n}`)});
+document.addEventListener('keydown',e=>{if(!KM.open)return;const k=e.key;
+ if(k===' '||k==='Enter'||k==='ArrowUp'){e.preventDefault();knitStep(1)}
+ else if(k==='Backspace'||k==='ArrowDown'){e.preventDefault();knitStep(-1)}
+ else if(k==='Escape')closeKnit();
+ e.stopImmediatePropagation()},true);
+addEventListener('resize',()=>{if(KM.open)renderKnit()});
 
 /* ---------- Navigation / Layout ---------- */
 function layout(){document.body.classList.toggle('wide',WIDE.matches);const t=S.tab,w=WIDE.matches;
