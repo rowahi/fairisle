@@ -267,7 +267,8 @@ a.btn{display:flex;align-items:center;justify-content:center;height:38px;backgro
  <div class="hd"><h2>Vorschau</h2><div class="sp"></div>
   <div class="seg"><button data-sq="0">Aktuelles Muster</button><button data-sq="1">Projekt</button></div>
   <div class="menu r" data-mk="pvview"><button class="mbtn">👁 Ansicht ▾</button><div class="mpanel msec">
-   <div class="seg"><button data-pm="box">▦ Kästchen</button><button data-pm="st">∨ Maschen</button></div>
+   <div class="seg"><button data-pm="box">▦ Kästchen</button><button data-pm="st">∨ Maschen</button><button data-pm="felt" title="Verschwommene Maschen – so wirkt das Muster aus Distanz oder bei verfilzter Wolle">☁ Verfilzt</button></div>
+   <div class="szg" style="margin-top:10px"><span class="lbl2" title="Höhe einer Masche im Verhältnis zur Breite">Maschenhöhe</span><span class="stp"><button data-ar="-">−</button><b class="val" id="arv" style="min-width:3.4em"></b><button data-ar="+">+</button></span><button id="ar0" style="height:32px;font-size:.8rem" title="Standard: 85 % – so wie gestrickte Maschen">Standard</button></div>
    <label class="ck"><input type="checkbox" id="pvl">Rapportgrenzen zeigen</label>
    <label class="ck"><input type="checkbox" id="gray">◐ Graustufen (Kontrast prüfen)</label>
    <div id="pvS"><hr>
@@ -365,7 +366,7 @@ a.btn{display:flex;align-items:center;justify-content:center;height:38px;backgro
 
 <script>
 'use strict';
-const APPV='10';
+const APPV='11';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const L=i=>String.fromCharCode(65+i);
@@ -400,7 +401,7 @@ const TPL={
 };
 let uid=Date.now();
 function mkPat(name,lines,cols){const{w,h,g}=fromLines(lines);return{id:++uid,name,w,h,ox:0,oy:0,g,colors:cols.map(i=>({c:PAL[i][0],n:PAL[i][1]}))}}
-const DEF={tab:'ed',cur:0,list:[],yarns:[],prev:{rx:3,ry:3,mode:'box',lines:true,bt:{c:0,n:0},bb:{c:0,n:0}},ed:{tool:'pen',col:1,letters:true,mx:false,my:false,zoom:1,flt:5},seq:{on:false},projs:[],curPj:0,ui:{split:56,gray:false,noteOk:false,bk:0}};
+const DEF={tab:'ed',cur:0,list:[],yarns:[],prev:{rx:3,ry:3,mode:'box',lines:true,ar:.85,bt:{c:0,n:0},bb:{c:0,n:0}},ed:{tool:'pen',col:1,letters:true,mx:false,my:false,zoom:1,flt:5},seq:{on:false},projs:[],curPj:0,ui:{split:56,gray:false,noteOk:false,bk:0}};
 const K='fairisle';
 let S;try{S=JSON.parse(localStorage.getItem(K))}catch(e){}
 if(!S||!Array.isArray(S.list))S=JSON.parse(JSON.stringify(DEF));
@@ -717,18 +718,29 @@ document.addEventListener('paste',e=>{if(e.target.closest('input,textarea'))retu
 const hexOf=(p,ch)=>{const i=ch.charCodeAt(0)-65;return i<p.colors.length?p.colors[i].c:'#bbbbbb'};
 // Zeilen (Hex-Farben) zeichnen. o: {maxW,maxH,mode,maxCell,lines,hl:[y],vl:[[x,y0,y1]]}
 function drawRows(cv,rows,o){
- const H=Math.max(1,rows.length),W=rows.length?rows[0].length:1,dpr=o.dpr||window.devicePixelRatio||1,ar=o.mode==='st'?.85:1,gm=new Map(),G=o.gray??S.ui.gray,col=c=>{if(!G)return c;let v=gm.get(c);if(!v){v=grayHex(c);gm.set(c,v)}return v};
- let cw=Math.floor(o.maxW/W);if(o.maxH)cw=Math.min(cw,Math.floor(o.maxH/(H*ar)));cw=Math.max(2,Math.min(o.maxCell,cw));const chh=o.mode==='st'?Math.max(2,Math.round(cw*ar)):cw;
+ const H=Math.max(1,rows.length),W=rows.length?rows[0].length:1,dpr=o.dpr||window.devicePixelRatio||1,ar=o.ar||.85,gm=new Map(),G=o.gray??S.ui.gray,col=c=>{if(!G)return c;let v=gm.get(c);if(!v){v=grayHex(c);gm.set(c,v)}return v};
+ let cw=Math.floor(o.maxW/W);if(o.maxH)cw=Math.min(cw,Math.floor(o.maxH/(H*ar)));cw=Math.max(2,Math.min(o.maxCell,cw));const chh=Math.max(2,Math.round(cw*ar)),ST=o.mode==='st'||o.mode==='felt';
  const w=W*cw,h=H*chh;cv.width=w*dpr;cv.height=h*dpr;cv.style.width=w+'px';cv.style.height=h+'px';
  const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
  if(o.mode==='st'){ctx.fillStyle='#2a2a2a';ctx.fillRect(0,0,w,h)}
  rows.forEach((row,y)=>row.forEach((c,x)=>{const px=x*cw,py=y*chh;ctx.fillStyle=col(c);
-  if(o.mode==='st'){ctx.beginPath();ctx.ellipse(px+cw*.3,py+chh*.5,cw*.25,chh*.62,-.5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(px+cw*.7,py+chh*.5,cw*.25,chh*.62,.5,0,Math.PI*2);ctx.fill()}
+  if(o.mode==='felt')ctx.fillRect(px,py,cw,chh);
+  if(ST){ctx.beginPath();ctx.ellipse(px+cw*.3,py+chh*.5,cw*.25,chh*.62,-.5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(px+cw*.7,py+chh*.5,cw*.25,chh*.62,.5,0,Math.PI*2);ctx.fill()}
   else ctx.fillRect(px,py,cw,chh)}));
- if(o.mode!=='st'&&cw>=6){ctx.strokeStyle='rgba(0,0,0,.16)';ctx.lineWidth=.5;ctx.beginPath();
+ if(o.mode==='felt')felt(cv,ctx,w,h,cw,chh,dpr);
+ if(o.mode==='box'&&cw>=6){ctx.strokeStyle='rgba(0,0,0,.16)';ctx.lineWidth=.5;ctx.beginPath();
   for(let x=1;x<W;x++){ctx.moveTo(x*cw,0);ctx.lineTo(x*cw,h)}for(let y=1;y<H;y++){ctx.moveTo(0,y*chh);ctx.lineTo(w,y*chh)}ctx.stroke()}
  if(o.lines){ctx.strokeStyle='#e0245e';ctx.lineWidth=1.5;ctx.setLineDash([5,4]);ctx.beginPath();
   (o.vl||[]).forEach(([x,y0,y1])=>{ctx.moveTo(x*cw,y0*chh);ctx.lineTo(x*cw,y1*chh)});(o.hl||[]).forEach(y=>{ctx.moveTo(0,y*chh);ctx.lineTo(w,y*chh)});ctx.stroke();ctx.setLineDash([])}}
+// Verfilzt: feine Fasern einstreuen, dann weichzeichnen (verkleinern + wieder vergrössern – funktioniert in jedem Browser)
+function felt(cv,ctx,w,h,cw,chh,dpr){
+ const rnd=(x,y,k)=>{let t=(x*374761393+y*668265263+k*2147483647)|0;t=(t^(t>>>13))*1274126177|0;return((t^(t>>>16))>>>0)/4294967296};
+ const W=Math.round(w/cw),H=Math.round(h/chh);ctx.lineWidth=Math.max(.6,cw*.06);
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++)for(let k=0;k<3;k++){const a=rnd(x,y,k)*Math.PI,l=cw*(.3+.5*rnd(x,y,k+5)),cx=(x+rnd(x,y,k+9))*cw,cy=(y+rnd(x,y,k+13))*chh;
+  ctx.strokeStyle=rnd(x,y,k+17)<.5?'rgba(255,255,255,.22)':'rgba(0,0,0,.18)';ctx.beginPath();ctx.moveTo(cx-Math.cos(a)*l/2,cy-Math.sin(a)*l/2);ctx.lineTo(cx+Math.cos(a)*l/2,cy+Math.sin(a)*l/2);ctx.stroke()}
+ const f=Math.min(1,3.2/Math.max(1,cw)),sm=document.createElement('canvas');sm.width=Math.max(1,Math.round(cv.width*f/dpr));sm.height=Math.max(1,Math.round(cv.height*f/dpr));
+ const sx=sm.getContext('2d');sx.imageSmoothingEnabled=true;sx.imageSmoothingQuality='high';sx.drawImage(cv,0,0,sm.width,sm.height);
+ ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.globalAlpha=.85;ctx.drawImage(sm,0,0,cv.width,cv.height);ctx.restore()}
 // Rapport p auf W Maschen verteilen. Geht er nicht auf, wird der Rest mit der Hintergrundfarbe gefüllt:
 // pad 'c' = beidseitig, 'l' = links, 'r' = rechts. Ist W kleiner als der Rapport, wird abgeschnitten.
 function fitLayout(p,W,pad){const n=Math.floor(W/p.w),rem=W-n*p.w;return{n,rem,lp:!n?0:pad==='l'?rem:pad==='r'?0:Math.floor(rem/2)}}
@@ -768,9 +780,9 @@ function seqRows(pj=PJ()){const W=pj.W,rows=[],hl=[],vl=[];
 function seqColors(pj=PJ()){const m=new Map(),f=seqItems(pj).find(i=>i.t==='p');if(f&&!palMixed(pj))S.list.find(x=>x.id===f.id).colors.forEach(c=>m.set(c.c,c.n));for(const it of seqItems(pj)){if(it.t==='b'){if(!m.has(it.c))m.set(it.c,'')}else{const p=S.list.find(x=>x.id===it.id);p.colors.forEach(c=>{if(!m.has(c.c)||!m.get(c.c))m.set(c.c,c.n)})}}return m}
 function initSeq(){if(!S.projs.length)S.projs.push(newProj('Projekt 1'));if(!PJ())S.curPj=S.projs[0].id;if(!PJ().W)PJ().W=seqFit()}
 function drawPv(){const p=P(),{rx,ry,mode,lines}=S.prev,maxW=$('pvw').clientWidth;
- if(S.seq.on&&PJ()){const r=seqRows();drawRows($('pv'),r.rows,{maxW,mode,lines,maxCell:28,hl:r.hl,vl:r.vl});
+ if(S.seq.on&&PJ()){const r=seqRows();drawRows($('pv'),r.rows,{maxW,mode,lines,maxCell:28,hl:r.hl,vl:r.vl,ar:S.prev.ar});
   $('pvi').textContent=`${pjName(PJ())} · ${PJ().W} Maschen × ${r.rows.length} Reihen`;return}
- drawPat($('pv'),p,{rx,ry,maxW,mode,lines,maxCell:28,...bands(p)});
+ drawPat($('pv'),p,{rx,ry,maxW,mode,lines,maxCell:28,ar:S.prev.ar,...bands(p)});
  $('pvi').textContent=`Rapport ${p.w} × ${p.h} · Vorschau ${p.w*rx} Maschen × ${p.h*ry+S.prev.bt.n+S.prev.bb.n} Reihen`}
 function renderSeq(){const pj=PJ(),items=seqItems(),cols=[...seqColors().keys()].slice(0,16),W=pj.W;
  $('pjmix').classList.toggle('hide',!palMixed(pj));
@@ -792,7 +804,7 @@ function renderSeq(){const pj=PJ(),items=seqItems(),cols=[...seqColors().keys()]
 function renderPv(){const p=P(),{rx,ry,bt,bb}=S.prev;if(S.seq.on)initSeq();
  document.querySelectorAll('[data-sq]').forEach(b=>b.classList.toggle('on',+b.dataset.sq===+S.seq.on));
  $('pvS').classList.toggle('hide',S.seq.on);$('pvQ').classList.toggle('hide',!S.seq.on);$('pvQ2').classList.toggle('hide',!S.seq.on);
- $('pvl').checked=S.prev.lines;$('gray').checked=S.ui.gray;$('gray2').checked=S.ui.gray;document.querySelectorAll('[data-pm]').forEach(b=>b.classList.toggle('on',b.dataset.pm===S.prev.mode));
+ $('pvl').checked=S.prev.lines;$('gray').checked=S.ui.gray;$('arv').textContent=Math.round((S.prev.ar||.85)*100)+' %';$('gray2').checked=S.ui.gray;document.querySelectorAll('[data-pm]').forEach(b=>b.classList.toggle('on',b.dataset.pm===S.prev.mode));
  if(S.seq.on){renderSeq();drawPv();return}
  $('rxv').textContent=rx;$('ryv').textContent=ry;$('btv').textContent=bt.n;$('bbv').textContent=bb.n;
  const o=p.colors.map((c,i)=>`<option value="${i}">${L(i)}${c.n?' – '+esc(c.n):''}</option>`).join('');
@@ -800,6 +812,8 @@ function renderPv(){const p=P(),{rx,ry,bt,bb}=S.prev;if(S.seq.on)initSeq();
  drawPv();
  $('pleg').innerHTML=p.colors.map((c,i)=>`<span><i style="background:${c.c}"></i><b>${L(i)}</b> ${esc(c.n)}</span>`).join('')}
 document.querySelectorAll('[data-pm]').forEach(b=>b.onclick=()=>{S.prev.mode=b.dataset.pm;save();renderPv()});
+hold('[data-ar]',b=>{S.prev.ar=Math.round(Math.min(1.5,Math.max(.4,(S.prev.ar||.85)+(b.dataset.ar==='+'?.05:-.05)))*100)/100;save();renderPv()});
+$('ar0').onclick=()=>{S.prev.ar=.85;save();renderPv()};
 document.querySelectorAll('[data-sq]').forEach(b=>b.onclick=()=>{S.seq.on=b.dataset.sq==='1';if(S.seq.on)initSeq();save();renderPv()});
 $('pvl').onchange=()=>{S.prev.lines=$('pvl').checked;save();renderPv()};
 $('gray').onchange=$('gray2').onchange=e=>{S.ui.gray=e.target.checked;save();render()};
@@ -991,9 +1005,9 @@ function printOut(){const p=P(),u=usage(p),cv=document.createElement('canvas');
  const cs=Math.max(8,Math.min(26,Math.floor(640/(p.w+5))));
  drawChart(cv,p,{cs,dpr:3,gray:false,letters:cs>=14,mut:'#555555',warn:'#c2571a',flt:S.ed.flt});
  const pv=document.createElement('canvas'),{rx,ry,mode,lines}=S.prev;let leg,info;
- if(S.seq.on&&PJ()){const r=seqRows();drawRows(pv,r.rows,{maxW:680,mode,lines,maxCell:16,hl:r.hl,vl:r.vl,dpr:3,gray:false});
+ if(S.seq.on&&PJ()){const r=seqRows();drawRows(pv,r.rows,{maxW:680,mode,lines,maxCell:16,hl:r.hl,vl:r.vl,dpr:3,gray:false,ar:S.prev.ar});
   info=`${esc(pjName(PJ()))} · ${PJ().W} Maschen × ${r.rows.length} Reihen`;leg=[...seqColors()].map(([c,n])=>`<span style="margin-right:5mm"><i style="display:inline-block;width:5mm;height:4mm;border:1px solid #888;background:${c};vertical-align:middle"></i> ${esc(n)||c}</span>`).join('')}
- else{drawPat(pv,p,{rx,ry,maxW:680,mode,lines,maxCell:16,dpr:3,gray:false,...bands(p)});info=`${p.w*rx} Maschen × ${p.h*ry+S.prev.bt.n+S.prev.bb.n} Reihen`;leg=''}
+ else{drawPat(pv,p,{rx,ry,maxW:680,mode,lines,maxCell:16,dpr:3,gray:false,ar:S.prev.ar,...bands(p)});info=`${p.w*rx} Maschen × ${p.h*ry+S.prev.bt.n+S.prev.bb.n} Reihen`;leg=''}
  $('print').innerHTML=`<h1>${esc(p.name||'Muster')}</h1><p class="meta">Rapport ${p.w} Maschen × ${p.h} Reihen · ${p.colors.length} Farben · ${new Date().toLocaleDateString('de-CH')}</p>
  <div class="fig"><img src="${cv.toDataURL()}" style="width:${cv.style.width}" alt="Diagramm"></div>
  <p class="meta" style="margin-top:2mm">Reihen von unten nach oben, Maschen von rechts nach links lesen. Rechts je Reihe: Farben und längster Spannfaden.</p>
