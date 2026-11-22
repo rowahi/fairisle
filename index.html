@@ -374,8 +374,8 @@ a.btn{display:flex;align-items:center;justify-content:center;height:38px;backgro
 <input type="file" id="photoFile" accept="image/*" hidden>
 <div id="knitmode" class="hide" role="dialog" aria-label="Strick-Modus">
  <div class="khead"><div style="min-width:0;flex:1"><div class="mut" style="font-size:.78rem">🧶 Strick-Modus</div><b id="kname" class="kn"></b></div>
+  <span class="stp" title="Zoom (Tasten + / − oder Strg + Mausrad)"><button data-kz="-">−</button><b class="val" id="kzv" style="min-width:3.6em;font-size:.9rem">🔍</b><button data-kz="+">+</button></span>
   <div class="menu r" data-mk="knit"><button class="mbtn ib" title="Mehr">⋯</button><div class="mpanel">
-   <div class="msec"><div class="mh" style="padding:0 0 6px">Diagramm-Grösse</div><span class="stp"><button data-kz="-">−</button><button data-kz="+">+</button></span></div>
    <button class="mi" id="kreset">↺ Wieder bei Reihe 1 beginnen</button></div></div>
   <button id="kclose" title="Strick-Modus beenden (Esc)">✕ Beenden</button></div>
  <div class="kinfo"><div class="kcount">Reihe <b id="krow"></b> <span class="mut">von <span id="ktot"></span></span></div><div class="mut" id="ksec"></div>
@@ -390,7 +390,7 @@ a.btn{display:flex;align-items:center;justify-content:center;height:38px;backgro
 
 <script>
 'use strict';
-const APPV='12';
+const APPV='13';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const L=i=>String.fromCharCode(65+i);
@@ -1125,31 +1125,40 @@ function renderKnit(scroll){const H=KD.rows.length,W=KD.rows[0].length,cur=kRow(
  $('krle').innerHTML=r.map(x=>{const l=KD.idx.get(x.c)||'',n=KD.names.get(x.c)||'';return`<span class="rl" title="${esc(n)}"><i style="background:${x.c};color:${ink(x.c)}">${l}</i>${x.n}</span>`}).join('')
   +`<span class="mut" style="align-self:center">${rep>1?`→ ${d} M. × ${rep} wiederholen`:`= ${W} Maschen`}</span>`;
  $('kback').disabled=cur<=1;$('knext').textContent=cur>=H?'🎉 Fertig!':'✓ Reihe fertig';
- // Diagramm
- const cv=$('kcv'),dpr=window.devicePixelRatio||1,cs=S.ui.kz||16,ch=Math.max(4,Math.round(cs*(S.prev.ar||.85))),NUM=30;
- const w=W*cs+NUM,h=H*ch;cv.width=w*dpr;cv.height=h*dpr;cv.style.width=w+'px';cv.style.height=h+'px';
+ // Diagramm – die aktuelle Reihe ist höher und zeigt die Buchstaben
+ const cv=$('kcv'),dpr=window.devicePixelRatio||1,cs=S.ui.kz||16,ch=Math.max(4,Math.round(cs*(S.prev.ar||.85))),cc=Math.max(ch+8,Math.round(ch*1.8)),NUM=34;
+ $('kzv').textContent=Math.round(cs/16*100)+' %';
+ const Y=[];let yy=0;for(let y=0;y<H;y++){Y.push(yy);yy+=y===ri?cc:ch}KD.Y=Y;KD.ri=ri;
+ const w=W*cs+NUM,h=yy;cv.width=w*dpr;cv.height=h*dpr;cv.style.width=w+'px';cv.style.height=h+'px';
  const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);
- KD.rows.forEach((row,y)=>{row.forEach((c,i)=>{x.fillStyle=c;x.fillRect(i*cs,y*ch,cs,ch)});
-  const n=H-y;if(n<cur){x.fillStyle='rgba(0,0,0,.55)';x.fillRect(0,y*ch,W*cs,ch)}
-  if(cs>=8){x.strokeStyle='rgba(0,0,0,.15)';x.lineWidth=.5;x.beginPath();for(let i=1;i<W;i++){x.moveTo(i*cs,y*ch);x.lineTo(i*cs,y*ch+ch)}x.stroke()}
-  x.fillStyle=n===cur?'#6a4c93':'#8a8496';x.font=`${n===cur?'700 ':''}${Math.min(12,Math.max(9,ch*.7))}px system-ui,sans-serif`;x.textBaseline='middle';
-  if(n===cur||n%5===0||n===1)x.fillText(String(n),W*cs+5,y*ch+ch/2)});
- const cy=ri*ch;x.lineWidth=3;x.strokeStyle='#fff';x.strokeRect(1.5,cy-1.5,W*cs-3,ch+3);x.lineWidth=2;x.strokeStyle='#6a4c93';x.strokeRect(1.5,cy-1.5,W*cs-3,ch+3);
- x.fillStyle='#6a4c93';x.beginPath();x.moveTo(W*cs+2,cy+ch/2);x.lineTo(W*cs+NUM-2,cy-2);x.lineTo(W*cs+NUM-2,cy+ch+2);x.closePath();x.globalAlpha=.25;x.fill();x.globalAlpha=1;
+ KD.rows.forEach((row,y)=>{const top=Y[y],rh=y===ri?cc:ch,n=H-y;
+  row.forEach((c,i)=>{x.fillStyle=c;x.fillRect(i*cs,top,cs,rh)});
+  if(n<cur){x.fillStyle='rgba(0,0,0,.55)';x.fillRect(0,top,W*cs,rh)}
+  if(cs>=8||y===ri){x.strokeStyle=y===ri?'rgba(0,0,0,.35)':'rgba(0,0,0,.15)';x.lineWidth=y===ri?1:.5;x.beginPath();for(let i=1;i<W;i++){x.moveTo(i*cs,top);x.lineTo(i*cs,top+rh)}x.stroke()}
+  if(y===ri&&cs>=11){x.font=`700 ${Math.min(rh*.55,cs*.7)}px system-ui,sans-serif`;x.textAlign='center';x.textBaseline='middle';
+   row.forEach((c,i)=>{const l=KD.idx.get(c);if(!l)return;x.fillStyle=ink(c);x.globalAlpha=.75;x.fillText(l,i*cs+cs/2,top+rh/2+1)});x.globalAlpha=1;x.textAlign='left'}
+  x.fillStyle=n===cur?'#6a4c93':'#8a8496';x.font=`${n===cur?'700 ':''}${n===cur?Math.min(16,Math.max(11,rh*.5)):Math.min(12,Math.max(9,ch*.7))}px system-ui,sans-serif`;x.textBaseline='middle';
+  if(n===cur||n%5===0||n===1)x.fillText(String(n),W*cs+6,top+rh/2)});
+ const cy=Y[ri];x.lineWidth=4;x.strokeStyle='#fff';x.strokeRect(2,cy+1,W*cs-4,cc-2);x.lineWidth=2.5;x.strokeStyle='#6a4c93';x.strokeRect(2,cy+1,W*cs-4,cc-2);
  const wr=$('kwrap');if(scroll===true){wr.scrollLeft=wr.scrollWidth}
- wr.scrollTop=Math.max(0,cy-wr.clientHeight*.6)}
+ wr.scrollTop=Math.max(0,cy-wr.clientHeight*.55)}
 function knitStep(d){const H=KD.rows.length,cur=kRow();if(d>0&&cur>=H){toast('🎉 Geschafft – alle Reihen gestrickt!');return}
  S.knit[KD.key]=Math.min(H,Math.max(1,cur+d));save();renderKnit();if(navigator.vibrate)try{navigator.vibrate(15)}catch(e){}}
 $('knitBtn').onclick=openKnit;$('kclose').onclick=closeKnit;
 $('knext').onclick=()=>knitStep(1);$('kback').onclick=()=>knitStep(-1);
-document.querySelectorAll('[data-kz]').forEach(b=>b.onclick=()=>{S.ui.kz=Math.min(40,Math.max(4,(S.ui.kz||16)+(b.dataset.kz==='+'?3:-3)));save();renderKnit()});
+function kZoom(d){const o=S.ui.kz||16,n=Math.min(48,Math.max(4,o+d*(o>=20?4:2)));if(n===o)return;const wr=$('kwrap'),fx=(wr.scrollLeft+wr.clientWidth)/wr.scrollWidth;
+ S.ui.kz=n;save();renderKnit();wr.scrollLeft=fx*wr.scrollWidth-wr.clientWidth}
+document.querySelectorAll('[data-kz]').forEach(b=>b.onclick=()=>kZoom(b.dataset.kz==='+'?1:-1));
+$('kwrap').addEventListener('wheel',e=>{if(!(e.ctrlKey||e.metaKey))return;e.preventDefault();kZoom(e.deltaY<0?1:-1)},{passive:false});
 $('kreset').onclick=()=>{if(!confirm('Wieder bei Reihe 1 beginnen?'))return;S.knit[KD.key]=1;save();renderKnit(true)};
-$('kcv').addEventListener('click',e=>{const r=$('kcv').getBoundingClientRect(),ch=r.height/KD.rows.length,y=Math.floor((e.clientY-r.top)/ch);
- const n=KD.rows.length-y;if(n<1||n>KD.rows.length)return;S.knit[KD.key]=n;save();renderKnit();toast(`Weiter bei Reihe ${n}`)});
+$('kcv').addEventListener('click',e=>{const r=$('kcv').getBoundingClientRect(),py=(e.clientY-r.top)*(parseFloat($('kcv').style.height)/r.height);let y=KD.Y.length-1;
+ while(y>0&&KD.Y[y]>py)y--;const n=KD.rows.length-y;if(n<1||n>KD.rows.length)return;S.knit[KD.key]=n;save();renderKnit();toast(`Weiter bei Reihe ${n}`)});
 document.addEventListener('keydown',e=>{if(!KM.open)return;const k=e.key;
  if(k===' '||k==='Enter'||k==='ArrowUp'){e.preventDefault();knitStep(1)}
  else if(k==='Backspace'||k==='ArrowDown'){e.preventDefault();knitStep(-1)}
  else if(k==='Escape')closeKnit();
+ else if(k==='+'||k==='='){e.preventDefault();kZoom(1)}
+ else if(k==='-'){e.preventDefault();kZoom(-1)}
  e.stopImmediatePropagation()},true);
 addEventListener('resize',()=>{if(KM.open)renderKnit()});
 
