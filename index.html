@@ -166,6 +166,7 @@ body:not(.wide) #printBtn{display:none}
 <section id="v-col"><div class="card ccard"><div class="cgrid">
  <div>
   <div class="hd"><h2>Farben</h2><div class="sp"></div><button class="ib" id="cadd" title="Farbe hinzufügen">＋</button><button class="ib" id="cdel" title="Letzte Farbe entfernen">－</button></div>
+  <p class="mut hide" id="pjpal" style="margin:-4px 0 8px"></p>
   <div id="cols"></div>
   <div id="contrast"></div>
   <h3>Meine Garne</h3>
@@ -212,7 +213,8 @@ body:not(.wide) #printBtn{display:none}
    <label>Breite <span class="stp"><button data-qw="-">−</button><b class="val" id="qwv"></b><button data-qw="+">+</button></span> Maschen</label>
    <button id="qfit" title="Kleinste Maschenzahl, in die alle Rapporte aufgehen">An Rapporte anpassen</button>
   </div>
-  <p class="mut" style="margin:8px 0 0">Reihenfolge per ⠿ ziehen oder mit ↑ ↓. Geht ein Rapport nicht auf, wird der Rand mit seiner Hintergrundfarbe gefüllt.</p>
+  <div class="note card hide" id="pjmix" style="margin:10px 0 0;padding:10px 12px;box-shadow:none"><b>Die Rapporte in diesem Projekt haben unterschiedliche Farben.</b> <span class="mut">Im Projekt gelten für alle Rapporte dieselben Farben A, B, C …</span><div class="row"><button class="pri" id="pjsync">Farben angleichen (wie im aktuellen Rapport)</button></div></div>
+  <p class="mut" style="margin:8px 0 0">Alle Rapporte eines Projekts teilen dieselben Farben – eine Änderung unter „Farben“ gilt für das ganze Projekt. Reihenfolge per ⠿ ziehen oder mit ↑ ↓. Geht ein Rapport nicht auf, wird der Rand mit seiner Hintergrundfarbe gefüllt.</p>
   <div class="qlist" id="qlist"></div>
   <div class="row"><select id="qsel" aria-label="Muster für die Folge" style="flex:2"></select><button id="qaddp">＋ Muster</button><button id="qaddb">＋ Farbstreifen</button></div>
   <div class="row"><button id="qods">💾 Projekt als ODS speichern</button></div>
@@ -252,7 +254,7 @@ body:not(.wide) #printBtn{display:none}
 
 <script>
 'use strict';
-const APPV='6';
+const APPV='7';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const L=i=>String.fromCharCode(65+i);
@@ -326,7 +328,7 @@ const visible=t=>!$('v-'+t).hidden;
 const UND=[];
 function snap(){const p=P();UND.push(JSON.stringify({id:p.id,w:p.w,h:p.h,ox:p.ox,oy:p.oy,g:p.g,colors:p.colors}));if(UND.length>100)UND.shift();$('undo').disabled=false}
 function undo(){while(UND.length){const u=JSON.parse(UND.pop()),p=S.list.find(x=>x.id===u.id);
- if(p){Object.assign(p,u);S.cur=p.id;if(S.ed.col>=p.colors.length)S.ed.col=0;CE=null;save();render();return}}}
+ if(p){Object.assign(p,u);palSync(p);S.cur=p.id;if(S.ed.col>=p.colors.length)S.ed.col=0;CE=null;save();render();return}}}
 
 /* ---------- Rapport-Editor ---------- */
 let CS=20,INF=0;const BOT=20;
@@ -508,7 +510,7 @@ function renderContrast(){const p=P(),pairs=new Map();
   for(let i=0;i<u.length;i++)for(let j=i+1;j<u.length;j++){const k=[u[i],u[j]].sort().join('');pairs.set(k,(pairs.get(k)||0)+1)}});
  const bad=[...pairs].map(([k,n])=>{const a=p.colors[k.charCodeAt(0)-65],b=p.colors[k.charCodeAt(1)-65];return{k,n,d:Math.abs(Lstar(a.c)-Lstar(b.c))}}).filter(x=>x.d<20).sort((a,b)=>a.d-b.d);
  $('contrast').innerHTML=bad.length?`<p class="mut warn" style="margin:8px 0 0">⚠ Wenig Kontrast in denselben Reihen: ${bad.map(x=>`<b>${x.k[0]}/${x.k[1]}</b> (Unterschied ${Math.round(x.d)})`).join(', ')}. Das Motiv hebt sich dort kaum ab – Graustufen-Vorschau zum Prüfen.</p>`:''}
-function renderCol(){const p=P();if(S.ed.col>=p.colors.length)S.ed.col=p.colors.length-1;
+function renderCol(){const p=P(),pp=projsOf(p),mt=mates(p);$('pjpal').classList.toggle('hide',!mt.length);if(mt.length)$('pjpal').textContent=`Projektfarben – gelten auch für ${mt.length} weitere${mt.length===1?'n':''} Rapport${mt.length===1?'':'e'} in ${pp.map(x=>'„'+pjName(x)+'“').join(', ')}.`;if(S.ed.col>=p.colors.length)S.ed.col=p.colors.length-1;
  if(!CE||CE.i!==S.ed.col||!P().colors[CE.i])selCol(S.ed.col);
  renderColList();const c=p.colors[CE.i];
  $('cet').textContent=`Farbe ${L(CE.i)} bearbeiten`;
@@ -532,7 +534,7 @@ function drawCmp(){const c=P().colors[CE.i].c;const o=$('cmpo'),n=$('cmpn');o.st
 function drawKnit(){if(!CE)return;const p=P(),cv=$('knit'),w=$('sv').clientWidth||360;
  drawPat(cv,p,{rx:Math.max(1,Math.ceil(28/p.w)),ry:Math.max(1,Math.ceil(10/p.h)),maxW:w,maxH:130,mode:'st',maxCell:16})}
 // Farbe setzen; src: 'picker' | 'hex' | sonst (Foto, Garn, Palette …)
-function setColor(hex,src){if(!CE||!HEX.test(hex))return;hex=hex.toLowerCase();const p=P(),c=p.colors[CE.i];if(c.c===hex&&src!=='force')return;c.c=hex;save();
+function setColor(hex,src){if(!CE||!HEX.test(hex))return;hex=hex.toLowerCase();const p=P(),c=p.colors[CE.i];if(c.c===hex&&src!=='force')return;const old=c.c;c.c=hex;palSync(p);projsOf(p).forEach(pj=>pj.items.forEach(i=>{if(i.t==='b'&&i.c===old)i.c=hex}));save();
  if(src!=='picker'){Object.assign(CE,hex2hsv(hex));if(CE.s===0||CE.v===0){}}
  if(src!=='hex')$('cehex').value=hex;
  const row=$('cols').querySelector(`.crow[data-i="${CE.i}"]`);if(row){const lt=row.querySelector('.lt');lt.style.background=hex;lt.style.color=ink(hex);const sm=row.querySelector('small');sm.textContent=hex+sm.textContent.slice(7)}
@@ -544,13 +546,13 @@ function drag(el,fn){let on=false;el.addEventListener('pointerdown',e=>{on=true;
 drag($('sv'),svPick);drag($('hue'),huePick);
 $('cehex').addEventListener('input',()=>{let v=$('cehex').value.trim();if(!v.startsWith('#'))v='#'+v;if(HEX.test(v))setColor(v,'hex')});
 $('cehex').addEventListener('change',()=>renderCol());
-$('cename').addEventListener('input',()=>{P().colors[CE.i].n=$('cename').value.slice(0,60);save();later('chips')});
+$('cename').addEventListener('input',()=>{P().colors[CE.i].n=$('cename').value.slice(0,60);palSync();save();later('chips')});
 $('cename').addEventListener('change',()=>{renderColList();if(visible('pv'))renderPv()});
 $('cerev').onclick=()=>setColor(CE.orig);
 $('eyed').onclick=async()=>{try{const r=await new EyeDropper().open();let h=r.sRGBHex;const m=/rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(h);if(m)h='#'+[m[1],m[2],m[3]].map(x=>(+x).toString(16).padStart(2,'0')).join('');setColor(h);renderColList()}catch(e){}};
 $('cols').addEventListener('click',e=>{const up=e.target.closest('[data-up]');
  if(up){const i=+up.dataset.up,p=P(),a=L(i-1),b=L(i);snap();[p.colors[i-1],p.colors[i]]=[p.colors[i],p.colors[i-1]];
-  p.g=p.g.map(s=>s.replace(/./g,ch=>ch===a?b:ch===b?a:ch));selCol(i-1);save();render();return}
+  const sw=s=>s.replace(/./g,ch=>ch===a?b:ch===b?a:ch);p.g=p.g.map(sw);palSync(p,sw);selCol(i-1);save();render();return}
  const row=e.target.closest('.crow');if(row){selCol(+row.dataset.i);save();render()}});
 $('sw').addEventListener('click',e=>{const b=e.target.closest('[data-pc]');if(!b)return;const c=P().colors[CE.i];snap();
  if(!c.n||PAL.some(x=>x[1]===c.n)){c.n=b.dataset.pn;$('cename').value=c.n}setColor(b.dataset.pc);renderColList()});
@@ -558,13 +560,13 @@ $('yarns').addEventListener('click',e=>{const d=e.target.closest('[data-yd]');
  if(d){const y=S.yarns[+d.dataset.yd];if(confirm(`Garn „${y.n}“ aus der Liste entfernen?`)){S.yarns.splice(+d.dataset.yd,1);save();renderYarns()}return}
  const t=e.target.closest('[data-y]');if(!t)return;const y=S.yarns[+t.dataset.y];snap();P().colors[CE.i].n=y.n;$('cename').value=y.n;setColor(y.c,'force');renderColList();later('chips')});
 $('yadd').onclick=()=>{const c=P().colors[CE.i];let n=c.n.trim();if(!n){n=(prompt('Name des Garns (z. B. Hersteller, Qualität, Farbnummer):')||'').trim();if(!n)return;c.n=n;$('cename').value=n}
- const ex=S.yarns.find(y=>y.n===n);if(ex)ex.c=c.c;else S.yarns.push({n:n.slice(0,60),c:c.c});save();renderYarns();renderColList();toast(`Garn „${n}“ gemerkt`)};
+ const ex=S.yarns.find(y=>y.n===n);if(ex)ex.c=c.c;else S.yarns.push({n:n.slice(0,60),c:c.c});palSync();save();renderYarns();renderColList();toast(`Garn „${n}“ gemerkt`)};
 $('cadd').onclick=()=>{const p=P();if(p.colors.length>=26)return;snap();const used=p.colors.map(c=>c.c);
- const f=PAL.find(x=>!used.includes(x[0]))||PAL[p.colors.length%PAL.length];p.colors.push({c:f[0],n:f[1]});selCol(p.colors.length-1);save();render()};
+ const f=PAL.find(x=>!used.includes(x[0]))||PAL[p.colors.length%PAL.length];p.colors.push({c:f[0],n:f[1]});palSync(p);selCol(p.colors.length-1);save();render()};
 $('cdel').onclick=()=>{const p=P();if(p.colors.length<=1)return;const i=p.colors.length-1,x=L(i);
- const n=p.g.reduce((s,r)=>s+r.split(x).length-1,0);
- if(n&&!confirm(`Farbe ${x} wird in ${n} Maschen verwendet. Diese werden zu A. Fortfahren?`))return;
- snap();p.colors.pop();p.g=p.g.map(s=>s.split(x).join('A'));if(S.ed.col>=p.colors.length)S.ed.col=p.colors.length-1;CE=null;save();render()};
+ const n=[p,...mates(p)].reduce((t,q)=>t+q.g.reduce((s,r)=>s+r.split(x).length-1,0),0);
+ if(n&&!confirm(`Farbe ${x} wird in ${n} Maschen verwendet${mates(p).length?' (alle Rapporte des Projekts)':''}. Diese werden zu A. Fortfahren?`))return;
+ snap();p.colors.pop();const rm=s=>s.split(x).join('A');p.g=p.g.map(rm);palSync(p,rm);if(S.ed.col>=p.colors.length)S.ed.col=p.colors.length-1;CE=null;save();render()};
 // Foto-Pipette
 let IMG=null,PM=null;
 async function loadImg(blob){try{IMG=await createImageBitmap(blob);PM=null;$('photo').classList.remove('hide');if(!WIDE.matches&&S.tab!=='col')go('col');else drawPhoto();toast('Foto geladen – auf die Wolle tippen, um die Farbe aufzunehmen')}catch(e){toast('Bild konnte nicht geladen werden')}}
@@ -618,6 +620,14 @@ const bands=p=>{const f=b=>({ch:L(Math.min(b.c,p.colors.length-1)),n:b.n});retur
 
 /* Projekte: je eine Folge von Rapporten und Farbstreifen untereinander */
 const PJ=()=>S.projs.find(x=>x.id===S.curPj);
+/* Projektfarben: alle Rapporte eines Projekts teilen dieselben Farben A, B, C … */
+const projsOf=p=>S.projs.filter(pj=>pj.items.some(i=>i.t==='p'&&i.id===p.id));
+const mates=p=>{const ids=new Set();projsOf(p).forEach(pj=>pj.items.forEach(i=>{if(i.t==='p'&&i.id!==p.id)ids.add(i.id)}));return S.list.filter(q=>ids.has(q.id))};
+const clonePal=c=>c.map(x=>({c:x.c,n:x.n}));
+const samePal=(a,b)=>a.length===b.length&&a.every((x,i)=>x.c===b[i].c&&x.n===b[i].n);
+// Farben von p auf alle Rapporte der Projekte übertragen, in denen p vorkommt; gridFn ändert zusätzlich deren Raster
+function palSync(p=P(),gridFn){mates(p).forEach(q=>{q.colors=clonePal(p.colors);if(gridFn)q.g=q.g.map(gridFn)})}
+function palMixed(pj){const ps=seqItems(pj).filter(i=>i.t==='p').map(i=>S.list.find(q=>q.id===i.id));return ps.some(q=>!samePal(q.colors,ps[0].colors))}
 const pjName=pj=>pj.name||'Ohne Namen';
 function newProj(name){const p=P();return{id:++uid,name,W:0,items:[{t:'b',c:p.colors[0].c,n:3},{t:'p',id:p.id,ry:2},{t:'b',c:p.colors[0].c,n:3}]}}
 const seqItems=(pj=PJ())=>pj?pj.items.filter(it=>it.t==='b'||S.list.some(p=>p.id===it.id)):[];
@@ -629,7 +639,7 @@ function seqRows(pj=PJ()){const W=pj.W,rows=[],hl=[],vl=[];
   if(it.t==='b'){for(let i=0;i<it.n;i++)rows.push(Array(W).fill(it.c))}
   else{const p=S.list.find(x=>x.id===it.id),y0=rows.length;rows.push(...patRows(p,W,it.ry,it.pad,it.bg));vl.push(...vlines(p,W,y0,rows.length,it.pad));for(let k=1;k<it.ry;k++)hl.push(y0+k*p.h)}}
  return{rows,hl,vl}}
-function seqColors(pj=PJ()){const m=new Map();for(const it of seqItems(pj)){if(it.t==='b'){if(!m.has(it.c))m.set(it.c,'')}else{const p=S.list.find(x=>x.id===it.id);p.colors.forEach(c=>{if(!m.has(c.c)||!m.get(c.c))m.set(c.c,c.n)})}}return m}
+function seqColors(pj=PJ()){const m=new Map(),f=seqItems(pj).find(i=>i.t==='p');if(f&&!palMixed(pj))S.list.find(x=>x.id===f.id).colors.forEach(c=>m.set(c.c,c.n));for(const it of seqItems(pj)){if(it.t==='b'){if(!m.has(it.c))m.set(it.c,'')}else{const p=S.list.find(x=>x.id===it.id);p.colors.forEach(c=>{if(!m.has(c.c)||!m.get(c.c))m.set(c.c,c.n)})}}return m}
 function initSeq(){if(!S.projs.length)S.projs.push(newProj('Projekt 1'));if(!PJ())S.curPj=S.projs[0].id;if(!PJ().W)PJ().W=seqFit()}
 function drawPv(){const p=P(),{rx,ry,mode,lines}=S.prev,maxW=$('pvw').clientWidth;
  if(S.seq.on&&PJ()){const r=seqRows();drawRows($('pv'),r.rows,{maxW,mode,lines,maxCell:28,hl:r.hl,vl:r.vl});
@@ -637,6 +647,7 @@ function drawPv(){const p=P(),{rx,ry,mode,lines}=S.prev,maxW=$('pvw').clientWidt
  drawPat($('pv'),p,{rx,ry,maxW,mode,lines,maxCell:28,...bands(p)});
  $('pvi').textContent=`Rapport ${p.w} × ${p.h} · Vorschau ${p.w*rx} Maschen × ${p.h*ry+S.prev.bt.n+S.prev.bb.n} Reihen`}
 function renderSeq(){const pj=PJ(),items=seqItems(),cols=[...seqColors().keys()].slice(0,16),W=pj.W;
+ $('pjmix').classList.toggle('hide',!palMixed(pj));
  $('prsel').innerHTML=S.projs.map(x=>`<option value="${x.id}"${x.id===pj.id?' selected':''}>${esc(pjName(x))}</option>`).join('');
  if(document.activeElement!==$('prname'))$('prname').value=pj.name;$('prdel').disabled=S.projs.length<2;
  $('qwv').textContent=W;
@@ -665,6 +676,11 @@ $('gray').onchange=()=>{S.ui.gray=$('gray').checked;save();render()};
 $('btc').onchange=()=>{S.prev.bt.c=+$('btc').value;if(!S.prev.bt.n)S.prev.bt.n=3;save();renderPv()};
 $('bbc').onchange=()=>{S.prev.bb.c=+$('bbc').value;if(!S.prev.bb.n)S.prev.bb.n=3;save();renderPv()};
 hold('[data-qw]',b=>{const pj=PJ();pj.W=Math.min(600,Math.max(4,pj.W+(b.dataset.qw==='+'?1:-1)));save();renderPv()});
+$('pjsync').onclick=()=>{const pj=PJ(),ps=seqItems(pj).filter(i=>i.t==='p').map(i=>S.list.find(q=>q.id===i.id));
+ const ref=ps.find(q=>q.id===S.cur)||ps[0];if(!ref)return;const mx=Math.max(...ps.map(q=>q.colors.length));
+ if(!confirm(`Alle ${ps.length} Rapporte in „${pjName(pj)}“ bekommen die Farben von „${ref.name}“. Fortfahren?`))return;
+ while(ref.colors.length<mx){const i=ref.colors.length;ref.colors.push({c:PAL[i%PAL.length][0],n:PAL[i%PAL.length][1]})}
+ ps.forEach(q=>{if(q!==ref)q.colors=clonePal(ref.colors)});palSync(ref);save();render();toast('Farben angeglichen')};
 $('qfit').onclick=()=>{PJ().W=seqFit();save();renderPv()};
 $('prsel').onchange=()=>{S.curPj=+$('prsel').value;save();renderPv()};
 $('prname').oninput=()=>{PJ().name=$('prname').value.slice(0,80);save();const o=$('prsel').selectedOptions[0];if(o)o.textContent=pjName(PJ());$('pvi').textContent=`${pjName(PJ())} · ${PJ().W} Maschen`};
@@ -672,7 +688,10 @@ $('prnew').onclick=()=>{const pj=newProj('Projekt '+(S.projs.length+1));S.projs.
 $('prdup').onclick=()=>{const pj=JSON.parse(JSON.stringify(PJ()));pj.id=++uid;pj.name=pjName(pj)+' (Kopie)';S.projs.splice(S.projs.indexOf(PJ())+1,0,pj);S.curPj=pj.id;save();renderPv();toast('Projekt kopiert')};
 $('prdel').onclick=()=>{if(S.projs.length<2)return;const pj=PJ();if(!confirm(`Projekt „${pjName(pj)}“ löschen? Die Muster selbst bleiben erhalten.`))return;S.projs=S.projs.filter(x=>x!==pj);S.curPj=S.projs[0].id;save();renderPv()};
 const setItems=it=>{PJ().items=it;return it};
-$('qaddp').onclick=()=>{const id=+$('qsel').value;if(!id)return;setItems(seqItems()).push({t:'p',id,ry:1});save();renderPv()};
+$('qaddp').onclick=()=>{const id=+$('qsel').value;if(!id)return;const it=setItems(seqItems()),q=S.list.find(x=>x.id===id),f=it.find(i=>i.t==='p');
+ const ref=f&&S.list.find(x=>x.id===f.id);it.push({t:'p',id,ry:1});
+ if(ref&&ref!==q&&!samePal(q.colors,ref.colors)){q.colors=clonePal(ref.colors);palSync(q);toast(`„${q.name}“ verwendet jetzt die Projektfarben`)}
+ save();renderPv()};
 $('qaddb').onclick=()=>{const c=[...seqColors().keys()][0]||P().colors[0].c;setItems(seqItems()).push({t:'b',c,n:2});save();renderPv()};
 $('qlist').addEventListener('click',e=>{const t=e.target.closest('button,[data-qo]');if(!t)return;const it=setItems(seqItems());
  if(t.dataset.qo){S.cur=+t.dataset.qo;CE=null;save();render();return}
