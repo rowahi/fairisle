@@ -237,7 +237,10 @@ a.btn{display:flex;align-items:center;justify-content:center;height:38px;backgro
   </div></div></div>
  <p class="mut hide" id="pjpal" style="margin:-4px 0 8px"></p>
  <div class="cgrid">
-  <div><div id="cols"></div><div id="contrast"></div></div>
+  <div><div id="cols"></div><div id="contrast"></div>
+   <div class="swapbox"><div class="mh" style="padding:12px 0 6px">Farben in diesem Muster tauschen</div>
+    <div class="row" style="margin:0;align-items:center"><select id="swa" aria-label="Farbe 1"></select><span style="flex:0 0 auto">⇄</span><select id="swb" aria-label="Farbe 2"></select><button id="swgo" style="flex:0 0 auto">Tauschen</button></div>
+    <p class="mut" id="swhint" style="margin:6px 0 0">Ändert nur das Raster dieses Musters – die Farben selbst bleiben.</p></div></div>
   <div class="ced" id="ced">
    <div class="hd" style="margin-bottom:8px"><h2 id="cet"></h2></div>
    <div class="g2" style="margin-top:0"><input id="cehex" maxlength="7" aria-label="Hex-Code" spellcheck="false"><input id="cename" placeholder="Garn / Farbname" aria-label="Name der Farbe"></div>
@@ -362,7 +365,7 @@ a.btn{display:flex;align-items:center;justify-content:center;height:38px;backgro
 
 <script>
 'use strict';
-const APPV='9';
+const APPV='10';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const L=i=>String.fromCharCode(65+i);
@@ -612,7 +615,12 @@ function hex2hsv(hex){const n=parseInt(hex.slice(1),16),r=(n>>16&255)/255,g=(n>>
 function hsv2hex(h,s,v){const f=n=>{const k=(n+h/60)%6;return v-v*s*Math.max(0,Math.min(k,4-k,1))};return'#'+[f(5),f(3),f(1)].map(x=>Math.round(x*255).toString(16).padStart(2,'0')).join('')}
 function selCol(i){S.ed.col=i;const c=P().colors[i];CE={i,...hex2hsv(c.c),orig:c.c}}
 function usage(p){const n={};for(let r=0;r<p.h;r++)for(let c=0;c<p.w;c++){const ch=cell(p,c,r);n[ch]=(n[ch]||0)+1}return n}
-function renderColList(){const p=P(),u=usage(p);
+function renderSwap(){const p=P(),o=p.colors.map((c,i)=>`<option value="${L(i)}">${L(i)}${c.n?' – '+esc(c.n):''}</option>`).join(''),a=$('swa').value,b=$('swb').value;
+ $('swa').innerHTML=o;$('swb').innerHTML=o;$('swa').value=a&&a.charCodeAt(0)-65<p.colors.length?a:'A';$('swb').value=b&&b.charCodeAt(0)-65<p.colors.length&&b!==$('swa').value?b:L(Math.min(1,p.colors.length-1));
+ $('swhint').textContent=mates(p).length?'Ändert nur das Raster dieses Musters – die Projektfarben bleiben für alle Rapporte gleich.':'Ändert nur das Raster dieses Musters – die Farben selbst bleiben.'}
+$('swgo').onclick=()=>{const p=P(),a=$('swa').value,b=$('swb').value;if(a===b)return toast('Bitte zwei verschiedene Farben wählen');snap();
+ p.g=p.g.map(s=>s.replace(/./g,ch=>ch===a?b:ch===b?a:ch));save();render();toast(`${a} ⇄ ${b} im Muster „${p.name}“ getauscht`)};
+function renderColList(){const p=P(),u=usage(p);renderSwap();
  $('cols').innerHTML=p.colors.map((c,i)=>`<div class="crow${i===S.ed.col?' on':''}" data-i="${i}">
   <span class="lt" style="background:${c.c};color:${ink(c.c)}">${L(i)}</span>
   <div class="ci"><b>${esc(c.n)||'<span class="mut">ohne Namen</span>'}</b><small>${c.c} · ${u[L(i)]||0} M. · Hell. ${Math.round(Lstar(c.c))}</small></div>
@@ -810,10 +818,19 @@ $('prnew').onclick=()=>{const pj=newProj('Projekt '+(S.projs.length+1));S.projs.
 $('prdup').onclick=()=>{const pj=JSON.parse(JSON.stringify(PJ()));pj.id=++uid;pj.name=pjName(pj)+' (Kopie)';S.projs.splice(S.projs.indexOf(PJ())+1,0,pj);S.curPj=pj.id;save();renderPv();toast('Projekt kopiert')};
 $('prdel').onclick=()=>{if(S.projs.length<2)return;const pj=PJ();if(!confirm(`Projekt „${pjName(pj)}“ löschen? Die Muster selbst bleiben erhalten.`))return;S.projs=S.projs.filter(x=>x!==pj);S.curPj=S.projs[0].id;save();renderPv()};
 const setItems=it=>{PJ().items=it;return it};
-$('qaddp').onclick=()=>{const id=+$('qsel').value;if(!id)return;const it=setItems(seqItems()),q=S.list.find(x=>x.id===id),f=it.find(i=>i.t==='p');
- const ref=f&&S.list.find(x=>x.id===f.id);it.push({t:'p',id,ry:1});
- if(ref&&ref!==q&&!samePal(q.colors,ref.colors)){q.colors=clonePal(ref.colors);palSync(q);toast(`„${q.name}“ verwendet jetzt die Projektfarben`)}
- save();renderPv()};
+// Muster ins Projekt aufnehmen: Farben werden nach Buchstabe übernommen (A→A …).
+// Hat das Muster mehr Farben als das Projekt, kommen die zusätzlichen Farben ins Projekt (für alle Rapporte).
+function adaptToProject(q,pj=PJ()){const f=seqItems(pj).find(i=>i.t==='p'&&i.id!==q.id),ref=f&&S.list.find(x=>x.id===f.id);
+ if(!ref||samePal(q.colors,ref.colors))return'';
+ const add=q.colors.length-ref.colors.length;
+ if(add>0){ref.colors.push(...clonePal(q.colors.slice(ref.colors.length)));palSync(ref)}
+ q.colors=clonePal(ref.colors);palSync(q);
+ return add>0?`${add} Farbe${add===1?'':'n'} (${q.colors.slice(-add).map((c,i)=>L(q.colors.length-add+i)).join(', ')}) neu im Projekt`:'Projektfarben übernommen'}
+function addToProject(q,pj=PJ()){const it=pj.items=seqItems(pj);it.push({t:'p',id:q.id,ry:1});return adaptToProject(q,pj)}
+$('qaddp').onclick=()=>{const id=+$('qsel').value;if(!id)return;const q=S.list.find(x=>x.id===id),m=addToProject(q);
+ save();renderPv();if(visible('col'))renderCol();if(visible('ed'))renderEd();toast(m?`„${q.name}“: ${m} – Farben im Muster lassen sich unter „Farben“ tauschen`:`„${q.name}“ hinzugefügt`)};
+// Neue Muster bei geöffnetem Projekt automatisch ins Projekt aufnehmen
+function newIntoProject(p){if(!(S.seq.on&&PJ()))return'';const m=addToProject(p);return` · ins Projekt „${pjName(PJ())}“ aufgenommen${m?' ('+m+')':''}`}
 $('qaddb').onclick=()=>{const c=[...seqColors().keys()][0]||P().colors[0].c;setItems(seqItems()).push({t:'b',c,n:2});save();renderPv()};
 $('qlist').addEventListener('click',e=>{const t=e.target.closest('button,[data-qo]');if(!t||t.classList.contains('mbtn'))return;const it=setItems(seqItems());
  if(t.dataset.qo){S.cur=+t.dataset.qo;CE=null;save();render();return}
@@ -879,17 +896,17 @@ $('pjlist').addEventListener('click',e=>{const m=e.target.closest('[data-pj-dup]
   return}
  if(e.target.closest('.menu'))return;const t=e.target.closest('[data-pj]');if(!t)return;S.curPj=+t.dataset.pj;S.seq.on=true;save();closeDrawer();go(WIDE.matches?S.tab:'pv');toast(`Projekt „${pjName(PJ())}“ geöffnet`)});
 $('prnew2').onclick=()=>{const pj=newProj('Projekt '+(S.projs.length+1));S.projs.push(pj);S.curPj=pj.id;pj.W=seqFit(pj);S.seq.on=true;save();closeDrawer();go(WIDE.matches?S.tab:'pv');toast('Neues Projekt angelegt')};
-$('newBlank').onclick=()=>{const t=TPL.leer,p=mkPat('Neues Muster',t.lines,t.cols);S.list.unshift(p);S.cur=p.id;S.ed.col=1;CE=null;save();closeDrawer();go('ed');toast('Neues Muster angelegt – Name oben ändern');setTimeout(()=>$('pname').select(),50)};
+$('newBlank').onclick=()=>{const t=TPL.leer,p=mkPat('Neues Muster',t.lines,t.cols);S.list.unshift(p);S.cur=p.id;S.ed.col=1;CE=null;const m=newIntoProject(p);save();closeDrawer();go('ed');toast('Neues Muster angelegt'+m);setTimeout(()=>$('pname').select(),50)};
 $('newb').addEventListener('click',e=>{const c=e.target.closest('[data-tcb]');
  if(c){const t=TPL[c.dataset.tcb];CB=t.lines.map(l=>[...l]);closeDrawer();go('ed');setTool('paste');toast(`„${t.name}“ – im Raster klicken zum Einsetzen, Esc beendet`);return}
  const b=e.target.closest('[data-new]');if(!b)return;const t=TPL[b.dataset.new];
- const p=mkPat(t.name,t.lines,t.cols);S.list.unshift(p);S.cur=p.id;S.ed.col=Math.min(1,p.colors.length-1);CE=null;save();closeDrawer();go('ed');toast(`Neues Muster „${t.name}“ angelegt`)});
+ const p=mkPat(t.name,t.lines,t.cols);S.list.unshift(p);S.cur=p.id;S.ed.col=Math.min(1,p.colors.length-1);CE=null;const m=newIntoProject(p);save();closeDrawer();go('ed');toast(`Neues Muster „${t.name}“ angelegt${m}`)});
 const b64e=s=>{const b=new TextEncoder().encode(s);let t='';for(let i=0;i<b.length;i+=8192)t+=String.fromCharCode(...b.subarray(i,i+8192));return btoa(t)};
 const b64d=s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\s/g,'')),c=>c.charCodeAt(0)));
 const pdata=p=>({name:p.name,w:p.w,h:p.h,ox:p.ox,oy:p.oy,g:p.g,colors:p.colors});
 const code=p=>'FI1:'+b64e(JSON.stringify(pdata(p)));
 $('codeCopy').onclick=async()=>{const c=code(P());try{await navigator.clipboard.writeText(c);toast('Code kopiert – mit „Text oder Code einfügen“ wieder einlesen')}catch(e){$('imp').value=c;dlg('dlgImp');$('imp').select();toast('Code steht im Feld – bitte kopieren')}};
-function addPat(p){S.list.unshift(p);S.cur=p.id;S.ed.col=Math.min(1,p.colors.length-1);CE=null;save();closeDrawer();toast(`„${p.name}“ übernommen (${p.w} × ${p.h})`);go('ed')}
+function addPat(p){S.list.unshift(p);S.cur=p.id;S.ed.col=Math.min(1,p.colors.length-1);CE=null;const m=newIntoProject(p);save();closeDrawer();toast(`„${p.name}“ übernommen (${p.w} × ${p.h})${m}`);go('ed')}
 $('impGo').onclick=()=>{const t=$('imp').value.trim();if(!t)return;$('dlgImp').close();
  try{if(/^FI1:/i.test(t))return addPat(norm(JSON.parse(b64d(t.slice(4)))));
   const lines=t.split(/\r?\n/).map(l=>l.toUpperCase().replace(/[^A-Z]/g,'')).filter(Boolean);
