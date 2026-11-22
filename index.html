@@ -1,0 +1,456 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#5a3d63"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon.svg">
+<title>Fair-Isle-Musterhilfe</title><link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--tx:#1f2a26;--mut:#6b7570;--ac:#5a3d63;--ac2:#ece4ee;--bd:#dcd8cf;--warn:#b4531a;--on:#fff}
+@media(prefers-color-scheme:dark){:root{--bg:#18161a;--card:#232027;--tx:#eceaee;--mut:#a39ca8;--ac:#c9a3d6;--ac2:#352d3a;--bd:#3d3542;--warn:#f0a060;--on:#1d1420}}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,sans-serif;padding:env(safe-area-inset-top) 0 calc(64px + env(safe-area-inset-bottom))}
+main{max-width:900px;margin:0 auto;padding:12px}
+section[hidden]{display:none}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px;margin-bottom:10px}
+h2{margin:0 0 8px;font-size:1.05rem}label{display:block;font-size:.85rem;color:var(--mut);margin:10px 0 3px}
+input,select,textarea,button{font:inherit;color:var(--tx)}
+input,select,textarea{width:100%;padding:9px;border:1px solid var(--bd);border-radius:9px;background:var(--bg)}
+input[type=checkbox]{width:20px;height:20px;margin:0 6px 0 0;vertical-align:middle}
+button{background:var(--ac2);color:var(--tx);border:0;border-radius:9px;padding:9px 14px;cursor:pointer;min-height:42px}
+button.p{background:var(--ac);color:var(--on);font-weight:700}button.d{background:var(--warn);color:#fff}
+button:disabled{opacity:.35}button.on{box-shadow:0 0 0 2px var(--ac) inset;font-weight:700}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.row>*{flex:1}
+.mut{color:var(--mut);font-size:.88rem}.warn{color:var(--warn)}
+.sz{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:8px}.sz>div{display:flex;align-items:center;gap:8px}
+.sz span{font-size:.85rem;color:var(--mut);min-width:3.4em}.sz b{min-width:2.2em;text-align:center}
+.sz button{width:42px;height:38px;min-height:38px;padding:0;font-size:1.3rem;line-height:1}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.chip{width:42px;height:42px;min-height:0;padding:0;border-radius:10px;font-weight:700;border:2px solid var(--bd)}
+.chip.on{outline:3px solid var(--ac);outline-offset:2px}
+.tools{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.tools button{flex:0 1 auto;padding:6px 12px}
+.gsc{overflow:auto;margin-top:10px;-webkit-overflow-scrolling:touch}canvas{display:block}#cv{touch-action:none;cursor:crosshair}
+.crow{border:1px solid var(--bd);border-radius:12px;padding:8px;margin-top:8px;cursor:pointer}.crow.on{border-color:var(--ac);box-shadow:0 0 0 2px var(--ac) inset}
+.crow .l1{display:flex;align-items:center;gap:8px}.crow .lt{flex:0 0 44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.2rem;border:1px solid var(--bd)}
+.crow input[type=color]{flex:0 0 56px;height:44px;padding:2px;cursor:pointer}.crow .hx{flex:0 0 6.5em;font-family:monospace}.crow .ct{flex:1;text-align:right}
+.crow .up{flex:0 0 auto;width:42px;padding:0}.crow .cn{margin-top:6px}
+.sw{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.sw button{width:36px;height:36px;min-height:0;padding:0;border:1px solid var(--bd);border-radius:8px}
+.plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.pt{border:1px solid var(--bd);border-radius:12px;padding:8px;background:var(--bg);cursor:pointer;min-width:0}.pt.on{border-color:var(--ac);box-shadow:0 0 0 2px var(--ac) inset}
+.pt b{display:block;font-size:.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pt canvas{margin-top:6px;border-radius:4px;max-width:100%}
+details{margin-top:10px}summary{cursor:pointer;color:var(--mut);padding:6px 0}
+.ck{display:flex;align-items:center;margin-top:8px;font-size:.92rem}
+.leg{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:.88rem}.leg i{display:inline-block;width:16px;height:16px;border-radius:4px;border:1px solid var(--bd);vertical-align:-3px;margin-right:4px}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;background:none;color:var(--mut);border-radius:0;padding:14px 4px}nav button.on{color:var(--ac);font-weight:700;box-shadow:none}
+#toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:8px 14px;border-radius:9px;font-size:.9rem;opacity:0;transition:opacity .3s;pointer-events:none}#toast.on{opacity:.92}
+</style></head><body><main>
+
+<section id="v-ed">
+<div class="card">
+<input id="pname" aria-label="Name des Musters" placeholder="Name des Musters">
+<div class="sz">
+ <div><span>Breite</span><button data-sz="w-">−</button><b id="wv"></b><button data-sz="w+">+</button></div>
+ <div><span>Höhe</span><button data-sz="h-">−</button><b id="hv"></b><button data-sz="h+">+</button></div>
+</div>
+<div class="chips" id="chips"></div>
+<div class="tools">
+ <button data-tool="pen">✏️ Malen</button><button data-tool="fill">🪣 Füllen</button><button data-tool="pick">💧 Pipette</button>
+ <button id="undo">↶ Rückgängig</button>
+</div>
+<div class="gsc" id="cvw"><canvas id="cv"></canvas></div>
+<p class="mut">Reihen von unten nach oben, Maschen von rechts nach links lesen. Rechts neben jeder Reihe: verwendete Farben und längster Spannfaden (orange = länger als erlaubt). Bei „−“ bleibt der ausgeblendete Inhalt erhalten (Breite: linke Spalte, Höhe: oberste Reihe).</p>
+<details><summary>Weitere Werkzeuge</summary>
+ <div class="ck"><label class="ck" style="margin:0"><input type="checkbox" id="mx">Beim Malen links/rechts spiegeln</label></div>
+ <div class="ck"><label class="ck" style="margin:0"><input type="checkbox" id="my">Beim Malen oben/unten spiegeln</label></div>
+ <div class="ck"><label class="ck" style="margin:0"><input type="checkbox" id="lt">Buchstaben im Raster zeigen</label></div>
+ <label>Rapport bearbeiten</label>
+ <div class="row"><button data-op="fh">↔ Spiegeln</button><button data-op="fv">↕ Spiegeln</button><button data-op="all">Alles in aktiver Farbe</button></div>
+ <div class="row"><button data-op="sl">← verschieben</button><button data-op="sr">→</button><button data-op="su">↑</button><button data-op="sd">↓</button></div>
+ <label>Farbe ersetzen</label>
+ <div class="row"><select id="rf"></select><select id="rt"></select><button data-op="rep">Ersetzen</button></div>
+ <div class="sz">
+  <div><span>Zoom</span><button data-zm="-">−</button><b id="zv"></b><button data-zm="+">+</button></div>
+  <div><span>Max. Spannfaden</span><button data-fl="-">−</button><b id="flv"></b><button data-fl="+">+</button></div>
+ </div>
+</details>
+</div>
+</section>
+
+<section id="v-col" hidden>
+<div class="card"><h2>Farben</h2>
+<p class="mut">Jeder Buchstabe steht für eine Farbe. Antippen wählt die Farbe zum Malen und für die Palette unten.</p>
+<div id="cols"></div>
+<div class="row"><button id="cadd">+ Farbe</button><button id="cdel">− Letzte Farbe</button></div>
+<label>Palette (setzt die gewählte Farbe)</label><div class="sw" id="sw"></div>
+</div>
+</section>
+
+<section id="v-pv" hidden>
+<div class="card"><h2>Vorschau</h2>
+<div class="sz">
+ <div><span>Breite ×</span><button data-rp="x-">−</button><b id="rxv"></b><button data-rp="x+">+</button></div>
+ <div><span>Höhe ×</span><button data-rp="y-">−</button><b id="ryv"></b><button data-rp="y+">+</button></div>
+</div>
+<div class="row"><button data-pm="box">▦ Kästchen</button><button data-pm="st">∨ Maschen</button></div>
+<div class="ck"><label class="ck" style="margin:0"><input type="checkbox" id="pvl">Rapportgrenzen zeigen</label></div>
+<div class="gsc" id="pvw"><canvas id="pv"></canvas></div>
+<p class="mut" id="pvi"></p><div class="leg" id="pleg"></div>
+</div>
+</section>
+
+<section id="v-pat" hidden>
+<div class="card"><h2 id="curn"></h2>
+<div class="row"><button class="p" id="odsSave">💾 Als ODS speichern</button></div>
+<div class="row"><button id="dup">Duplizieren</button><button class="d" id="del">Löschen</button></div>
+<p class="mut">Die ODS-Datei (LibreOffice Calc) enthält den Rapport mit bedingter Formatierung: Zellwert „A“ → Farbe von A usw. Ein zweites Blatt zeigt die Vorschau mit den eingestellten Wiederholungen.</p>
+</div>
+<div class="card"><h2>Neues Muster</h2><div class="row" id="newb"></div></div>
+<div class="card"><h2>Meine Muster</h2><div class="plist" id="plist"></div></div>
+<div class="card"><h2>Bestehendes Muster aufnehmen</h2>
+<div class="row"><button id="odsOpen">📂 ODS-Datei öffnen</button></div><input type="file" id="odsFile" accept=".ods,application/vnd.oasis.opendocument.spreadsheet" hidden>
+<label for="imp">Code oder Buchstaben-Raster einfügen (eine Zeile pro Reihe, oberste Reihe zuerst, z. B. „AABAA“)</label>
+<textarea id="imp" rows="6" spellcheck="false" style="font-family:monospace"></textarea>
+<div class="row"><button id="impGo">Übernehmen</button><button id="codeCopy">Code des Musters kopieren</button></div>
+</div>
+</section>
+</main>
+<nav><button data-t="ed">Rapport</button><button data-t="col">Farben</button><button data-t="pv">Vorschau</button><button data-t="pat">Muster</button></nav>
+<div id="toast"></div>
+
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const L=i=>String.fromCharCode(65+i);
+const HEX=/^#[0-9a-f]{6}$/i;
+const lum=h=>{const n=parseInt(h.slice(1),16);return(0.299*(n>>16&255)+0.587*(n>>8&255)+0.114*(n&255))/255};
+const ink=h=>lum(h)>0.55?'#000000':'#ffffff';
+const PAL=[['#f3ead8','Natur'],['#1f3a5f','Marine'],['#b3262e','Rot'],['#d9a527','Senf'],['#3d6b3a','Grün'],['#6b4a32','Moorit'],['#9cc3e0','Himmelblau'],['#222222','Schwarz'],['#ffffff','Weiß'],['#9a9a9a','Grau'],['#4a78b0','Blau'],['#c0602c','Rost'],['#f1d35a','Gelb'],['#7d8a3c','Moos'],['#2a8c8c','Türkis'],['#e3a1b0','Rosa'],['#6d4a8a','Lila'],['#8a2b4a','Beere']];
+const MAXS=200;
+const toast=t=>{const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2200)};
+
+/* ---------- Daten ---------- */
+// Raster p.g: Reihen von unten (g[0] = Reihe 1), jede Zeichenkette von rechts (Index 0 = Masche 1).
+// p.w/p.h sind die sichtbaren Masse; was darüber hinaus gespeichert ist, bleibt beim Verkleinern erhalten.
+function fromLines(lines){const w=Math.max(1,...lines.map(l=>l.length)),h=lines.length,g=[];
+ for(let r=0;r<h;r++)g.push([...lines[h-1-r].padEnd(w,'A')].reverse().join(''));return{w,h,g}}
+const TPL={
+ leer:{name:'Neues Muster',lines:Array(10).fill('AAAAAAAAAAAA'),cols:[0,1]},
+ raute:{name:'Raute',lines:['AAABAAAA','AABABAAA','ABAAABAA','BAACAABA','ABAAABAA','AABABAAA','AAABAAAA'],cols:[0,1,2]},
+ laeuse:{name:'Läuse',lines:['BAAA','AAAA','AABA','AAAA'],cols:[0,7]},
+ welle:{name:'Welle',lines:['AAAAAAAAAAAA','BAAAAABAAAAA','BBAAABBBAAAB','ABBABBABBABB','AABBBAAABBBA','AAABAAAAABAA','CCCCCCCCCCCC'],cols:[0,1,2]}
+};
+let uid=Date.now();
+function mkPat(name,lines,cols){const{w,h,g}=fromLines(lines);
+ return{id:++uid,name,w,h,g,colors:cols.map(i=>({c:PAL[i][0],n:PAL[i][1]}))}}
+const DEF={tab:'ed',cur:0,list:[],prev:{rx:3,ry:3,mode:'box',lines:true},ed:{tool:'pen',col:1,letters:true,mx:false,my:false,zoom:1,flt:5}};
+const K='fairisle';
+let S;try{S=JSON.parse(localStorage.getItem(K))}catch(e){}
+if(!S||!Array.isArray(S.list))S=JSON.parse(JSON.stringify(DEF));
+S.prev={...DEF.prev,...S.prev};S.ed={...DEF.ed,...S.ed};
+if(!S.list.length){const t=TPL.raute;S.list.push(mkPat(t.name,t.lines,t.cols))}
+if(!S.list.some(p=>p.id===S.cur))S.cur=S.list[0].id;
+S.list.forEach(p=>uid=Math.max(uid,p.id));
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){toast('Speichern im Browser fehlgeschlagen')}};
+const P=()=>S.list.find(p=>p.id===S.cur);
+
+const cell=(p,c,r)=>{const s=p.g[r];return s&&s[c]||'A'};
+function put(p,c,r,ch){while(p.g.length<=r)p.g.push('');let s=p.g[r];if(s.length<=c)s=s.padEnd(c+1,'A');p.g[r]=s.slice(0,c)+ch+s.slice(c+1)}
+function ensure(p){while(p.g.length<p.h)p.g.push('');for(let r=0;r<p.h;r++)if(p.g[r].length<p.w)p.g[r]=p.g[r].padEnd(p.w,'A')}
+// Anzeige-Raster: D[oben→unten][links→rechts]
+function disp(p){const D=[];for(let dy=0;dy<p.h;dy++){const r=p.h-1-dy,row=[];for(let dx=0;dx<p.w;dx++)row.push(cell(p,p.w-1-dx,r));D.push(row)}return D}
+function undisp(p,D){for(let dy=0;dy<p.h;dy++)for(let dx=0;dx<p.w;dx++)put(p,p.w-1-dx,p.h-1-dy,D[dy][dx])}
+function rowStat(row){const used=[...new Set(row)].sort(),n=row.length;let fl=0;
+ if(used.length>1)for(const ch of used){let run=0;for(let i=0;i<2*n;i++){if(row[i%n]!==ch){run++;if(run>fl)fl=Math.min(run,n)}else run=0}}
+ return{used,fl}}
+function norm(o){// importierte Daten prüfen
+ const cols=(Array.isArray(o.colors)?o.colors:[]).slice(0,26).map((c,i)=>({c:HEX.test(c&&c.c)?c.c.toLowerCase():PAL[i%PAL.length][0],n:String(c&&c.n||'').slice(0,60)}));
+ const g=(Array.isArray(o.g)?o.g:[]).slice(0,MAXS).map(s=>String(s).toUpperCase().replace(/[^A-Z]/g,'A').slice(0,MAXS));
+ const p={id:++uid,name:String(o.name||'Import').slice(0,80),w:Math.min(MAXS,Math.max(1,o.w|0||1)),h:Math.min(MAXS,Math.max(1,o.h|0||1)),g,colors:cols};
+ let mx=0;g.forEach(s=>{for(const ch of s)mx=Math.max(mx,ch.charCodeAt(0)-64)});
+ while(p.colors.length<Math.max(2,mx)){const i=p.colors.length;p.colors.push({c:PAL[i%PAL.length][0],n:PAL[i%PAL.length][1]})}
+ ensure(p);return p}
+
+/* ---------- Rückgängig ---------- */
+const UND=[];
+function snap(){const p=P();UND.push(JSON.stringify({id:p.id,w:p.w,h:p.h,g:p.g,colors:p.colors}));if(UND.length>80)UND.shift();$('undo').disabled=false}
+function undo(){while(UND.length){const u=JSON.parse(UND.pop()),p=S.list.find(x=>x.id===u.id);
+ if(p){Object.assign(p,{w:u.w,h:u.h,g:u.g,colors:u.colors});S.cur=p.id;if(S.ed.col>=p.colors.length)S.ed.col=0;save();render();return}}}
+
+/* ---------- Rapport-Editor ---------- */
+let CS=20,INF=0;const BOT=18;
+function drawEd(){
+ const p=P(),cv=$('cv'),ctx=cv.getContext('2d'),D=disp(p),nc=p.colors.length,dpr=window.devicePixelRatio||1;
+ INF=34+Math.min(nc,6)*10+26;
+ const avail=$('cvw').clientWidth-INF-4;
+ CS=Math.max(6,Math.round(Math.max(8,Math.min(40,Math.floor(avail/p.w)))*S.ed.zoom));
+ const W=p.w*CS+INF,H=p.h*CS+BOT;
+ cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';
+ ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
+ const css=getComputedStyle(document.body),tx=css.getPropertyValue('--tx'),mut=css.getPropertyValue('--mut'),wr=css.getPropertyValue('--warn');
+ ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`600 ${Math.round(CS*.5)}px system-ui,sans-serif`;
+ for(let dy=0;dy<p.h;dy++)for(let dx=0;dx<p.w;dx++){
+  const ch=D[dy][dx],i=ch.charCodeAt(0)-65,x=dx*CS,y=dy*CS;
+  if(i<nc){ctx.fillStyle=p.colors[i].c;ctx.fillRect(x,y,CS,CS)}
+  else{ctx.fillStyle='#bbb';ctx.fillRect(x,y,CS,CS);ctx.strokeStyle='#777';ctx.beginPath();ctx.moveTo(x,y+CS);ctx.lineTo(x+CS,y);ctx.stroke()}
+  if(S.ed.letters&&CS>=14){ctx.fillStyle=i<nc?ink(p.colors[i].c):'#000';ctx.globalAlpha=.55;ctx.fillText(ch,x+CS/2,y+CS/2+1);ctx.globalAlpha=1}
+ }
+ // Gitter, alle 5 Maschen/Reihen (von rechts/unten gezählt) kräftiger
+ for(let x=0;x<=p.w;x++){const k=p.w-x;ctx.strokeStyle=k%5===0||x===0?'rgba(0,0,0,.75)':'rgba(0,0,0,.28)';ctx.lineWidth=k%5===0||x===0?1.4:.6;ctx.beginPath();ctx.moveTo(x*CS,0);ctx.lineTo(x*CS,p.h*CS);ctx.stroke()}
+ for(let y=0;y<=p.h;y++){const k=p.h-y;ctx.strokeStyle=k%5===0||y===0?'rgba(0,0,0,.75)':'rgba(0,0,0,.28)';ctx.lineWidth=k%5===0||y===0?1.4:.6;ctx.beginPath();ctx.moveTo(0,y*CS);ctx.lineTo(p.w*CS,y*CS);ctx.stroke()}
+ // Reihen-Info rechts
+ const fs=Math.min(13,Math.max(9,CS*.6));ctx.font=`${fs}px system-ui,sans-serif`;
+ for(let dy=0;dy<p.h;dy++){const y=dy*CS+CS/2,x0=p.w*CS+4,st=rowStat(D[dy]);
+  ctx.fillStyle=mut;ctx.textAlign='left';ctx.fillText(String(p.h-dy),x0,y+1);
+  st.used.slice(0,6).forEach((ch,j)=>{const i=ch.charCodeAt(0)-65;ctx.fillStyle=i<nc?p.colors[i].c:'#bbb';ctx.fillRect(x0+28+j*10,y-4,8,8);ctx.strokeStyle='rgba(0,0,0,.4)';ctx.lineWidth=.5;ctx.strokeRect(x0+28+j*10,y-4,8,8)});
+  if(st.fl){const bad=st.fl>S.ed.flt;ctx.fillStyle=bad?wr:mut;ctx.font=`${bad?'700 ':''}${fs}px system-ui,sans-serif`;ctx.fillText(String(st.fl),x0+30+Math.min(st.used.length,6)*10,y+1);ctx.font=`${fs}px system-ui,sans-serif`}
+ }
+ // Maschennummern unten (rechts = 1)
+ ctx.fillStyle=mut;ctx.textAlign='center';
+ for(let dx=0;dx<p.w;dx++){const n=p.w-dx;if(CS>=18||n%5===0||n===1)ctx.fillText(String(n),dx*CS+CS/2,p.h*CS+BOT/2+1)}
+}
+function hit(e){const p=P(),r=$('cv').getBoundingClientRect(),dx=Math.floor((e.clientX-r.left)/CS),dy=Math.floor((e.clientY-r.top)/CS);
+ return dx>=0&&dy>=0&&dx<p.w&&dy<p.h?[dx,dy]:null}
+function paint(dx,dy){const p=P(),ch=L(S.ed.col),pts=[[dx,dy]];
+ if(S.ed.mx)pts.push([p.w-1-dx,dy]);if(S.ed.my)pts.push([dx,p.h-1-dy]);if(S.ed.mx&&S.ed.my)pts.push([p.w-1-dx,p.h-1-dy]);
+ let ch2=false;for(const[x,y]of pts)if(cell(p,p.w-1-x,p.h-1-y)!==ch){put(p,p.w-1-x,p.h-1-y,ch);ch2=true}return ch2}
+function fill(dx,dy){const p=P(),D=disp(p),from=D[dy][dx],to=L(S.ed.col);if(from===to)return;const st=[[dx,dy]];
+ while(st.length){const[x,y]=st.pop();if(x<0||y<0||x>=p.w||y>=p.h||D[y][x]!==from)continue;D[y][x]=to;st.push([x+1,y],[x-1,y],[x,y+1],[x,y-1])}undisp(p,D)}
+let drawing=false,last='';
+$('cv').addEventListener('pointerdown',e=>{const h=hit(e);if(!h)return;e.preventDefault();const p=P();
+ if(S.ed.tool==='pick'){S.ed.col=Math.min(p.colors.length-1,cell(p,p.w-1-h[0],p.h-1-h[1]).charCodeAt(0)-65);S.ed.tool='pen';save();renderEd();return}
+ snap();if(S.ed.tool==='fill'){fill(h[0],h[1]);save();drawEd();return}
+ $('cv').setPointerCapture(e.pointerId);drawing=true;last=h.join();paint(h[0],h[1]);drawEd()});
+$('cv').addEventListener('pointermove',e=>{if(!drawing)return;const h=hit(e);if(!h||h.join()===last)return;last=h.join();if(paint(h[0],h[1]))drawEd()});
+const endDraw=()=>{if(drawing){drawing=false;save()}};
+$('cv').addEventListener('pointerup',endDraw);$('cv').addEventListener('pointercancel',endDraw);
+
+function op(k){const p=P();let D=disp(p);snap();
+ const W=p.w,H=p.h;
+ if(k==='fh')D=D.map(r=>r.slice().reverse());
+ if(k==='fv')D.reverse();
+ if(k==='sl')D=D.map(r=>r.slice(1).concat(r[0]));
+ if(k==='sr')D=D.map(r=>[r[W-1]].concat(r.slice(0,W-1)));
+ if(k==='su')D=D.slice(1).concat([D[0]]);
+ if(k==='sd')D=[D[H-1]].concat(D.slice(0,H-1));
+ if(k==='all')D=D.map(r=>r.map(()=>L(S.ed.col)));
+ if(k==='rep'){const f=$('rf').value,t=$('rt').value;D=D.map(r=>r.map(c=>c===f?t:c))}
+ undisp(p,D);save();drawEd()}
+function size(dw,dh){const p=P(),w=Math.min(MAXS,Math.max(1,p.w+dw)),h=Math.min(MAXS,Math.max(1,p.h+dh));
+ if(w===p.w&&h===p.h)return;snap();p.w=w;p.h=h;ensure(p);save();renderEd()}
+// Gedrückt halten wiederholt +/−
+function hold(sel,fn){document.querySelectorAll(sel).forEach(b=>{let t1,t2;const stop=()=>{clearTimeout(t1);clearInterval(t2)};
+ b.addEventListener('pointerdown',e=>{e.preventDefault();fn(b);t1=setTimeout(()=>t2=setInterval(()=>fn(b),90),450)});
+ ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,stop));
+ b.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fn(b)}})})}
+hold('[data-sz]',b=>{const k=b.dataset.sz;size(k[0]==='w'?(k[1]==='+'?1:-1):0,k[0]==='h'?(k[1]==='+'?1:-1):0)});
+hold('[data-rp]',b=>{const k=b.dataset.rp,f=k[0]==='x'?'rx':'ry';S.prev[f]=Math.min(30,Math.max(1,S.prev[f]+(k[1]==='+'?1:-1)));save();renderPv()});
+
+function renderEd(){const p=P();ensure(p);
+ if(S.ed.col>=p.colors.length)S.ed.col=p.colors.length-1;
+ if(document.activeElement!==$('pname'))$('pname').value=p.name;
+ $('wv').textContent=p.w;$('hv').textContent=p.h;
+ $('chips').innerHTML=p.colors.map((c,i)=>`<button class="chip${i===S.ed.col?' on':''}" data-c="${i}" style="background:${c.c};color:${ink(c.c)}" title="${esc(c.n)}">${L(i)}</button>`).join('');
+ document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('on',b.dataset.tool===S.ed.tool));
+ $('undo').disabled=!UND.length;$('mx').checked=S.ed.mx;$('my').checked=S.ed.my;$('lt').checked=S.ed.letters;
+ $('zv').textContent=Math.round(S.ed.zoom*100)+' %';$('flv').textContent=S.ed.flt;
+ const o=p.colors.map((c,i)=>`<option value="${L(i)}">${L(i)}${c.n?' – '+esc(c.n):''}</option>`).join('');
+ const rf=$('rf').value,rt=$('rt').value;$('rf').innerHTML=o;$('rt').innerHTML=o;
+ if(rf&&rf.charCodeAt(0)-65<p.colors.length)$('rf').value=rf;
+ $('rt').value=rt&&rt.charCodeAt(0)-65<p.colors.length?rt:L(Math.min(1,p.colors.length-1));
+ drawEd()}
+$('chips').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(!b)return;S.ed.col=+b.dataset.c;if(S.ed.tool==='pick')S.ed.tool='pen';save();renderEd()});
+document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{S.ed.tool=b.dataset.tool;save();renderEd()});
+$('undo').onclick=undo;
+$('pname').oninput=()=>{P().name=$('pname').value.slice(0,80);save()};
+document.querySelectorAll('[data-op]').forEach(b=>b.onclick=()=>op(b.dataset.op));
+$('mx').onchange=()=>{S.ed.mx=$('mx').checked;save()};$('my').onchange=()=>{S.ed.my=$('my').checked;save()};
+$('lt').onchange=()=>{S.ed.letters=$('lt').checked;save();drawEd()};
+document.querySelectorAll('[data-zm]').forEach(b=>b.onclick=()=>{S.ed.zoom=Math.min(3,Math.max(.4,Math.round((S.ed.zoom+(b.dataset.zm==='+'?.2:-.2))*10)/10));save();renderEd()});
+document.querySelectorAll('[data-fl]').forEach(b=>b.onclick=()=>{S.ed.flt=Math.min(30,Math.max(2,S.ed.flt+(b.dataset.fl==='+'?1:-1)));save();renderEd()});
+
+/* ---------- Farben ---------- */
+function usage(p){const n={};for(let r=0;r<p.h;r++)for(let c=0;c<p.w;c++){const ch=cell(p,c,r);n[ch]=(n[ch]||0)+1}return n}
+function renderCol(){const p=P(),u=usage(p);
+ $('cols').innerHTML=p.colors.map((c,i)=>`<div class="crow${i===S.ed.col?' on':''}" data-i="${i}"><div class="l1">
+  <span class="lt" style="background:${c.c};color:${ink(c.c)}">${L(i)}</span>
+  <input type="color" class="cp" data-i="${i}" value="${c.c}" aria-label="Farbe ${L(i)}">
+  <input class="hx" data-i="${i}" value="${c.c}" maxlength="7" aria-label="Hex ${L(i)}">
+  <span class="ct mut">${u[L(i)]||0} M.</span>
+  ${i?`<button class="up" data-up="${i}" title="Mit ${L(i-1)} tauschen">↑</button>`:''}
+ </div><input class="cn" data-i="${i}" value="${esc(c.n)}" placeholder="Name / Garn (optional)" aria-label="Name ${L(i)}"></div>`).join('');
+ $('cdel').disabled=p.colors.length<=1;$('cadd').disabled=p.colors.length>=26;
+ $('sw').innerHTML=PAL.map(([c,n])=>`<button data-pc="${c}" data-pn="${n}" style="background:${c}" title="${n}"></button>`).join('')}
+function setCol(i,c,live){const p=P();if(!HEX.test(c))return;p.colors[i].c=c.toLowerCase();save();
+ const row=$('cols').querySelector(`.crow[data-i="${i}"]`);if(live&&row){const lt=row.querySelector('.lt');lt.style.background=c;lt.style.color=ink(c);row.querySelector('.hx').value=c;row.querySelector('.cp').value=c}else renderCol()}
+$('cols').addEventListener('input',e=>{const t=e.target,i=+t.dataset.i;
+ if(t.classList.contains('cp'))setCol(i,t.value,true);
+ if(t.classList.contains('hx')){let v=t.value.trim();if(!v.startsWith('#'))v='#'+v;if(HEX.test(v))setCol(i,v,true)}
+ if(t.classList.contains('cn')){P().colors[i].n=t.value.slice(0,60);save()}});
+$('cols').addEventListener('click',e=>{const up=e.target.closest('[data-up]');
+ if(up){const i=+up.dataset.up,p=P(),a=L(i-1),b=L(i);snap();[p.colors[i-1],p.colors[i]]=[p.colors[i],p.colors[i-1]];
+  p.g=p.g.map(s=>s.replace(/./g,ch=>ch===a?b:ch===b?a:ch));S.ed.col=i-1;save();renderCol();return}
+ const row=e.target.closest('.crow');if(row&&!e.target.closest('input')){S.ed.col=+row.dataset.i;save();renderCol()}
+ else if(row){S.ed.col=+row.dataset.i;$('cols').querySelectorAll('.crow').forEach(r=>r.classList.toggle('on',r===row))}});
+$('sw').addEventListener('click',e=>{const b=e.target.closest('[data-pc]');if(!b)return;const p=P(),i=S.ed.col;snap();
+ const old=p.colors[i];if(!old.n||PAL.some(x=>x[1]===old.n))old.n=b.dataset.pn;setCol(i,b.dataset.pc)});
+$('cadd').onclick=()=>{const p=P();if(p.colors.length>=26)return;snap();const used=p.colors.map(c=>c.c);
+ const f=PAL.find(x=>!used.includes(x[0]))||PAL[p.colors.length%PAL.length];p.colors.push({c:f[0],n:f[1]});S.ed.col=p.colors.length-1;save();renderCol()};
+$('cdel').onclick=()=>{const p=P();if(p.colors.length<=1)return;const i=p.colors.length-1,x=L(i);
+ const n=p.g.reduce((s,r)=>s+r.split(x).length-1,0);
+ if(n&&!confirm(`Farbe ${x} wird in ${n} Maschen verwendet. Diese werden zu A. Fortfahren?`))return;
+ snap();p.colors.pop();p.g=p.g.map(s=>s.split(x).join('A'));if(S.ed.col>=p.colors.length)S.ed.col=p.colors.length-1;save();renderCol()};
+
+/* ---------- Vorschau ---------- */
+function drawPat(cv,p,rx,ry,maxW,mode,lines,maxCell){
+ const D=disp(p),W=p.w*rx,H=p.h*ry,dpr=window.devicePixelRatio||1;
+ const cw=Math.max(2,Math.min(maxCell,Math.floor(maxW/W))),chh=mode==='st'?Math.max(2,Math.round(cw*.85)):cw;
+ const w=W*cw,h=H*chh;cv.width=w*dpr;cv.height=h*dpr;cv.style.width=w+'px';cv.style.height=h+'px';
+ const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+ const col=ch=>{const i=ch.charCodeAt(0)-65;return i<p.colors.length?p.colors[i].c:'#bbb'};
+ if(mode==='st'){ctx.fillStyle='#2a2a2a';ctx.fillRect(0,0,w,h)}
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){const c=col(D[y%p.h][x%p.w]),px=x*cw,py=y*chh;
+  if(mode==='st'){ctx.fillStyle=c;ctx.beginPath();ctx.ellipse(px+cw*.3,py+chh*.5,cw*.25,chh*.62,-.5,0,Math.PI*2);ctx.fill();
+   ctx.beginPath();ctx.ellipse(px+cw*.7,py+chh*.5,cw*.25,chh*.62,.5,0,Math.PI*2);ctx.fill()}
+  else{ctx.fillStyle=c;ctx.fillRect(px,py,cw,chh)}}
+ if(mode!=='st'&&cw>=6){ctx.strokeStyle='rgba(0,0,0,.18)';ctx.lineWidth=.5;ctx.beginPath();
+  for(let x=1;x<W;x++){ctx.moveTo(x*cw,0);ctx.lineTo(x*cw,h)}for(let y=1;y<H;y++){ctx.moveTo(0,y*chh);ctx.lineTo(w,y*chh)}ctx.stroke()}
+ if(lines){ctx.strokeStyle='#e0245e';ctx.lineWidth=1.5;ctx.setLineDash([5,4]);ctx.beginPath();
+  for(let x=1;x<rx;x++){ctx.moveTo(x*p.w*cw,0);ctx.lineTo(x*p.w*cw,h)}for(let y=1;y<ry;y++){ctx.moveTo(0,y*p.h*chh);ctx.lineTo(w,y*p.h*chh)}ctx.stroke();ctx.setLineDash([])}}
+function renderPv(){const p=P(),{rx,ry,mode,lines}=S.prev;
+ $('rxv').textContent=rx;$('ryv').textContent=ry;$('pvl').checked=lines;
+ document.querySelectorAll('[data-pm]').forEach(b=>b.classList.toggle('on',b.dataset.pm===mode));
+ drawPat($('pv'),p,rx,ry,$('pvw').clientWidth,mode,lines,28);
+ $('pvi').textContent=`${p.name}: Rapport ${p.w} × ${p.h}, Vorschau ${p.w*rx} Maschen × ${p.h*ry} Reihen.`;
+ $('pleg').innerHTML=p.colors.map((c,i)=>`<span><i style="background:${c.c}"></i><b>${L(i)}</b> ${esc(c.n)}</span>`).join('')}
+document.querySelectorAll('[data-pm]').forEach(b=>b.onclick=()=>{S.prev.mode=b.dataset.pm;save();renderPv()});
+$('pvl').onchange=()=>{S.prev.lines=$('pvl').checked;save();renderPv()};
+
+/* ---------- Musterliste ---------- */
+function renderPat(){const p=P();$('curn').textContent=p.name||'Ohne Namen';$('del').disabled=S.list.length<2;
+ $('newb').innerHTML=Object.entries(TPL).map(([k,t])=>`<button data-new="${k}">${k==='leer'?'Leer':'Vorlage '+esc(t.name)}</button>`).join('');
+ $('plist').innerHTML=S.list.map(x=>`<div class="pt${x.id===S.cur?' on':''}" data-id="${x.id}"><b>${esc(x.name||'Ohne Namen')}</b><span class="mut">${x.w} × ${x.h}, ${x.colors.length} Farben</span><canvas></canvas></div>`).join('');
+ $('plist').querySelectorAll('.pt').forEach(el=>{const x=S.list.find(q=>q.id===+el.dataset.id);ensure(x);drawPat(el.querySelector('canvas'),x,2,Math.max(1,Math.round(x.w*2/x.h/1.6)),134,'box',false,6)})}
+$('plist').addEventListener('click',e=>{const t=e.target.closest('.pt');if(!t)return;S.cur=+t.dataset.id;save();go('ed')});
+$('newb').addEventListener('click',e=>{const b=e.target.closest('[data-new]');if(!b)return;const t=TPL[b.dataset.new];
+ const p=mkPat(t.name,t.lines,t.cols);S.list.unshift(p);S.cur=p.id;S.ed.col=Math.min(1,p.colors.length-1);save();go('ed')});
+$('dup').onclick=()=>{const p=JSON.parse(JSON.stringify(P()));p.id=++uid;p.name+=' (Kopie)';S.list.splice(S.list.indexOf(P())+1,0,p);S.cur=p.id;save();renderPat();toast('Kopie angelegt')};
+$('del').onclick=()=>{if(S.list.length<2)return;const p=P();if(!confirm(`„${p.name}“ wirklich löschen?`))return;S.list=S.list.filter(x=>x!==p);S.cur=S.list[0].id;save();renderPat()};
+const b64e=s=>{const b=new TextEncoder().encode(s);let t='';for(let i=0;i<b.length;i+=8192)t+=String.fromCharCode(...b.subarray(i,i+8192));return btoa(t)};
+const b64d=s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\s/g,'')),c=>c.charCodeAt(0)));
+const code=p=>'FI1:'+b64e(JSON.stringify({name:p.name,w:p.w,h:p.h,g:p.g,colors:p.colors}));
+$('codeCopy').onclick=async()=>{const c=code(P());$('imp').value=c;try{await navigator.clipboard.writeText(c);toast('Code kopiert')}catch(e){$('imp').select();toast('Code steht im Feld – bitte kopieren')}};
+function addPat(p){S.list.unshift(p);S.cur=p.id;S.ed.col=Math.min(1,p.colors.length-1);save();toast(`„${p.name}“ übernommen (${p.w} × ${p.h})`);go('ed')}
+$('impGo').onclick=()=>{const t=$('imp').value.trim();if(!t)return;
+ try{if(/^FI1:/i.test(t))return addPat(norm(JSON.parse(b64d(t.slice(4)))));
+  const lines=t.split(/\r?\n/).map(l=>l.toUpperCase().replace(/[^A-Z]/g,'')).filter(Boolean);
+  if(!lines.length)throw 0;const f=fromLines(lines);addPat(norm({name:'Import',...f}))}
+ catch(e){toast('Konnte den Text nicht lesen')}};
+
+/* ---------- ZIP / ODS ---------- */
+const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+const crc32=b=>{let c=0xFFFFFFFF;for(let i=0;i<b.length;i++)c=CRC[(c^b[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0};
+function zip(files){// ungepackt (Methode 0); mimetype muss zuerst stehen
+ const enc=new TextEncoder(),parts=[],cd=[];let off=0;const d=new Date();
+ const dt=((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate(),tm=(d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1);
+ for(const f of files){const nm=enc.encode(f.name),data=typeof f.data==='string'?enc.encode(f.data):f.data,crc=crc32(data);
+  const h=new DataView(new ArrayBuffer(30));h.setUint32(0,0x04034b50,true);h.setUint16(4,10,true);h.setUint16(6,0x0800,true);h.setUint16(8,0,true);
+  h.setUint16(10,tm,true);h.setUint16(12,dt,true);h.setUint32(14,crc,true);h.setUint32(18,data.length,true);h.setUint32(22,data.length,true);h.setUint16(26,nm.length,true);h.setUint16(28,0,true);
+  parts.push(new Uint8Array(h.buffer),nm,data);
+  const c=new DataView(new ArrayBuffer(46));c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,10,true);c.setUint16(8,0x0800,true);c.setUint16(10,0,true);
+  c.setUint16(12,tm,true);c.setUint16(14,dt,true);c.setUint32(16,crc,true);c.setUint32(20,data.length,true);c.setUint32(24,data.length,true);c.setUint16(28,nm.length,true);c.setUint32(42,off,true);
+  cd.push(new Uint8Array(c.buffer),nm);off+=30+nm.length+data.length}
+ const cdl=cd.reduce((s,a)=>s+a.length,0),e=new DataView(new ArrayBuffer(22));
+ e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,cdl,true);e.setUint32(16,off,true);
+ return new Blob([...parts,...cd,new Uint8Array(e.buffer)],{type:'application/vnd.oasis.opendocument.spreadsheet'})}
+async function unzip(buf){const v=new DataView(buf),u8=new Uint8Array(buf),out={},dec=new TextDecoder();let e=-1;
+ for(let i=buf.byteLength-22;i>=Math.max(0,buf.byteLength-65557);i--)if(v.getUint32(i,true)===0x06054b50){e=i;break}
+ if(e<0)throw new Error('Keine ZIP-Datei');let p=v.getUint32(e+16,true);const n=v.getUint16(e+10,true);
+ for(let k=0;k<n;k++){const m=v.getUint16(p+10,true),cs=v.getUint32(p+20,true),nl=v.getUint16(p+28,true),xl=v.getUint16(p+30,true),cl=v.getUint16(p+32,true),lo=v.getUint32(p+42,true);
+  const name=dec.decode(u8.subarray(p+46,p+46+nl));p+=46+nl+xl+cl;
+  if(!/^(content\.xml|styles\.xml|fairisle\.json)$/.test(name))continue;
+  const ds=lo+30+v.getUint16(lo+26,true)+v.getUint16(lo+28,true),raw=u8.slice(ds,ds+cs);
+  out[name]=m===0?dec.decode(raw):m===8?await new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text():null}
+ return out}
+const xe=s=>String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const NS='xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" xmlns:meta="urn:oasis:names:tc:opendocument:xmlns:meta:1.0" office:version="1.2"';
+function odsFiles(p){const D=disp(p),nc=p.colors.length,{rx,ry}=S.prev;
+ const brd='fo:border="0.5pt solid #808080" style:vertical-align="middle"';
+ const styles=`<?xml version="1.0" encoding="UTF-8"?>\n<office:document-styles ${NS}><office:styles>
+<style:default-style style:family="table-cell"><style:text-properties style:font-name="Liberation Sans" fo:font-size="10pt"/></style:default-style>
+<style:style style:name="Default" style:family="table-cell"/>
+${p.colors.map((c,i)=>`<style:style style:name="Farbe_${L(i)}" style:display-name="Farbe ${L(i)}" style:family="table-cell" style:parent-style-name="Default"><style:table-cell-properties fo:background-color="${c.c}" ${brd}/><style:paragraph-properties fo:text-align="center"/><style:text-properties fo:color="${ink(c.c)}" fo:font-size="7pt"/></style:style>`).join('\n')}
+</office:styles></office:document-styles>`;
+ const maps=sh=>p.colors.map((c,i)=>`<style:map style:condition="cell-content()=&quot;${L(i)}&quot;" style:apply-style-name="Farbe_${L(i)}" style:base-cell-address="${sh}.A1"/>`).join('');
+ const gst=sh=>`<style:style style:name="ce${sh[0]}" style:family="table-cell" style:parent-style-name="Default"><style:table-cell-properties ${brd}/><style:paragraph-properties fo:text-align="center"/><style:text-properties fo:font-size="7pt"/>${maps(sh)}</style:style>`;
+ const sc=(t,st)=>`<table:table-cell office:value-type="string"${st?` table:style-name="${st}"`:''}><text:p>${xe(t)}</text:p></table:table-cell>`;
+ const nm=(n)=>`<table:table-cell office:value-type="float" office:value="${n}" table:style-name="ceN"><text:p>${n}</text:p></table:table-cell>`;
+ const E='<table:table-cell/>';
+ let r1=`<table:table table:name="Rapport"><table:table-column table:style-name="coG" table:number-columns-repeated="${p.w}"/><table:table-column table:style-name="coN"/>`;
+ r1+=`<table:table-row table:style-name="roT">${sc(`${p.name} – Rapport ${p.w} × ${p.h}`,'ceT')}</table:table-row>`;
+ D.forEach((row,dy)=>{r1+=`<table:table-row table:style-name="roG">${row.map(ch=>sc(ch,'ceR')).join('')}${nm(p.h-dy)}</table:table-row>`});
+ r1+=`<table:table-row table:style-name="roG">${Array.from({length:p.w},(_,dx)=>nm(p.w-dx)).join('')}</table:table-row>`;
+ r1+=`<table:table-row>${E}</table:table-row><table:table-row>${sc('Farben','ceT')}</table:table-row>`;
+ p.colors.forEach((c,i)=>{r1+=`<table:table-row table:style-name="roG">${sc(L(i),'ceR')}${E}${sc(`${c.n?c.n+' ':''}(${c.c})`)}</table:table-row>`});
+ r1+=`<table:table-row>${E}</table:table-row><table:table-row>${sc('Lesen: Reihen von unten nach oben, Maschen von rechts nach links.')}</table:table-row></table:table>`;
+ let r2=`<table:table table:name="Vorschau"><table:table-column table:style-name="coG" table:number-columns-repeated="${p.w*rx}"/>`;
+ for(let y=0;y<p.h*ry;y++)r2+=`<table:table-row table:style-name="roG">${Array.from({length:p.w*rx},(_,x)=>sc(D[y%p.h][x%p.w],'ceV')).join('')}</table:table-row>`;
+ r2+='</table:table>';
+ const content=`<?xml version="1.0" encoding="UTF-8"?>\n<office:document-content ${NS}><office:automatic-styles>
+<style:style style:name="coG" style:family="table-column"><style:table-column-properties style:column-width="0.5cm"/></style:style>
+<style:style style:name="coN" style:family="table-column"><style:table-column-properties style:column-width="0.8cm"/></style:style>
+<style:style style:name="roG" style:family="table-row"><style:table-row-properties style:row-height="0.5cm" style:use-optimal-row-height="false"/></style:style>
+<style:style style:name="roT" style:family="table-row"><style:table-row-properties style:row-height="0.8cm" style:use-optimal-row-height="false"/></style:style>
+<style:style style:name="ceT" style:family="table-cell" style:parent-style-name="Default"><style:text-properties fo:font-size="12pt" fo:font-weight="bold"/></style:style>
+<style:style style:name="ceN" style:family="table-cell" style:parent-style-name="Default"><style:table-cell-properties style:vertical-align="middle"/><style:paragraph-properties fo:text-align="center"/><style:text-properties fo:font-size="7pt" fo:color="#666666"/></style:style>
+${gst('Rapport')}
+${gst('Vorschau')}
+</office:automatic-styles><office:body><office:spreadsheet>${r1}${r2}</office:spreadsheet></office:body></office:document-content>`;
+ const meta=`<?xml version="1.0" encoding="UTF-8"?>\n<office:document-meta ${NS}><office:meta><meta:generator>Fair-Isle-Musterhilfe</meta:generator></office:meta></office:document-meta>`;
+ const man=`<?xml version="1.0" encoding="UTF-8"?>\n<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.2">
+<manifest:file-entry manifest:full-path="/" manifest:version="1.2" manifest:media-type="application/vnd.oasis.opendocument.spreadsheet"/>
+<manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/>
+<manifest:file-entry manifest:full-path="styles.xml" manifest:media-type="text/xml"/>
+<manifest:file-entry manifest:full-path="meta.xml" manifest:media-type="text/xml"/>
+<manifest:file-entry manifest:full-path="fairisle.json" manifest:media-type="application/json"/>
+</manifest:manifest>`;
+ return[{name:'mimetype',data:'application/vnd.oasis.opendocument.spreadsheet'},{name:'META-INF/manifest.xml',data:man},{name:'content.xml',data:content},{name:'styles.xml',data:styles},{name:'meta.xml',data:meta},
+  {name:'fairisle.json',data:JSON.stringify({name:p.name,w:p.w,h:p.h,g:p.g,colors:p.colors})}]}
+function dl(name,blob){const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),3000)}
+$('odsSave').onclick=()=>{const p=P();dl((p.name||'Muster').replace(/[\\/:*?"<>|]+/g,'_').trim()+'.ods',zip(odsFiles(p)));toast('ODS-Datei erstellt')};
+
+// ODS einlesen: bevorzugt die eingebetteten Daten, sonst Raster + bedingte Formatierung aus content.xml
+function parseOds(f,fname){
+ if(f['fairisle.json']){try{return norm(JSON.parse(f['fairisle.json']))}catch(e){}}
+ if(!f['content.xml'])throw new Error('content.xml fehlt');
+ const TN='urn:oasis:names:tc:opendocument:xmlns:table:1.0',dp=new DOMParser(),doc=dp.parseFromString(f['content.xml'],'application/xml');
+ const sdoc=f['styles.xml']?dp.parseFromString(f['styles.xml'],'application/xml'):null;
+ const tables=[...doc.getElementsByTagNameNS(TN,'table')];if(!tables.length)throw new Error('Keine Tabelle');
+ const tb=tables.find(t=>t.getAttributeNS(TN,'name')==='Rapport')||tables[0];
+ const M=[];
+ for(const row of tb.getElementsByTagNameNS(TN,'table-row')){const cells=[];
+  for(const c of row.children){if(c.namespaceURI!==TN||!/table-cell$/.test(c.localName))continue;const rep=Math.min(+c.getAttributeNS(TN,'number-columns-repeated')||1,MAXS+2),t=c.textContent.trim();for(let k=0;k<rep;k++)cells.push(t)}
+  const rr=Math.min(+row.getAttributeNS(TN,'number-rows-repeated')||1,MAXS);for(let k=0;k<rr;k++)M.push(cells);if(M.length>2000)break}
+ const isL=t=>/^[A-Z]$/i.test(t);let y0=M.findIndex(r=>r.some(isL));if(y0<0)throw new Error('Keine Buchstaben gefunden');
+ const x0=M[y0].findIndex(isL);let x1=x0;while(x1<M[y0].length&&isL(M[y0][x1]))x1++;
+ const w=x1-x0,lines=[];for(let y=y0;y<M.length&&isL(M[y][x0]||'');y++)lines.push(Array.from({length:w},(_,x)=>(M[y][x0+x]||'A').toUpperCase()).map(ch=>isL(ch)?ch:'A').join(''));
+ // Farben aus bedingter Formatierung
+ const bg={},cond={};
+ for(const d of[doc,sdoc].filter(Boolean)){for(const s of d.getElementsByTagName('*')){if(s.localName==='style'){const n=s.getAttribute('style:name');const pr=[...s.children].find(c=>c.localName==='table-cell-properties');const b=pr&&pr.getAttribute('fo:background-color');if(n&&b&&HEX.test(b))bg[n]=b}
+  if(s.localName==='map'){const m=/cell-content\(\)\s*=\s*"([A-Z])"/i.exec(s.getAttribute('style:condition')||'');if(m)cond[m[1].toUpperCase()]=s.getAttribute('style:apply-style-name')}
+  if(s.localName==='condition'){const m=/^\s*=?\s*"([A-Z])"\s*$/i.exec(s.getAttribute('calcext:value')||'');if(m)cond[m[1].toUpperCase()]=s.getAttribute('calcext:apply-style-name')}}}
+ const f2=fromLines(lines);let mx=0;lines.join('').split('').forEach(ch=>mx=Math.max(mx,ch.charCodeAt(0)-64));
+ const colors=Array.from({length:Math.max(2,mx)},(_,i)=>{const b=bg[cond[L(i)]];return{c:b||PAL[i%PAL.length][0],n:b?'':PAL[i%PAL.length][1]}});
+ return norm({name:fname.replace(/\.ods$/i,''),...f2,colors})}
+$('odsOpen').onclick=()=>$('odsFile').click();
+$('odsFile').onchange=async()=>{const file=$('odsFile').files[0];$('odsFile').value='';if(!file)return;
+ try{addPat(parseOds(await unzip(await file.arrayBuffer()),file.name))}catch(e){toast('ODS konnte nicht gelesen werden: '+e.message)}};
+
+/* ---------- Navigation ---------- */
+function go(t){S.tab=t;save();document.querySelectorAll('main>section').forEach(s=>s.hidden=s.id!=='v-'+t);
+ document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));render();window.scrollTo(0,0)}
+function render(){const t=S.tab;if(t==='ed')renderEd();if(t==='col')renderCol();if(t==='pv')renderPv();if(t==='pat')renderPat()}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.t));
+let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(render,120)});
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',render);
+go(['ed','col','pv','pat'].includes(S.tab)?S.tab:'ed');
+if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script></body></html>
