@@ -102,6 +102,7 @@ body:not(.wide) header{padding:8px 12px}body:not(.wide) .brand span{font-size:.9
 body:not(.wide) main{padding:10px}body:not(.wide) #tools{flex-wrap:wrap;width:100%}body:not(.wide) #tools button{flex:1 1 40%;padding:0 6px}body:not(.wide) .card{padding:12px;margin-bottom:10px}
 #toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:9px 16px;border-radius:10px;font-size:.88rem;opacity:0;transition:opacity .3s;pointer-events:none;z-index:20}#toast.on{opacity:.94}
 #print{display:none}
+.note{border-color:color-mix(in srgb,var(--warn) 45%,var(--bd));background:color-mix(in srgb,var(--warn) 6%,var(--card))}.note li{margin:3px 0;font-size:.9rem}
 a.btn{display:flex;align-items:center;justify-content:center;height:38px;background:var(--soft);color:var(--tx);border-radius:10px;padding:0 14px;text-decoration:none;font-weight:600;font-size:.9rem}a.btn:hover{background:color-mix(in srgb,var(--soft) 80%,var(--ac) 12%)}
 body:not(.wide) #printBtn{display:none}
 @media print{
@@ -125,6 +126,11 @@ body:not(.wide) #printBtn{display:none}
  <button class="pri" id="odsSave2" title="Als ODS (LibreOffice Calc) speichern">💾 ODS speichern</button>
 </header>
 <main>
+<div class="card note hide" id="note"><div class="hd" style="margin-bottom:0"><h2>⚠ Wichtig: Deine Daten bleiben nur in diesem Browser</h2><div class="sp"></div><button class="pri" id="noteOk">Verstanden</button></div><ul style="margin:6px 0 0;padding-left:20px">
+ <li>Alle Muster, Projekte und Garne werden <b>nur lokal in diesem Browser auf diesem Gerät</b> gespeichert – nicht im Internet. Ein anderer Browser oder ein anderes Gerät sieht sie nicht.</li>
+ <li><b>Browserdaten, Cache bzw. „Website-Daten“ nicht löschen</b> und nicht im privaten Fenster arbeiten – sonst ist alles verloren.</li>
+ <li>Regelmässig sichern: <b>„Gesamtsicherung herunterladen“</b> (alles in einer Datei) oder einzelne Muster als ODS speichern.</li>
+</ul></div>
 <div class="design">
 <div class="colL">
 <section id="v-ed"><div class="card">
@@ -229,6 +235,13 @@ body:not(.wide) #printBtn{display:none}
  <textarea id="imp" rows="6" spellcheck="false" style="font-family:ui-monospace,monospace" placeholder="Eine Zeile pro Reihe, oberste Reihe zuerst, z. B.&#10;AABAA&#10;ABCBA&#10;AABAA"></textarea>
  <div class="row"><button id="impGo">Übernehmen</button><button id="codeCopy">Code des Musters kopieren</button></div>
 </div>
+<div class="card note"><h2>⚠ Wichtige Hinweise</h2><ul style="margin:6px 0 0;padding-left:20px">
+ <li>Alle Muster, Projekte und Garne werden <b>nur lokal in diesem Browser auf diesem Gerät</b> gespeichert – nicht im Internet. Ein anderer Browser oder ein anderes Gerät sieht sie nicht.</li>
+ <li><b>Browserdaten, Cache bzw. „Website-Daten“ nicht löschen</b> und nicht im privaten Fenster arbeiten – sonst ist alles verloren.</li>
+ <li>Regelmässig sichern: <b>„Gesamtsicherung herunterladen“</b> (alles in einer Datei) oder einzelne Muster als ODS speichern.</li>
+</ul>
+ <div class="row"><button class="pri" id="bkSave">💾 Gesamtsicherung herunterladen</button><button id="bkLoad">📂 Sicherung wiederherstellen</button></div><input type="file" id="bkFile" accept=".json,application/json" hidden>
+ <p class="mut" id="bkInfo" style="margin:8px 0 0"></p></div>
 <div class="card"><h2>Feedback</h2><p class="mut" style="margin:4px 0 0">Ein Wunsch, eine Idee oder ein Fehler? Wir freuen uns über deine Nachricht.</p>
 <div class="row"><a class="btn" id="fbk" target="_blank" rel="noopener">💬 Feedback oder Wunsch senden</a></div></div>
 </section>
@@ -239,7 +252,7 @@ body:not(.wide) #printBtn{display:none}
 
 <script>
 'use strict';
-const APPV='5';
+const APPV='6';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const L=i=>String.fromCharCode(65+i);
@@ -274,7 +287,7 @@ const TPL={
 };
 let uid=Date.now();
 function mkPat(name,lines,cols){const{w,h,g}=fromLines(lines);return{id:++uid,name,w,h,ox:0,oy:0,g,colors:cols.map(i=>({c:PAL[i][0],n:PAL[i][1]}))}}
-const DEF={tab:'ed',cur:0,list:[],yarns:[],prev:{rx:3,ry:3,mode:'box',lines:true,bt:{c:0,n:0},bb:{c:0,n:0}},ed:{tool:'pen',col:1,letters:true,mx:false,my:false,zoom:1,flt:5},seq:{on:false},projs:[],curPj:0,ui:{split:56,gray:false}};
+const DEF={tab:'ed',cur:0,list:[],yarns:[],prev:{rx:3,ry:3,mode:'box',lines:true,bt:{c:0,n:0},bb:{c:0,n:0}},ed:{tool:'pen',col:1,letters:true,mx:false,my:false,zoom:1,flt:5},seq:{on:false},projs:[],curPj:0,ui:{split:56,gray:false,noteOk:false,bk:0}};
 const K='fairisle';
 let S;try{S=JSON.parse(localStorage.getItem(K))}catch(e){}
 if(!S||!Array.isArray(S.list))S=JSON.parse(JSON.stringify(DEF));
@@ -688,7 +701,7 @@ function seqOds(pj=PJ()){const m=seqColors(pj);if(m.size>26)return toast('Mehr a
 $('qods').onclick=()=>seqOds();
 
 /* ---------- Musterliste ---------- */
-function renderPat(){const p=P();$('curn').textContent=p.name||'Ohne Namen';$('del').disabled=S.list.length<2;
+function renderPat(){const p=P();bkInfo();$('curn').textContent=p.name||'Ohne Namen';$('del').disabled=S.list.length<2;
  const grp={};Object.entries(TPL).forEach(([k,t])=>(grp[t.g]=grp[t.g]||[]).push([k,t]));
  $('newb').innerHTML=Object.entries(grp).map(([g,a])=>`<h3>${esc(g)}</h3><div class="plist tpl">${a.map(([k,t])=>{const f=fromLines(t.lines);return`<div class="pt" data-new="${k}" title="Neues Muster aus dieser Vorlage"><b>${esc(t.name)}</b><span class="mut">${f.w} × ${f.h}</span><canvas data-tk="${k}"></canvas>${k==='leer'?'':`<div class="row" style="margin-top:6px"><button data-tcb="${k}" title="In die Ablage legen und im aktuellen Rapport einsetzen">📋 Einsetzen</button></div>`}</div>`}).join('')}</div>`).join('');
  $('newb').querySelectorAll('[data-tk]').forEach(cv=>{const t=TPL[cv.dataset.tk],q=mkPat(t.name,t.lines,t.cols);drawPat(cv,q,{rx:2,ry:1,maxW:150,maxH:70,mode:'box',maxCell:6})});
@@ -806,6 +819,22 @@ function printOut(){const p=P(),u=usage(p),cv=document.createElement('canvas');
  ${p.colors.map((c,i)=>`<tr><td><i style="background:${c.c}"></i></td><td><b>${L(i)}</b></td><td>${esc(c.n)}</td><td>${c.c}</td><td>${u[L(i)]||0}</td></tr>`).join('')}</table>
  <div class="fig"><h2>Vorschau</h2><p class="meta">${info}</p><img src="${pv.toDataURL()}" style="width:${pv.style.width}" alt="Vorschau">${leg?`<p>${leg}</p>`:''}</div>`;
  setTimeout(()=>window.print(),50)}
+// Hinweis beim ersten Start; Gesamtsicherung
+$('note').classList.toggle('hide',!!S.ui.noteOk);
+$('noteOk').onclick=()=>{S.ui.noteOk=true;save();$('note').classList.add('hide')};
+if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+function bkInfo(){$('bkInfo').textContent=S.ui.bk?`Letzte Gesamtsicherung: ${new Date(S.ui.bk).toLocaleString('de-CH')}`:'Noch keine Gesamtsicherung erstellt.'}
+$('bkSave').onclick=()=>{S.ui.bk=Date.now();save();const d=new Date().toISOString().slice(0,10);
+ dl(`FairIsle-Sicherung-${d}.json`,new Blob([JSON.stringify({app:'fairisle',v:APPV,date:new Date().toISOString(),data:S})],{type:'application/json'}));bkInfo();toast('Sicherung heruntergeladen')};
+$('bkLoad').onclick=()=>$('bkFile').click();
+$('bkFile').onchange=async()=>{const f=$('bkFile').files[0];$('bkFile').value='';if(!f)return;
+ try{const o=JSON.parse(await f.text());if(o.app!=='fairisle'||!o.data||!Array.isArray(o.data.list))throw 0;
+  if(!confirm(`Sicherung vom ${new Date(o.date).toLocaleString('de-CH')} wiederherstellen? ${o.data.list.length} Muster und ${(o.data.projs||[]).length} Projekte. Der aktuelle Stand im Browser wird ersetzt.`))return;
+  const d=o.data;d.list=d.list.map(x=>{const n=norm(x);n.id=Number(x.id)||n.id;return n});
+  d.yarns=(Array.isArray(d.yarns)?d.yarns:[]).filter(y=>y&&HEX.test(y.c)).map(y=>({c:y.c,n:String(y.n||'').slice(0,60)}));
+  d.projs=(Array.isArray(d.projs)?d.projs:[]).map(x=>({id:Number(x.id)||++uid,name:String(x.name||'').slice(0,80),W:Math.min(600,Math.max(0,x.W|0)),
+   items:(Array.isArray(x.items)?x.items:[]).filter(i=>i&&(i.t==='p'||(i.t==='b'&&HEX.test(i.c)))).map(i=>i.t==='b'?{t:'b',c:i.c,n:Math.min(60,Math.max(0,i.n|0))}:{t:'p',id:Number(i.id),ry:Math.min(20,Math.max(1,i.ry|0)),pad:['c','l','r'].includes(i.pad)?i.pad:'c',bg:/^[A-Z]$/.test(i.bg)?i.bg:'A'})}));
+  localStorage.setItem(K,JSON.stringify(d));location.reload()}catch(e){toast('Das ist keine gültige Sicherungsdatei')}};
 $('fbk').href=`https://tally.so/r/Vpzl8J?version=${APPV}`;
 $('printBtn').onclick=$('printBtn2').onclick=printOut;
 $('odsSave').onclick=$('odsSave2').onclick=()=>{const p=P();dl((p.name||'Muster').replace(/[\\/:*?"<>|]+/g,'_').trim()+'.ods',zip(odsFiles(p)));toast('ODS-Datei erstellt')};

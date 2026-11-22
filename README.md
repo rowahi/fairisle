@@ -24,3 +24,9 @@ Kleine Web-App (PWA, eine Datei, ohne Server) zum Entwerfen und Anpassen von Fai
 - **Bestehendes Muster aufnehmen**: ODS-Datei öffnen (auch in Calc nachbearbeitete), Buchstaben-Raster einfügen (eine Zeile pro Reihe, oberste zuerst) oder einen Muster-Code (`FI1:…`) einfügen.
 
 Lesen: Reihen von unten nach oben, Maschen von rechts nach links.
+
+## Wichtig: Daten nur lokal
+
+- Alle Muster, Projekte und Garne werden **nur im Browser auf diesem Gerät** gespeichert (localStorage), nicht auf einem Server. Andere Browser oder Geräte sehen sie nicht.
+- **Browserdaten / Cache / Website-Daten nicht löschen** und nicht im privaten Fenster arbeiten – sonst sind die Daten weg.
+- Regelmässig unter „Muster & Dateien“ eine **Gesamtsicherung** herunterladen (JSON-Datei); sie lässt sich dort auch wiederherstellen.
