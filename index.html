@@ -138,7 +138,7 @@ body.knitting{overflow:hidden}
 .khead{display:flex;align-items:center;gap:8px}.khead .kn{display:block;font-size:1.05rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .kinfo{margin:10px 0 8px}.kcount{font-size:1.6rem;font-weight:700;letter-spacing:-.01em}.kcount b{color:var(--ac);font-size:2.2rem}
 .kbar{height:6px;background:var(--soft);border-radius:3px;margin:8px 0;overflow:hidden}.kbar i{display:block;height:100%;background:var(--ac);border-radius:3px;transition:width .2s}
-.krle{display:flex;flex-wrap:wrap;gap:6px;max-height:84px;overflow:auto}.rl{display:inline-flex;align-items:center;gap:4px;background:var(--card);border:1px solid var(--bd);border-radius:9px;padding:3px 8px 3px 3px;font-weight:700;font-variant-numeric:tabular-nums}
+.kone{margin-top:4px}#kswrap{overflow-x:auto}#kstrip{display:block}.kfl{font-size:.85rem;margin-top:6px;color:var(--warn)}.kfl:empty{display:none}.kfl b{font-weight:700}.rl{display:inline-flex;align-items:center;gap:4px;background:var(--card);border:1px solid var(--bd);border-radius:9px;padding:3px 8px 3px 3px;font-weight:700;font-variant-numeric:tabular-nums}
 .rl i{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;font-style:normal;font-size:.75rem;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
 #kwrap{flex:1;overflow:auto;border-radius:12px;background:var(--card);border:1px solid var(--bd);-webkit-overflow-scrolling:touch}#kcv{cursor:pointer}
 .kfoot{display:flex;gap:10px;margin-top:10px}.kfoot button{height:64px;font-size:1.1rem;border-radius:14px}.kfoot #kback{flex:1}.kfoot #knext{flex:2.2}
@@ -380,7 +380,8 @@ a.btn{display:flex;align-items:center;justify-content:center;height:38px;backgro
   <button id="kclose" title="Strick-Modus beenden (Esc)">✕ Beenden</button></div>
  <div class="kinfo"><div class="kcount">Reihe <b id="krow"></b> <span class="mut">von <span id="ktot"></span></span></div><div class="mut" id="ksec"></div>
   <div class="kbar"><i id="kprog"></i></div>
-  <div class="krle" id="krle" title="Farbfolge dieser Reihe, von rechts nach links"></div></div>
+  <div class="kone"><div class="mut" id="kone1" style="font-size:.8rem;margin-bottom:4px"></div><div id="kswrap"><canvas id="kstrip"></canvas></div></div>
+  <div id="kfloat" class="kfl"></div></div>
  <div id="kwrap"><canvas id="kcv"></canvas></div>
  <div class="kfoot"><button id="kback" title="Eine Reihe zurück (↓)">◀ Zurück</button><button class="pri" id="knext" title="Reihe fertig (Leertaste)">✓ Reihe fertig</button></div>
  <p class="mut kfh">Reihe antippen, um dorthin zu springen · Gelesen wird von rechts nach links</p>
@@ -390,7 +391,7 @@ a.btn{display:flex;align-items:center;justify-content:center;height:38px;backgro
 
 <script>
 'use strict';
-const APPV='13';
+const APPV='14';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const L=i=>String.fromCharCode(65+i);
@@ -1122,8 +1123,7 @@ function renderKnit(scroll){const H=KD.rows.length,W=KD.rows[0].length,cur=kRow(
  $('ksec').textContent=lb.t?`${lb.t} · Reihe ${lb.i} von ${lb.n}`:'';
  $('kprog').style.width=Math.round((cur-1)/H*100)+'%';
  const{r,rep,d}=rowRle(KD.rows[ri]);
- $('krle').innerHTML=r.map(x=>{const l=KD.idx.get(x.c)||'',n=KD.names.get(x.c)||'';return`<span class="rl" title="${esc(n)}"><i style="background:${x.c};color:${ink(x.c)}">${l}</i>${x.n}</span>`}).join('')
-  +`<span class="mut" style="align-self:center">${rep>1?`→ ${d} M. × ${rep} wiederholen`:`= ${W} Maschen`}</span>`;
+ renderStrip(KD.rows[ri].slice(W-d),rep>1,rep,r);
  $('kback').disabled=cur<=1;$('knext').textContent=cur>=H?'🎉 Fertig!':'✓ Reihe fertig';
  // Diagramm – die aktuelle Reihe ist höher und zeigt die Buchstaben
  const cv=$('kcv'),dpr=window.devicePixelRatio||1,cs=S.ui.kz||16,ch=Math.max(4,Math.round(cs*(S.prev.ar||.85))),cc=Math.max(ch+8,Math.round(ch*1.8)),NUM=34;
@@ -1135,13 +1135,37 @@ function renderKnit(scroll){const H=KD.rows.length,W=KD.rows[0].length,cur=kRow(
   row.forEach((c,i)=>{x.fillStyle=c;x.fillRect(i*cs,top,cs,rh)});
   if(n<cur){x.fillStyle='rgba(0,0,0,.55)';x.fillRect(0,top,W*cs,rh)}
   if(cs>=8||y===ri){x.strokeStyle=y===ri?'rgba(0,0,0,.35)':'rgba(0,0,0,.15)';x.lineWidth=y===ri?1:.5;x.beginPath();for(let i=1;i<W;i++){x.moveTo(i*cs,top);x.lineTo(i*cs,top+rh)}x.stroke()}
-  if(y===ri&&cs>=11){x.font=`700 ${Math.min(rh*.55,cs*.7)}px system-ui,sans-serif`;x.textAlign='center';x.textBaseline='middle';
-   row.forEach((c,i)=>{const l=KD.idx.get(c);if(!l)return;x.fillStyle=ink(c);x.globalAlpha=.75;x.fillText(l,i*cs+cs/2,top+rh/2+1)});x.globalAlpha=1;x.textAlign='left'}
   x.fillStyle=n===cur?'#6a4c93':'#8a8496';x.font=`${n===cur?'700 ':''}${n===cur?Math.min(16,Math.max(11,rh*.5)):Math.min(12,Math.max(9,ch*.7))}px system-ui,sans-serif`;x.textBaseline='middle';
   if(n===cur||n%5===0||n===1)x.fillText(String(n),W*cs+6,top+rh/2)});
  const cy=Y[ri];x.lineWidth=4;x.strokeStyle='#fff';x.strokeRect(2,cy+1,W*cs-4,cc-2);x.lineWidth=2.5;x.strokeStyle='#6a4c93';x.strokeRect(2,cy+1,W*cs-4,cc-2);
  const wr=$('kwrap');if(scroll===true){wr.scrollLeft=wr.scrollWidth}
  wr.scrollTop=Math.max(0,cy-wr.clientHeight*.55)}
+// Spannfäden einer Reihe (Lesung von rechts): für jede Farbe die Strecken, über die sie mitgeführt wird
+function floatsOf(seg,cyc,lim){const b=seg.slice().reverse(),n=b.length,used=[...new Set(b)],out=[];if(used.length<2)return out;
+ for(const X of used){const runs=[];
+  if(cyc){const s0=b.indexOf(X);let len=0,st=0;for(let k=1;k<=n;k++){const i=(s0+k)%n;if(b[i]!==X){if(!len)st=i;len++}else{if(len)runs.push([st,len]);len=0}}}
+  else{let len=0,st=0;for(let i=0;i<=n;i++){if(i<n&&b[i]!==X){if(!len)st=i;len++}else{if(len&&st>0&&i<n)runs.push([st,len]);len=0}}}
+  for(const[st,len]of runs)if(len>lim){const k=Math.ceil(len/lim)-1,c=[];for(let j=1;j<=k;j++)c.push((st+Math.round(len*j/(k+1))-1+n)%n);out.push({X,len,c})}}
+ return out}
+// Ein Rapport der aktuellen Reihe vergrössert, mit Maschenzahl je Farbblock und Fang-Markierungen
+function renderStrip(seg,cyc,rep,runs){const d=seg.length,lim=S.ed.flt||5,fl=floatsOf(seg,cyc,lim),cv=$('kstrip'),dpr=window.devicePixelRatio||1;
+ const avail=$('kswrap').clientWidth||320,cs=Math.max(14,Math.min(40,Math.floor((avail-2)/d))),ch=Math.round(cs*1.1),LB=16,MK=fl.length?12:0;
+ const w=d*cs,h=ch+LB+MK;cv.width=w*dpr;cv.height=h*dpr;cv.style.width=w+'px';cv.style.height=h+'px';
+ const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);
+ seg.forEach((c,i)=>{x.fillStyle=c;x.fillRect(i*cs,0,cs,ch)});
+ x.strokeStyle='rgba(0,0,0,.25)';x.lineWidth=1;x.beginPath();for(let i=1;i<d;i++){x.moveTo(i*cs+.5,0);x.lineTo(i*cs+.5,ch)}x.stroke();
+ x.strokeStyle='rgba(0,0,0,.5)';x.strokeRect(.5,.5,w-1,ch-1);
+ // Maschenzahl unter jedem Farbblock (von rechts gezählt)
+ const css=getComputedStyle(document.body),mut=css.getPropertyValue('--mut'),wr=css.getPropertyValue('--warn');
+ x.font=`600 ${Math.min(13,cs*.5)}px system-ui,sans-serif`;x.textAlign='center';x.textBaseline='middle';
+ let pos=d;runs.forEach(r=>{const a=pos-r.n;x.fillStyle=mut;x.fillText(String(r.n),(a+r.n/2)*cs,ch+LB/2+1);x.fillStyle='rgba(0,0,0,.25)';if(a>0)x.fillRect(a*cs,ch+2,1,LB-4);pos=a});
+ // Fang-Markierungen
+ x.fillStyle=wr;fl.forEach(f=>f.c.forEach(i=>{const px=(d-1-i)*cs+cs/2,py=ch+LB+2;x.beginPath();x.moveTo(px,py);x.lineTo(px-5,py+8);x.lineTo(px+5,py+8);x.closePath();x.fill()}));
+ $('kswrap').scrollLeft=$('kswrap').scrollWidth;
+ $('kone1').textContent=`${rep>1?`Ein Rapport: ${d} Maschen, ${rep}× wiederholen`:`Ganze Reihe: ${d} Maschen`} · von rechts nach links stricken ←`;
+ const by={};fl.forEach(f=>{const k=f.X;if(!by[k]||by[k].len<f.len)by[k]=f});
+ $('kfloat').innerHTML=Object.values(by).map(f=>{const nm=KD.names.get(f.X)||'',l=KD.idx.get(f.X)||'',k=f.c.length,step=Math.round(f.len/(k+1));
+  return`▲ Faden <b>${l}${nm?' ('+esc(nm)+')':''}</b> spannt über <b>${f.len} Maschen</b> – ${k===1?`nach ca. ${step} Maschen einmal`:`etwa alle ${step} Maschen (${k}×)`} einfangen.`}).join('<br>')}
 function knitStep(d){const H=KD.rows.length,cur=kRow();if(d>0&&cur>=H){toast('🎉 Geschafft – alle Reihen gestrickt!');return}
  S.knit[KD.key]=Math.min(H,Math.max(1,cur+d));save();renderKnit();if(navigator.vibrate)try{navigator.vibrate(15)}catch(e){}}
 $('knitBtn').onclick=openKnit;$('kclose').onclick=closeKnit;
