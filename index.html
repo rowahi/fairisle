@@ -261,7 +261,7 @@ a.btn{display:flex;align-items:center;justify-content:center;height:38px;backgro
   <div class="ced" id="ced">
    <div class="hd" style="margin-bottom:8px"><h2 id="cet"></h2></div>
    <div class="g2" style="margin-top:0"><input id="cehex" maxlength="7" aria-label="Hex-Code" spellcheck="false"><input id="cename" placeholder="Garn / Farbname" aria-label="Name der Farbe"></div>
-   <div class="seg ctabs"><button data-ct="pick">🎨 Wählen</button><button data-ct="photo">📷 Foto</button><button data-ct="yarn">🧶 Garne</button><button data-ct="std">▦ Standard</button></div>
+   <div class="seg ctabs"><button data-ct="pick">🎨 Wählen</button><button data-ct="photo">📷 Foto</button><button data-ct="yarn">🧶 Garne</button><button data-ct="std">▦ Paletten</button></div>
    <div id="ct-pick">
     <canvas id="sv"></canvas><canvas id="hue"></canvas>
     <div class="cmp" style="margin-top:12px"><div id="cmpo">vorher</div><div id="cmpn">jetzt</div></div>
@@ -273,7 +273,7 @@ a.btn{display:flex;align-items:center;justify-content:center;height:38px;backgro
     <canvas id="photo" class="hide"></canvas>
    </div>
    <div id="ct-yarn"><div class="yarns" id="yarns"></div><div class="row"><button id="yadd">＋ Aktuelle Farbe als Garn merken</button></div></div>
-   <div id="ct-std"><div class="sw" id="sw"></div></div>
+   <div id="ct-std"><select id="palsel" aria-label="Palette wählen" style="margin-bottom:8px"></select><div class="sw" id="sw"></div><p class="mut" id="palsrc" style="margin:8px 0 0"></p></div>
   </div>
  </div>
 </div></section>
@@ -398,7 +398,7 @@ a.btn{display:flex;align-items:center;justify-content:center;height:38px;backgro
 
 <script>
 'use strict';
-const APPV='17';
+const APPV='18';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const L=i=>String.fromCharCode(65+i);
@@ -407,6 +407,11 @@ const lum=h=>{const n=parseInt(h.slice(1),16);return(0.299*(n>>16&255)+0.587*(n>
 const ink=h=>lum(h)>0.55?'#000000':'#ffffff';
 const PAL=[['#f3ead8','Natur'],['#1f3a5f','Marine'],['#b3262e','Rot'],['#d9a527','Senf'],['#3d6b3a','Grün'],['#6b4a32','Moorit'],['#9cc3e0','Himmelblau'],['#222222','Schwarz'],['#ffffff','Weiß'],['#9a9a9a','Grau'],['#4a78b0','Blau'],['#c0602c','Rost'],['#f1d35a','Gelb'],['#7d8a3c','Moos'],['#2a8c8c','Türkis'],['#e3a1b0','Rosa'],['#6d4a8a','Lila'],['#8a2b4a','Beere'],['#c9b79c','Haferflocke'],['#5b6b73','Schiefer']];
 const MAXS=200;
+// Garn-Paletten (weitere lassen sich hier ergänzen: Name, Hinweis zur Quelle, [Farbe, Name])
+const YARNPAL={
+ std:{name:'Standardfarben',src:'',colors:PAL.map(([c,n])=>[c,n])},
+ blane:{name:'Hillesvåg Blåne',src:'Farben aus den Herstellerfotos abgeleitet (nordiskgarn.dk, Nov. 2026) – Bildschirmfarben sind Näherungen.',colors:[["#917d6b", "Blåne 672101 Beige"], ["#705138", "Blåne 672102 Hellbraun"], ["#d27541", "Blåne 672103 Cognac"], ["#6d0c10", "Blåne 672104 Bordeaux"], ["#0b4e72", "Blåne 672105 Petrol"], ["#0f6d7a", "Blåne 672106 Türkis"], ["#868646", "Blåne 672107 Limette"], ["#846533", "Blåne 672108 Ocker"], ["#28282c", "Blåne 672109 Schwarz"], ["#ad8a7e", "Blåne 672110 Rosa"], ["#493b51", "Blåne 672111 Grauviolett"], ["#656a71", "Blåne 672113 Helles Jeansblau"], ["#812749", "Blåne 672114 Dunkelpink"], ["#a99e92", "Blåne 672115 Naturgrau"], ["#382620", "Blåne 672116 Dunkelbraun"], ["#807d50", "Blåne 672118 Olivgrün"], ["#7c6120", "Blåne 672119 Gelb"], ["#b18146", "Blåne 672122 Rötlichgelb"], ["#48454b", "Blåne 672125 Helles Marine"], ["#05493c", "Blåne 672126 Grün"], ["#5c5966", "Blåne 672128 Gräulicher Lavendel"], ["#686f6c", "Blåne 672130 Helltürkis"], ["#5b1f27", "Blåne 672131 Burgunderlila"], ["#b62418", "Blåne 672132 Rot"], ["#1e1f27", "Blåne 672133 Marineblau"], ["#546936", "Blåne 672134 Grasgrün"], ["#3a6e8d", "Blåne 672135 Mittelblau"], ["#897d77", "Blåne 672136 Helles Rötlichbeige"], ["#8a3b4a", "Blåne 672137 Altrosa"], ["#552e26", "Blåne 672138 Rotbraun"], ["#3e5c6d", "Blåne 672139 Gedecktes Flugblau"], ["#626c68", "Blåne 672140 Gedecktes Eismint"], ["#274c39", "Blåne 672141 Reines Grün"], ["#75754d", "Blåne 672142 Gedeckte helle Limette"], ["#40494e", "Blåne 672143 Blaugrau"], ["#595958", "Blåne 672144 Helles Anthrazit"], ["#817266", "Blåne 672145 Kamel"], ["#7e6042", "Blåne 672146 Karamell"], ["#563f2e", "Blåne 672147 Braun"], ["#625743", "Blåne 672148 Olivbraun"]]}
+};
 const WIDE=matchMedia('(min-width:980px)');
 const toast=t=>{const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2400)};
 
@@ -696,7 +701,8 @@ function renderCol(){const ct=S.ui.ct||'pick';document.querySelectorAll('[data-c
  if(document.activeElement!==$('cehex'))$('cehex').value=c.c;
  if(document.activeElement!==$('cename'))$('cename').value=c.n;
  $('eyed').classList.toggle('hide',!('EyeDropper'in window));
- $('sw').innerHTML=PAL.map(([c,n])=>`<button data-pc="${c}" data-pn="${n}" style="background:${c}" title="${n}"></button>`).join('');
+ const pk=YARNPAL[S.ui.pal]?S.ui.pal:'std',pl=YARNPAL[pk];$('palsel').innerHTML=Object.entries(YARNPAL).map(([k,v])=>`<option value="${k}"${k===pk?' selected':''}>${esc(v.name)} (${v.colors.length})</option>`).join('');
+ $('sw').innerHTML=pl.colors.map(([c,n])=>`<button data-pc="${c}" data-pn="${esc(n)}" style="background:${c}" title="${esc(n)}"></button>`).join('');$('palsrc').textContent=pl.src;
  renderYarns();drawPicker();drawCmp();drawKnit();if(IMG)drawPhoto()}
 function renderYarns(){$('yarns').innerHTML=S.yarns.length?S.yarns.map((y,i)=>`<div class="yarn" data-y="${i}" title="Für Farbe übernehmen"><i style="background:${y.c}"></i><span>${esc(y.n)}</span><small>${y.c}</small><button data-yd="${i}" title="Garn entfernen">✕</button></div>`).join('')
  :'<p class="mut" style="margin:0">Noch keine Garne gespeichert. Farbe einstellen, benennen und merken – so lassen sich gekaufte Garne immer wieder verwenden und vergleichen.</p>'}
@@ -734,8 +740,9 @@ $('cols').addEventListener('click',e=>{const up=e.target.closest('[data-up]');
  if(up){const i=+up.dataset.up,p=P(),a=L(i-1),b=L(i);snap();[p.colors[i-1],p.colors[i]]=[p.colors[i],p.colors[i-1]];
   const sw=s=>mapBase(s,ch=>ch===a?b:ch===b?a:ch);p.g=p.g.map(sw);palSync(p,sw);selCol(i-1);save();render();return}
  const row=e.target.closest('.crow');if(row){selCol(+row.dataset.i);save();render()}});
+$('palsel').onchange=()=>{S.ui.pal=$('palsel').value;save();renderCol()};
 $('sw').addEventListener('click',e=>{const b=e.target.closest('[data-pc]');if(!b)return;const c=P().colors[CE.i];snap();
- if(!c.n||PAL.some(x=>x[1]===c.n)){c.n=b.dataset.pn;$('cename').value=c.n}setColor(b.dataset.pc);renderColList()});
+ if(!c.n||Object.values(YARNPAL).some(pl=>pl.colors.some(x=>x[1]===c.n))){c.n=b.dataset.pn;$('cename').value=c.n}setColor(b.dataset.pc,'force');renderColList();if(visible('pv'))renderPv()});
 $('yarns').addEventListener('click',e=>{const d=e.target.closest('[data-yd]');
  if(d){const y=S.yarns[+d.dataset.yd];if(confirm(`Garn „${y.n}“ aus der Liste entfernen?`)){S.yarns.splice(+d.dataset.yd,1);save();renderYarns()}return}
  const t=e.target.closest('[data-y]');if(!t)return;const y=S.yarns[+t.dataset.y];snap();P().colors[CE.i].n=y.n;$('cename').value=y.n;setColor(y.c,'force');renderColList();later('chips')});
