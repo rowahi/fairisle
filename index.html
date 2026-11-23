@@ -108,7 +108,12 @@ button:disabled{opacity:.35;pointer-events:none}
 #photo{margin-top:8px;border-radius:10px;max-width:100%;cursor:crosshair;touch-action:none}
 .drop{border:1.5px dashed var(--bd);border-radius:12px;padding:12px;text-align:center;color:var(--mut);font-size:.85rem;margin-top:8px}
 .drop.over{border-color:var(--ac);background:var(--acs)}
-.sw{display:flex;flex-wrap:wrap;gap:6px}.sw button{width:30px;height:30px;padding:0;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.sw{display:flex;flex-wrap:wrap;gap:6px}
+.ygrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;max-height:430px;overflow:auto;padding:2px}
+.ytile{position:relative;height:auto;padding:0;display:flex;flex-direction:column;align-items:stretch;text-align:left;background:var(--card);border:1px solid var(--bd);border-radius:12px;overflow:hidden;font-weight:400;white-space:normal}
+.ytile:hover{box-shadow:var(--sh);background:var(--card);border-color:var(--ac)}.ytile.used{border-color:var(--ac);box-shadow:0 0 0 1.5px var(--ac)}
+.ytile canvas{display:block;width:100%;height:56px}.ytile .yn{font-size:.78rem;font-weight:600;padding:5px 8px 0;line-height:1.2}.ytile .yc{font:.7rem ui-monospace,monospace;color:var(--mut);padding:1px 8px 6px}
+.ybadge{position:absolute;top:5px;left:5px;width:20px;height:20px;border-radius:6px;font:700 .72rem system-ui;font-style:normal;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 1.5px #fff}.sw button{width:30px;height:30px;padding:0;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
 .yarns{display:flex;flex-direction:column;gap:4px}
 .yarn{display:flex;align-items:center;gap:8px;padding:4px;border-radius:10px;cursor:pointer}.yarn:hover{background:var(--soft)}
 .yarn i{flex:0 0 28px;height:28px;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}.yarn span{flex:1;font-size:.88rem}.yarn small{font-family:ui-monospace,monospace;color:var(--mut);font-size:.75rem}
@@ -273,7 +278,7 @@ a.btn{display:flex;align-items:center;justify-content:center;height:38px;backgro
     <canvas id="photo" class="hide"></canvas>
    </div>
    <div id="ct-yarn"><div class="yarns" id="yarns"></div><div class="row"><button id="yadd">＋ Aktuelle Farbe als Garn merken</button></div></div>
-   <div id="ct-std"><select id="palsel" aria-label="Palette wählen" style="margin-bottom:8px"></select><div class="sw" id="sw"></div><p class="mut" id="palsrc" style="margin:8px 0 0"></p></div>
+   <div id="ct-std"><select id="palsel" aria-label="Palette wählen" style="margin-bottom:8px"></select><div id="sw"></div><p class="mut" id="palsrc" style="margin:8px 0 0"></p></div>
   </div>
  </div>
 </div></section>
@@ -410,7 +415,7 @@ const MAXS=200;
 // Garn-Paletten (weitere lassen sich hier ergänzen: Name, Hinweis zur Quelle, [Farbe, Name])
 const YARNPAL={
  std:{name:'Standardfarben',src:'',colors:PAL.map(([c,n])=>[c,n])},
- blane:{name:'Hillesvåg Blåne',src:'Farben aus den Herstellerfotos abgeleitet (nordiskgarn.dk, Nov. 2026) – Bildschirmfarben sind Näherungen.',colors:[["#917d6b", "Blåne 672101 Beige"], ["#705138", "Blåne 672102 Hellbraun"], ["#d27541", "Blåne 672103 Cognac"], ["#6d0c10", "Blåne 672104 Bordeaux"], ["#0b4e72", "Blåne 672105 Petrol"], ["#0f6d7a", "Blåne 672106 Türkis"], ["#868646", "Blåne 672107 Limette"], ["#846533", "Blåne 672108 Ocker"], ["#28282c", "Blåne 672109 Schwarz"], ["#ad8a7e", "Blåne 672110 Rosa"], ["#493b51", "Blåne 672111 Grauviolett"], ["#656a71", "Blåne 672113 Helles Jeansblau"], ["#812749", "Blåne 672114 Dunkelpink"], ["#a99e92", "Blåne 672115 Naturgrau"], ["#382620", "Blåne 672116 Dunkelbraun"], ["#807d50", "Blåne 672118 Olivgrün"], ["#7c6120", "Blåne 672119 Gelb"], ["#b18146", "Blåne 672122 Rötlichgelb"], ["#48454b", "Blåne 672125 Helles Marine"], ["#05493c", "Blåne 672126 Grün"], ["#5c5966", "Blåne 672128 Gräulicher Lavendel"], ["#686f6c", "Blåne 672130 Helltürkis"], ["#5b1f27", "Blåne 672131 Burgunderlila"], ["#b62418", "Blåne 672132 Rot"], ["#1e1f27", "Blåne 672133 Marineblau"], ["#546936", "Blåne 672134 Grasgrün"], ["#3a6e8d", "Blåne 672135 Mittelblau"], ["#897d77", "Blåne 672136 Helles Rötlichbeige"], ["#8a3b4a", "Blåne 672137 Altrosa"], ["#552e26", "Blåne 672138 Rotbraun"], ["#3e5c6d", "Blåne 672139 Gedecktes Flugblau"], ["#626c68", "Blåne 672140 Gedecktes Eismint"], ["#274c39", "Blåne 672141 Reines Grün"], ["#75754d", "Blåne 672142 Gedeckte helle Limette"], ["#40494e", "Blåne 672143 Blaugrau"], ["#595958", "Blåne 672144 Helles Anthrazit"], ["#817266", "Blåne 672145 Kamel"], ["#7e6042", "Blåne 672146 Karamell"], ["#563f2e", "Blåne 672147 Braun"], ["#625743", "Blåne 672148 Olivbraun"]]}
+ blane:{name:'Hillesvåg Blåne',src:'Farben aus den Herstellerfotos abgeleitet (Nov. 2026) – Bildschirmfarben sind Näherungen.',url:'https://nordiskgarn.dk/de/produktkategorie/wolle/hillesvag/blane/',tiles:true,colors:[["#917d6b", "Blåne 672101 Beige"], ["#705138", "Blåne 672102 Hellbraun"], ["#d27541", "Blåne 672103 Cognac"], ["#6d0c10", "Blåne 672104 Bordeaux"], ["#0b4e72", "Blåne 672105 Petrol"], ["#0f6d7a", "Blåne 672106 Türkis"], ["#868646", "Blåne 672107 Limette"], ["#846533", "Blåne 672108 Ocker"], ["#28282c", "Blåne 672109 Schwarz"], ["#ad8a7e", "Blåne 672110 Rosa"], ["#493b51", "Blåne 672111 Grauviolett"], ["#656a71", "Blåne 672113 Helles Jeansblau"], ["#812749", "Blåne 672114 Dunkelpink"], ["#a99e92", "Blåne 672115 Naturgrau"], ["#382620", "Blåne 672116 Dunkelbraun"], ["#807d50", "Blåne 672118 Olivgrün"], ["#7c6120", "Blåne 672119 Gelb"], ["#b18146", "Blåne 672122 Rötlichgelb"], ["#48454b", "Blåne 672125 Helles Marine"], ["#05493c", "Blåne 672126 Grün"], ["#5c5966", "Blåne 672128 Gräulicher Lavendel"], ["#686f6c", "Blåne 672130 Helltürkis"], ["#5b1f27", "Blåne 672131 Burgunderlila"], ["#b62418", "Blåne 672132 Rot"], ["#1e1f27", "Blåne 672133 Marineblau"], ["#546936", "Blåne 672134 Grasgrün"], ["#3a6e8d", "Blåne 672135 Mittelblau"], ["#897d77", "Blåne 672136 Helles Rötlichbeige"], ["#8a3b4a", "Blåne 672137 Altrosa"], ["#552e26", "Blåne 672138 Rotbraun"], ["#3e5c6d", "Blåne 672139 Gedecktes Flugblau"], ["#626c68", "Blåne 672140 Gedecktes Eismint"], ["#274c39", "Blåne 672141 Reines Grün"], ["#75754d", "Blåne 672142 Gedeckte helle Limette"], ["#40494e", "Blåne 672143 Blaugrau"], ["#595958", "Blåne 672144 Helles Anthrazit"], ["#817266", "Blåne 672145 Kamel"], ["#7e6042", "Blåne 672146 Karamell"], ["#563f2e", "Blåne 672147 Braun"], ["#625743", "Blåne 672148 Olivbraun"]]}
 };
 const WIDE=matchMedia('(min-width:980px)');
 const toast=t=>{const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2400)};
@@ -702,7 +707,12 @@ function renderCol(){const ct=S.ui.ct||'pick';document.querySelectorAll('[data-c
  if(document.activeElement!==$('cename'))$('cename').value=c.n;
  $('eyed').classList.toggle('hide',!('EyeDropper'in window));
  const pk=YARNPAL[S.ui.pal]?S.ui.pal:'std',pl=YARNPAL[pk];$('palsel').innerHTML=Object.entries(YARNPAL).map(([k,v])=>`<option value="${k}"${k===pk?' selected':''}>${esc(v.name)} (${v.colors.length})</option>`).join('');
- $('sw').innerHTML=pl.colors.map(([c,n])=>`<button data-pc="${c}" data-pn="${esc(n)}" style="background:${c}" title="${esc(n)}"></button>`).join('');$('palsrc').textContent=pl.src;
+ const used=new Map(P().colors.map((c,i)=>[c.c,L(i)]));$('sw').className=pl.tiles?'ygrid':'sw';
+ $('sw').innerHTML=pl.colors.map(([c,n])=>{if(!pl.tiles)return`<button data-pc="${c}" data-pn="${esc(n)}" style="background:${c}" title="${esc(n)}"></button>`;
+  const m=/(\d{4,})\s*(.*)$/.exec(n)||[,'',n],u=used.get(c);
+  return`<button class="ytile${u?' used':''}" data-pc="${c}" data-pn="${esc(n)}" title="${esc(n)} – ${c}"><canvas data-yt="${c}" data-seed="${esc(m[1])}"></canvas>${u?`<i class="ybadge" style="background:${c};color:${ink(c)}">${u}</i>`:''}<span class="yn">${esc(m[2])}</span><span class="yc">${esc(m[1])}</span></button>`}).join('');
+ $('sw').querySelectorAll('[data-yt]').forEach(cv=>yarnTex(cv,cv.dataset.yt,cv.dataset.seed));
+ $('palsrc').innerHTML=esc(pl.src)+(pl.url?` <a href="${pl.url}" target="_blank" rel="noopener">Zum Shop ↗</a>`:'');
  renderYarns();drawPicker();drawCmp();drawKnit();if(IMG)drawPhoto()}
 function renderYarns(){$('yarns').innerHTML=S.yarns.length?S.yarns.map((y,i)=>`<div class="yarn" data-y="${i}" title="Für Farbe übernehmen"><i style="background:${y.c}"></i><span>${esc(y.n)}</span><small>${y.c}</small><button data-yd="${i}" title="Garn entfernen">✕</button></div>`).join('')
  :'<p class="mut" style="margin:0">Noch keine Garne gespeichert. Farbe einstellen, benennen und merken – so lassen sich gekaufte Garne immer wieder verwenden und vergleichen.</p>'}
@@ -740,9 +750,21 @@ $('cols').addEventListener('click',e=>{const up=e.target.closest('[data-up]');
  if(up){const i=+up.dataset.up,p=P(),a=L(i-1),b=L(i);snap();[p.colors[i-1],p.colors[i]]=[p.colors[i],p.colors[i-1]];
   const sw=s=>mapBase(s,ch=>ch===a?b:ch===b?a:ch);p.g=p.g.map(sw);palSync(p,sw);selCol(i-1);save();render();return}
  const row=e.target.closest('.crow');if(row){selCol(+row.dataset.i);save();render()}});
+// Wollmuster in einer Farbe: gezwirnte Fäden mit feinen Fasern (gezeichnet, keine Fotos)
+function yarnTex(cv,hex,seed){const dpr=window.devicePixelRatio||1,W=cv.clientWidth||96,H=cv.clientHeight||56;cv.width=W*dpr;cv.height=H*dpr;
+ const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);let st=(+String(seed).replace(/\D/g,'')||7)%2147483647;const rnd=()=>(st=st*16807%2147483647)/2147483647;
+ const n=parseInt(hex.slice(1),16),rgb=[n>>16&255,n>>8&255,n&255],sh=f=>'rgb('+rgb.map(v=>Math.round(f<1?v*f:v+(255-v)*(f-1))).join(',')+')';
+ x.fillStyle=sh(.62);x.fillRect(0,0,W,H);
+ const ang=-.42,dx=Math.cos(ang),dy=Math.sin(ang),bw=H/3.2;
+ for(let b=-2;b<7;b++){const oy=b*bw;for(let t=-10;t<W+H;t+=bw*.42){const cx=t*dx-oy*dy*-1,cy=H+t*dy+oy*1.05;
+  x.save();x.translate(cx,cy);x.rotate(ang+.9);const g=x.createLinearGradient(0,-bw*.5,0,bw*.5);g.addColorStop(0,sh(.78));g.addColorStop(.45,sh(1.08+rnd()*.06));g.addColorStop(1,sh(.7));
+  x.fillStyle=g;x.beginPath();x.ellipse(0,0,bw*.34,bw*.62,0,0,7);x.fill();x.restore()}}
+ x.lineWidth=.6;for(let i=0;i<70;i++){const px=rnd()*W,py=rnd()*H,a=rnd()*Math.PI,l=4+rnd()*9;x.strokeStyle=rnd()<.6?`rgba(255,255,255,${.12+rnd()*.12})`:`rgba(0,0,0,${.1+rnd()*.1})`;
+  x.beginPath();x.moveTo(px,py);x.quadraticCurveTo(px+Math.cos(a)*l*.5+rnd()*3,py+Math.sin(a)*l*.5+rnd()*3,px+Math.cos(a)*l,py+Math.sin(a)*l);x.stroke()}
+ const v=x.createRadialGradient(W/2,H/2,H*.2,W/2,H/2,W*.75);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.18)');x.fillStyle=v;x.fillRect(0,0,W,H)}
 $('palsel').onchange=()=>{S.ui.pal=$('palsel').value;save();renderCol()};
 $('sw').addEventListener('click',e=>{const b=e.target.closest('[data-pc]');if(!b)return;const c=P().colors[CE.i];snap();
- if(!c.n||Object.values(YARNPAL).some(pl=>pl.colors.some(x=>x[1]===c.n))){c.n=b.dataset.pn;$('cename').value=c.n}setColor(b.dataset.pc,'force');renderColList();if(visible('pv'))renderPv()});
+ if(!c.n||Object.values(YARNPAL).some(pl=>pl.colors.some(x=>x[1]===c.n))){c.n=b.dataset.pn;$('cename').value=c.n}setColor(b.dataset.pc,'force');const sc=$('sw').scrollTop;renderCol();$('sw').scrollTop=sc;if(visible('pv'))renderPv()});
 $('yarns').addEventListener('click',e=>{const d=e.target.closest('[data-yd]');
  if(d){const y=S.yarns[+d.dataset.yd];if(confirm(`Garn „${y.n}“ aus der Liste entfernen?`)){S.yarns.splice(+d.dataset.yd,1);save();renderYarns()}return}
  const t=e.target.closest('[data-y]');if(!t)return;const y=S.yarns[+t.dataset.y];snap();P().colors[CE.i].n=y.n;$('cename').value=y.n;setColor(y.c,'force');renderColList();later('chips')});
