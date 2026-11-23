@@ -500,6 +500,26 @@ const relY=h=>{const n=parseInt(h.slice(1),16);return .2126*lin(n>>16&255)+.7152
 const Lstar=h=>{const y=relY(h);return y>.008856?116*Math.cbrt(y)-16:903.3*y};
 const grayHex=h=>{const y=relY(h),s=y<=.0031308?12.92*y:1.055*y**(1/2.4)-.055,v=Math.round(Math.min(1,s)*255).toString(16).padStart(2,'0');return'#'+v+v+v};
 const gc=(h,g=S.ui.gray)=>g?grayHex(h):h;
+// Wollige Masche: Schattierung, Glanz, Zwirn und Fasern als halbtransparente Ebene (einmal vorgezeichnet, mehrere Varianten)
+const SPC={};
+function stitchSprites(cw,chh,dpr){const k=cw+'x'+chh+'x'+dpr;if(SPC[k])return SPC[k];const out=[];
+ for(let v=0;v<4;v++){const W=cw,H=chh*1.4,c=document.createElement('canvas');c.width=Math.ceil(W*dpr);c.height=Math.ceil(H*dpr);const x=c.getContext('2d');x.scale(dpr,dpr);
+  let st=(v+1)*7919;const rnd=()=>(st=st*16807%2147483647)/2147483647;const oy=chh*.2;
+  for(const[cx,rot]of[[cw*.3,-.5],[cw*.7,.5]]){const cy=oy+chh*.5,rx=cw*.25,ry=chh*.62;
+   x.save();x.translate(cx,cy);x.rotate(rot);x.beginPath();x.ellipse(0,0,rx,ry,0,0,7);x.clip();
+   // Rand dunkler, Mitte heller
+   x.save();x.scale(1,ry/rx);const g=x.createRadialGradient(-rx*.15,0,rx*.1,0,0,rx*1.05);g.addColorStop(0,'rgba(255,255,255,.22)');g.addColorStop(.55,'rgba(255,255,255,0)');g.addColorStop(1,'rgba(0,0,0,.42)');x.fillStyle=g;x.fillRect(-rx,-rx,rx*2,rx*2);x.restore();
+   // Zwirn: schräge Linien quer über den Schenkel
+   x.lineCap='round';const n=4+Math.round(rnd());
+   for(let i=0;i<n;i++){const y=-ry+(i+.5+rnd()*.35)*(2*ry/n),t=.35+rnd()*.4;x.strokeStyle=`rgba(0,0,0,${.09+rnd()*.08})`;x.lineWidth=Math.max(.5,cw*(.03+rnd()*.03));x.beginPath();x.moveTo(-rx,y+rx*t);x.quadraticCurveTo(rx*(rnd()-.5)*.6,y+rx*(rnd()-.3)*.4,rx,y-rx*t);x.stroke()}
+   x.strokeStyle='rgba(255,255,255,.16)';x.lineWidth=Math.max(.4,cw*.03);
+   for(let i=0;i<n;i++){const y=-ry+(i+.15+rnd()*.3)*(2*ry/n);x.beginPath();x.moveTo(-rx*.7,y+rx*.4);x.quadraticCurveTo(0,y,rx*.7,y-rx*.35);x.stroke()}
+   x.restore()}
+  // feine Fasern, auch leicht über den Rand hinaus
+  x.lineWidth=Math.max(.35,cw*.02);for(let i=0;i<Math.max(4,Math.round(cw*.5));i++){const px=rnd()*W,py=oy+rnd()*chh,a=rnd()*Math.PI,l=cw*(.12+rnd()*.22);
+   x.strokeStyle=rnd()<.65?`rgba(255,255,255,${.12+rnd()*.15})`:`rgba(0,0,0,${.1+rnd()*.1})`;x.beginPath();x.moveTo(px,py);x.lineTo(px+Math.cos(a)*l,py+Math.sin(a)*l);x.stroke()}
+  out.push(c)}
+ return SPC[k]=out}
 // „V“-Zeichen in Gegenfarbe
 function drawV(ctx,x,y,w,h,c){ctx.save();ctx.strokeStyle=c;ctx.lineWidth=Math.max(1.2,Math.min(w,h)*.13);ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();
  ctx.moveTo(x+w*.27,y+h*.28);ctx.lineTo(x+w*.5,y+h*.74);ctx.lineTo(x+w*.73,y+h*.28);ctx.stroke();ctx.restore()}
@@ -807,9 +827,11 @@ function drawRows(cv,rows,o){
  const w=W*cw,h=H*chh;cv.width=w*dpr;cv.height=h*dpr;cv.style.width=w+'px';cv.style.height=h+'px';
  const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
  if(o.mode==='st'){ctx.fillStyle='#2a2a2a';ctx.fillRect(0,0,w,h)}
+ const SP=o.mode==='st'&&cw>=6?stitchSprites(cw,chh,dpr):null;
  rows.forEach((row,y)=>row.forEach((c,x)=>{const px=x*cw,py=y*chh;if(c===null){ctx.fillStyle=BG;ctx.fillRect(px,py,cw,chh);if(HT&&cw>=4)hatch(ctx,px,py,cw,chh);return}ctx.fillStyle=col(c);
   if(o.mode==='felt')ctx.fillRect(px,py,cw,chh);
-  if(ST){ctx.beginPath();ctx.ellipse(px+cw*.3,py+chh*.5,cw*.25,chh*.62,-.5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(px+cw*.7,py+chh*.5,cw*.25,chh*.62,.5,0,Math.PI*2);ctx.fill()}
+  if(ST){ctx.beginPath();ctx.ellipse(px+cw*.3,py+chh*.5,cw*.25,chh*.62,-.5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(px+cw*.7,py+chh*.5,cw*.25,chh*.62,.5,0,Math.PI*2);ctx.fill();
+   if(SP)ctx.drawImage(SP[(x*7+y*13)%SP.length],px,py-chh*.2,cw,chh*1.4)}
   else ctx.fillRect(px,py,cw,chh)}));
  if(o.mode==='felt')felt(cv,ctx,w,h,cw,chh,dpr);
  if(o.mode==='box'&&cw>=7)rows.forEach((row,y)=>{if(row.v)row.v.forEach((m,x)=>{if(m)drawV(ctx,x*cw,y*chh,cw,chh,row[x]===null?'#777':ink(col(row[x])))})});
