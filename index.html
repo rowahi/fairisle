@@ -404,7 +404,7 @@ a.btn{display:flex;align-items:center;justify-content:center;height:38px;backgro
 
 <script>
 'use strict';
-const APPV='21';
+const APPV='22';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const L=i=>String.fromCharCode(65+i);
@@ -458,6 +458,9 @@ S.prev={...DEF.prev,...S.prev};S.ed={...DEF.ed,...S.ed};S.ui={...DEF.ui,...S.ui}
 if(!S.list.length){const t=TPL.raute;S.list.push(mkPat(t.name,t.lines,t.cols))}
 if(!S.list.some(p=>p.id===S.cur))S.cur=S.list[0].id;
 S.list.forEach(p=>{uid=Math.max(uid,p.id);p.ox=p.ox|0;p.oy=p.oy|0});S.projs.forEach(x=>uid=Math.max(uid,x.id));
+// Ältere Stände: Muster, die in mehreren Projekten stecken, bekommen je Projekt eine eigene Kopie (das erste Projekt behält das Original)
+const SPLIT=(()=>{const seen=new Map();let n=0;S.projs.forEach(pj=>{const m=new Map();pj.items.forEach(i=>{if(i.t!=='p')return;const p=S.list.find(x=>x.id===i.id);if(!p)return;
+ const o=seen.get(p.id);if(o===undefined){seen.set(p.id,pj.id);return}if(o===pj.id)return;if(!m.has(p.id)){m.set(p.id,copyPat(p,' – '+(pj.name||'Projekt')));n++}i.id=m.get(p.id).id})});return n})();
 let svT=0;
 const save=()=>{const el=document.getElementById('saved');try{localStorage.setItem(K,JSON.stringify(S));
  if(el){el.classList.remove('err');el.classList.add('pulse');el.innerHTML='✓ <span class="lbl">Gespeichert</span>';el.title='Automatisch gespeichert um '+new Date().toLocaleTimeString('de-CH')+' – nur in diesem Browser';clearTimeout(svT);svT=setTimeout(()=>el.classList.remove('pulse'),700)}}
@@ -899,7 +902,17 @@ const samePal=(a,b)=>a.length===b.length&&a.every((x,i)=>x.c===b[i].c&&x.n===b[i
 function palSync(p=P(),gridFn){mates(p).forEach(q=>{q.colors=clonePal(p.colors);if(gridFn)q.g=q.g.map(gridFn)})}
 function palMixed(pj){const ps=seqItems(pj).filter(i=>i.t==='p').map(i=>S.list.find(q=>q.id===i.id));return ps.some(q=>!samePal(q.colors,ps[0].colors))}
 const pjName=pj=>pj.name||'Ohne Namen';
-function newProj(name){const p=P();return{id:++uid,name,W:0,items:[{t:'b',c:p.colors[0].c,n:3},{t:'p',id:p.id,ry:2},{t:'b',c:p.colors[0].c,n:3}]}}
+// Ein Muster gehört zu genau einem Projekt. Wird es schon in einem anderen verwendet, kommt eine Kopie ins Projekt –
+// sonst würden Malen und Farbänderungen auch das andere Projekt verändern.
+function copyPat(p,suf){const q=JSON.parse(JSON.stringify(p));q.id=++uid;q.name=(p.name||'Muster')+suf;S.list.splice(S.list.indexOf(p)+1,0,q);return q}
+const usedIn=(p,pj)=>S.projs.some(x=>x!==pj&&x.items.some(i=>i.t==='p'&&i.id===p.id));
+// Projekt wechseln: gehört das offene Muster nicht dazu, wird das erste Muster des Projekts geöffnet
+function enterProj(id){S.curPj=id;const pj=PJ();if(!pj)return'';const its=seqItems(pj).filter(i=>i.t==='p');if(!its.length||its.some(i=>i.id===S.cur))return'';
+ S.cur=its[0].id;CE=null;if(S.ed.col>=P().colors.length)S.ed.col=0;return` – Muster „${P().name||'Ohne Namen'}“ geöffnet`}
+function dupProj(pj){const q=JSON.parse(JSON.stringify(pj));q.id=++uid;q.name=pjName(pj)+' (Kopie)';const m=new Map();
+ q.items.forEach(i=>{if(i.t!=='p')return;const p=S.list.find(x=>x.id===i.id);if(!p)return;if(!m.has(p.id))m.set(p.id,copyPat(p,' – '+q.name));i.id=m.get(p.id).id});
+ S.projs.splice(S.projs.indexOf(pj)+1,0,q);return q}
+function newProj(name){let p=P();if(S.projs.some(x=>x.items.some(i=>i.t==='p'&&i.id===p.id)))p=copyPat(p,' – '+name);return{id:++uid,name,W:0,items:[{t:'b',c:p.colors[0].c,n:3},{t:'p',id:p.id,ry:2},{t:'b',c:p.colors[0].c,n:3}]}}
 const seqItems=(pj=PJ())=>pj?pj.items.filter(it=>it.t==='b'||S.list.some(p=>p.id===it.id)):[];
 const gcd=(a,b)=>b?gcd(b,a%b):a;
 function seqFit(pj=PJ()){const ws=seqItems(pj).filter(i=>i.t==='p').map(i=>S.list.find(p=>p.id===i.id).w);if(!ws.length)return P().w*3;
@@ -960,11 +973,11 @@ $('pjsync').onclick=()=>{const pj=PJ(),ps=seqItems(pj).filter(i=>i.t==='p').map(
  while(ref.colors.length<mx){const i=ref.colors.length;ref.colors.push({c:PAL[i%PAL.length][0],n:PAL[i%PAL.length][1]})}
  ps.forEach(q=>{if(q!==ref)q.colors=clonePal(ref.colors)});palSync(ref);save();render();toast('Farben angeglichen')};
 $('qfit').onclick=()=>{PJ().W=seqFit();save();renderPv()};
-$('prsel').onchange=()=>{S.curPj=+$('prsel').value;save();renderPv()};
+$('prsel').onchange=()=>{const m=enterProj(+$('prsel').value);save();render();if(m)toast(`Projekt „${pjName(PJ())}“${m}`)};
 $('prname').oninput=()=>{PJ().name=$('prname').value.slice(0,80);save();const o=$('prsel').selectedOptions[0];if(o)o.textContent=pjName(PJ());$('pvi').textContent=`${pjName(PJ())} · ${PJ().W} Maschen`};
-$('prnew').onclick=()=>{const pj=newProj('Projekt '+(S.projs.length+1));S.projs.push(pj);S.curPj=pj.id;pj.W=seqFit(pj);save();renderPv();$('prname').select()};
-$('prdup').onclick=()=>{const pj=JSON.parse(JSON.stringify(PJ()));pj.id=++uid;pj.name=pjName(pj)+' (Kopie)';S.projs.splice(S.projs.indexOf(PJ())+1,0,pj);S.curPj=pj.id;save();renderPv();toast('Projekt kopiert')};
-$('prdel').onclick=()=>{if(S.projs.length<2)return;const pj=PJ();if(!confirm(`Projekt „${pjName(pj)}“ löschen? Die Muster selbst bleiben erhalten.`))return;S.projs=S.projs.filter(x=>x!==pj);S.curPj=S.projs[0].id;save();renderPv()};
+$('prnew').onclick=()=>{const pj=newProj('Projekt '+(S.projs.length+1));S.projs.push(pj);enterProj(pj.id);pj.W=seqFit(pj);save();render();$('prname').select()};
+$('prdup').onclick=()=>{const pj=dupProj(PJ());enterProj(pj.id);save();render();toast('Projekt kopiert – mit eigenen Kopien der Muster')};
+$('prdel').onclick=()=>{if(S.projs.length<2)return;const pj=PJ();if(!confirm(`Projekt „${pjName(pj)}“ löschen? Die Muster selbst bleiben erhalten.`))return;S.projs=S.projs.filter(x=>x!==pj);enterProj(S.projs[0].id);save();render()};
 const setItems=it=>{PJ().items=it;return it};
 // Muster ins Projekt aufnehmen: Farben werden nach Buchstabe übernommen (A→A …).
 // Hat das Muster mehr Farben als das Projekt, kommen die zusätzlichen Farben ins Projekt (für alle Rapporte).
@@ -974,7 +987,8 @@ function adaptToProject(q,pj=PJ()){const f=seqItems(pj).find(i=>i.t==='p'&&i.id!
  if(add>0){ref.colors.push(...clonePal(q.colors.slice(ref.colors.length)));palSync(ref)}
  q.colors=clonePal(ref.colors);palSync(q);
  return add>0?`${add} Farbe${add===1?'':'n'} (${q.colors.slice(-add).map((c,i)=>L(q.colors.length-add+i)).join(', ')}) neu im Projekt`:'Projektfarben übernommen'}
-function addToProject(q,pj=PJ()){const it=pj.items=seqItems(pj);it.push({t:'p',id:q.id,ry:1});return adaptToProject(q,pj)}
+function addToProject(q,pj=PJ()){let cp='';if(usedIn(q,pj)){q=copyPat(q,' – '+pjName(pj));cp=`als Kopie „${q.name}“ aufgenommen (wird auch in einem anderen Projekt verwendet)`}
+ const it=pj.items=seqItems(pj);it.push({t:'p',id:q.id,ry:1});const m=adaptToProject(q,pj);return[cp,m].filter(Boolean).join(' – ')}
 $('qaddp').onclick=()=>{const id=+$('qsel').value;if(!id)return;const q=S.list.find(x=>x.id===id),m=addToProject(q);
  save();renderPv();if(visible('col'))renderCol();if(visible('ed'))renderEd();toast(m?`„${q.name}“: ${m} – Farben im Muster lassen sich unter „Farben“ tauschen`:`„${q.name}“ hinzugefügt`)};
 // Neue Muster bei geöffnetem Projekt automatisch ins Projekt aufnehmen
@@ -1026,7 +1040,8 @@ function renderPat(){
  if(DR.tab==='pj'){
   $('pjlist').innerHTML=S.projs.length?S.projs.map(x=>{const n=seqItems(x).filter(i=>i.t==='p').length;return`<div class="pt${S.seq.on&&x.id===S.curPj?' on':''}" data-pj="${x.id}">${tmenu([['pj-dup','⧉ Duplizieren',x.id],['pj-ods','💾 Als ODS speichern',x.id],['pj-del','🗑 Löschen',x.id,'dan']])}<b>${esc(pjName(x))}</b><span class="mut">${x.W} Maschen · ${n} Rapport${n===1?'':'e'}</span><canvas></canvas></div>`}).join(''):'<p class="mut">Noch keine Projekte.</p>';
   $('pjlist').querySelectorAll('[data-pj]').forEach(el=>{const x=S.projs.find(q=>q.id===+el.dataset.pj);if(!x.W)x.W=seqFit(x);const r=seqRows(x);drawRows(el.querySelector('canvas'),r.rows.length?r.rows:[['#ffffff']],{maxW:180,maxH:110,mode:'box',maxCell:6})})}}
-function openPat(id){S.cur=id;CE=null;save();closeDrawer();go(WIDE.matches?S.tab:'ed');toast(`„${P().name||'Ohne Namen'}“ geöffnet`)}
+function openPat(id){S.cur=id;CE=null;let m='';const pj=PJ(),ps=projsOf(P());if(S.seq.on&&pj&&ps.length&&!ps.includes(pj)){S.curPj=ps[0].id;m=` – Vorschau zeigt jetzt Projekt „${pjName(ps[0])}“`}
+ save();closeDrawer();go(WIDE.matches?S.tab:'ed');toast(`„${P().name||'Ohne Namen'}“ geöffnet${m}`)}
 $('plist').addEventListener('click',e=>{const m=e.target.closest('[data-pa-dup],[data-pa-ren],[data-pa-ods],[data-pa-del]');
  if(m){const d=m.dataset,id=+(d.paDup||d.paRen||d.paOds||d.paDel),p=S.list.find(x=>x.id===id);closeMenus();
   if(d.paDup){const q=JSON.parse(JSON.stringify(p));q.id=++uid;q.name+=' (Kopie)';S.list.splice(S.list.indexOf(p)+1,0,q);save();renderPat();toast('Kopie angelegt')}
@@ -1038,12 +1053,12 @@ $('plist').addEventListener('click',e=>{const m=e.target.closest('[data-pa-dup],
  if(e.target.closest('.menu'))return;const t=e.target.closest('.pt');if(t)openPat(+t.dataset.id)});
 $('pjlist').addEventListener('click',e=>{const m=e.target.closest('[data-pj-dup],[data-pj-ods],[data-pj-del]');
  if(m){const d=m.dataset,id=+(d.pjDup||d.pjOds||d.pjDel),pj=S.projs.find(x=>x.id===id);closeMenus();
-  if(d.pjDup){const q=JSON.parse(JSON.stringify(pj));q.id=++uid;q.name=pjName(pj)+' (Kopie)';S.projs.splice(S.projs.indexOf(pj)+1,0,q);save();renderPat();toast('Projekt kopiert')}
+  if(d.pjDup){dupProj(pj);save();renderPat();toast('Projekt kopiert – mit eigenen Kopien der Muster')}
   if(d.pjOds)seqOds(pj);
-  if(d.pjDel){if(!confirm(`Projekt „${pjName(pj)}“ löschen? Die Muster selbst bleiben erhalten.`))return;S.projs=S.projs.filter(x=>x!==pj);if(S.curPj===id)S.curPj=S.projs[0]?S.projs[0].id:0;if(!S.projs.length)S.seq.on=false;save();renderPat();render()}
+  if(d.pjDel){if(!confirm(`Projekt „${pjName(pj)}“ löschen? Die Muster selbst bleiben erhalten.`))return;S.projs=S.projs.filter(x=>x!==pj);if(S.curPj===id){if(S.projs[0])enterProj(S.projs[0].id);else S.curPj=0}if(!S.projs.length)S.seq.on=false;save();renderPat();render()}
   return}
- if(e.target.closest('.menu'))return;const t=e.target.closest('[data-pj]');if(!t)return;S.curPj=+t.dataset.pj;S.seq.on=true;save();closeDrawer();go(WIDE.matches?S.tab:'pv');toast(`Projekt „${pjName(PJ())}“ geöffnet`)});
-$('prnew2').onclick=()=>{const pj=newProj('Projekt '+(S.projs.length+1));S.projs.push(pj);S.curPj=pj.id;pj.W=seqFit(pj);S.seq.on=true;save();closeDrawer();go(WIDE.matches?S.tab:'pv');toast('Neues Projekt angelegt')};
+ if(e.target.closest('.menu'))return;const t=e.target.closest('[data-pj]');if(!t)return;const om=enterProj(+t.dataset.pj);S.seq.on=true;save();closeDrawer();go(WIDE.matches?S.tab:'pv');toast(`Projekt „${pjName(PJ())}“ geöffnet${om}`)});
+$('prnew2').onclick=()=>{const pj=newProj('Projekt '+(S.projs.length+1));S.projs.push(pj);enterProj(pj.id);pj.W=seqFit(pj);S.seq.on=true;save();closeDrawer();go(WIDE.matches?S.tab:'pv');toast('Neues Projekt angelegt')};
 $('newBlank').onclick=()=>{const t=TPL.leer,p=mkPat('Neues Muster',t.lines,t.cols);S.list.unshift(p);S.cur=p.id;S.ed.col=1;CE=null;const m=newIntoProject(p);save();closeDrawer();go('ed');toast('Neues Muster angelegt'+m);setTimeout(()=>$('pname').select(),50)};
 $('newb').addEventListener('click',e=>{const c=e.target.closest('[data-tcb]');
  if(c){const t=TPL[c.dataset.tcb];CB=t.lines.map(l=>[...l]);closeDrawer();go('ed');setTool('paste');toast(`„${t.name}“ – im Raster klicken zum Einsetzen, Esc beendet`);return}
@@ -1347,5 +1362,6 @@ setSplit(S.ui.split);
  sp.addEventListener('pointerup',end);sp.addEventListener('pointercancel',end);
  sp.addEventListener('dblclick',()=>{setSplit(56);save();render()})})();
 go(['ed','col','pv'].includes(S.tab)?S.tab:'ed');
+if(SPLIT){save();setTimeout(()=>toast(`${SPLIT} Muster kamen in mehreren Projekten vor und haben je Projekt eine eigene Kopie bekommen`),600)}
 if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script></body></html>
